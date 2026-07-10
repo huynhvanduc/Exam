@@ -361,3 +361,36 @@ MigrationBackup/
 
 # Fody - auto-generated XML schema
 FodyWeavers.xsd
+
+## ==============================
+## .NET / Blazor project extras
+## ==============================
+
+# Editor / IDE
+.vscode/
+.idea/
+*.iml
+
+# ASP.NET Core local dev settings (chứa port, profile, secrets local)
+launchSettings.json
+
+# Environment-specific & secret config
+appsettings.*.json
+!appsettings.json
+!appsettings.Development.json
+secrets.json
+*.env
+
+# Blazor/WebAssembly build & published output
+wwwroot/dist/
+wwwroot/lib/
+publish/
+PublishOutput/
+
+# Local databases
+*.db
+*.sqlite
+*.sqlite3
+
+# EF Core migrations bundle output (nếu build ra file exe)
+efbundle*
