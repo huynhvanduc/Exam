@@ -1,25 +1,52 @@
-var builder = WebApplication.CreateBuilder(args);
+using Identity.API.Extensions;
+using Identity.API.Persistence;
+using Identity.API.Settings;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Hosting;
+using Serilog;
 
-// Add services to the container.
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.Console()
+    .CreateBootstrapLogger();
 
-builder.Services.AddControllers();
-// Learn more about configuring Swagger/OpenAPI at https://aka.ms/aspnetcore/swashbuckle
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen();
-
-var app = builder.Build();
-
-// Configure the HTTP request pipeline.
-if (app.Environment.IsDevelopment())
+try
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    Log.Information("Starting Identity.API");
+
+    var builder = WebApplication.CreateBuilder(args);
+
+    builder.Host.UseSerilog((context, services, loggerConfig) => loggerConfig
+        .ReadFrom.Configuration(context.Configuration)
+        .ReadFrom.Services(services)
+        .Enrich.FromLogContext());
+
+    // Add services to the container.
+    // builder.Services.AddRazorPages();
+    builder.Services.AddAuthorization();
+    builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
+    builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection("IdentityServer"));
+    builder.Services.ConfigureIdentity(builder.Configuration);
+    builder.Services.ConfigureIdentityServer(builder.Configuration);
+
+    var app = builder.Build();
+
+    if (!EF.IsDesignTime)
+        SeedData.EnsureSeedData(app);
+
+    app.UseSerilogRequestLogging();
+
+    app.UseRouting();
+
+    app.UseIdentityServer();
+    app.UseAuthorization();
+
+    app.Run();
 }
-
-app.UseHttpsRedirection();
-
-app.UseAuthorization();
-
-app.MapControllers();
-
-app.Run();
+catch (Exception ex) when (ex is not HostAbortedException)
+{
+    Log.Fatal(ex, "Identity.API terminated unexpectedly");
+}
+finally
+{
+    Log.CloseAndFlush();
+}
