@@ -17,4 +17,10 @@ public class QuestionRepository : MongoRepositoryBase<Question>, IQuestionReposi
         Logger.LogDebug("Getting Questions by CategoryId {CategoryId}.", categoryId);
         return await Collection.Find(x => x.CategoryId == categoryId).ToListAsync(cancellationToken);
     }
+
+    public async Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("Checking Question existence by CategoryId {CategoryId}.", categoryId);
+        return await Collection.Find(x => x.CategoryId == categoryId).AnyAsync(cancellationToken);
+    }
 }

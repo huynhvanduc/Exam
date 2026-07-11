@@ -4,4 +4,5 @@ namespace Exam.Domain.AggregateModels.ExamAggregate;
 
 public interface IExamRepository : IRepositoryBase<Exam>
 {
+    Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default);
 }

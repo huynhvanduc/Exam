@@ -8,6 +8,7 @@ using MongoDB.Bson.Serialization;
 using MongoDB.Bson.Serialization.Conventions;
 using MongoDB.Bson.Serialization.IdGenerators;
 using MongoDB.Bson.Serialization.Serializers;
+using ExamEntity = Exam.Domain.AggregateModels.ExamAggregate.Exam;
 
 namespace Exam.Infrastructure.Persistence.Mongo;
 
@@ -61,9 +62,13 @@ public static class MongoClassMaps
             BsonClassMap.RegisterClassMap<Category>(cm => cm.AutoMap());
         }
 
-        if (!BsonClassMap.IsClassMapRegistered(typeof(Exam.Domain.AggregateModels.ExamAggregate.Exam)))
+        if (!BsonClassMap.IsClassMapRegistered(typeof(Answer)))
         {
-            BsonClassMap.RegisterClassMap<Exam.Domain.AggregateModels.ExamAggregate.Exam>(cm => cm.AutoMap());
+            BsonClassMap.RegisterClassMap<Answer>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(a => new Answer(a.Id, a.Content, a.IsCorrect));
+            });
         }
 
         if (!BsonClassMap.IsClassMapRegistered(typeof(Question)))
@@ -73,6 +78,15 @@ public static class MongoClassMaps
                 cm.AutoMap();
                 cm.MapCreator(q => new Question(q.Id, q.Content, q.QuestionType, q.Level, q.CategoryId,
                     q.Answers, q.Explain, q.Points, q.OwnerUserId, q.CategoryName));
+            });
+        }
+
+        if (!BsonClassMap.IsClassMapRegistered(typeof(AnswerResult)))
+        {
+            BsonClassMap.RegisterClassMap<AnswerResult>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(a => new AnswerResult(a.Id, a.Content, a.UserChosen, a.IsCorrect));
             });
         }
 
@@ -86,14 +100,34 @@ public static class MongoClassMaps
             });
         }
 
+        if (!BsonClassMap.IsClassMapRegistered(typeof(ExamEntity)))
+        {
+            BsonClassMap.RegisterClassMap<ExamEntity>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(e => new ExamEntity(e.Name, e.ShortDesc, e.Content, e.Duration, e.Level,
+                    e.OwnerUserId, e.CategoryId, e.CategoryName, e.IsTimeRestricted, e.MinimumPassingScore));
+                cm.MapMember(e => e.NegativeMarkingRatio).SetSerializer(new DecimalSerializer(BsonType.Decimal128));
+            });
+        }
+
         if (!BsonClassMap.IsClassMapRegistered(typeof(ExamResult)))
         {
-            BsonClassMap.RegisterClassMap<ExamResult>(cm => cm.AutoMap());
+            BsonClassMap.RegisterClassMap<ExamResult>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(r => new ExamResult(r.UserId, r.ExamId, r.NegativeMarkingRatio));
+                cm.MapMember(r => r.NegativeMarkingRatio).SetSerializer(new DecimalSerializer(BsonType.Decimal128));
+            });
         }
 
         if (!BsonClassMap.IsClassMapRegistered(typeof(User)))
         {
-            BsonClassMap.RegisterClassMap<User>(cm => cm.AutoMap());
+            BsonClassMap.RegisterClassMap<User>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(u => new User(u.ExternalId, u.FirstName, u.LastName, u.Role));
+            });
         }
     }
 }

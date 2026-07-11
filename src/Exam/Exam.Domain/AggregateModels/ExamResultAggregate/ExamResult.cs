@@ -5,7 +5,7 @@ namespace Exam.Domain.AggregateModels.ExamResultAggregate;
 
 public class ExamResult : Entity, IAggregateRoot
 {
-    private readonly List<QuestionResult> _questionResults = new();
+    private List<QuestionResult> _questionResults = new();
 
     public string ExamId { get; private set; }
 
@@ -17,7 +17,11 @@ public class ExamResult : Entity, IAggregateRoot
 
     public string FullName { get; private set; }
 
-    public IReadOnlyCollection<QuestionResult> QuestionResults => _questionResults.AsReadOnly();
+    public IReadOnlyCollection<QuestionResult> QuestionResults
+    {
+        get => _questionResults;
+        private set => _questionResults = value?.ToList() ?? new List<QuestionResult>();
+    }
 
     public int CorrectQuestionCount { get; private set; }
 

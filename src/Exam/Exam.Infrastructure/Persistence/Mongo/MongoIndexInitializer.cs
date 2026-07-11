@@ -1,3 +1,4 @@
+using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using MongoDB.Driver;
@@ -20,5 +21,12 @@ public static class MongoIndexInitializer
             Builders<Question>.IndexKeys.Ascending(x => x.CategoryId));
 
         await questions.Indexes.CreateOneAsync(questionCategoryIndex, cancellationToken: cancellationToken);
+
+        var categories = context.GetCollection<Category>("categories");
+        var categoryUrlPathIndex = new CreateIndexModel<Category>(
+            Builders<Category>.IndexKeys.Ascending(x => x.UrlPath),
+            new CreateIndexOptions { Unique = true });
+
+        await categories.Indexes.CreateOneAsync(categoryUrlPathIndex, cancellationToken: cancellationToken);
     }
 }

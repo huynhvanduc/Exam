@@ -6,7 +6,7 @@ namespace Exam.Domain.AggregateModels.ExamAggregate;
 
 public class Exam : Entity, IAggregateRoot
 {
-    private readonly List<string> _questionIds = new();
+    private List<string> _questionIds = new();
 
     public string Name { get; private set; }
 
@@ -44,7 +44,11 @@ public class Exam : Entity, IAggregateRoot
 
     public decimal NegativeMarkingRatio { get; private set; }
 
-    public IReadOnlyCollection<string> QuestionIds => _questionIds.AsReadOnly();
+    public IReadOnlyCollection<string> QuestionIds
+    {
+        get => _questionIds;
+        private set => _questionIds = value?.ToList() ?? new List<string>();
+    }
 
     public int NumberOfQuestions => QuestionSelectionMode == QuestionSelectionMode.Pool
         ? PoolQuestionCount
