@@ -18,6 +18,13 @@ public class QuestionRepository : MongoRepositoryBase<Question>, IQuestionReposi
         return await Collection.Find(x => x.CategoryId == categoryId).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<Question>> GetByIdsAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default)
+    {
+        var idList = ids?.ToList() ?? new List<string>();
+        Logger.LogDebug("Getting Questions by Ids {Ids}.", idList);
+        return await Collection.Find(x => idList.Contains(x.Id)).ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default)
     {
         Logger.LogDebug("Checking Question existence by CategoryId {CategoryId}.", categoryId);

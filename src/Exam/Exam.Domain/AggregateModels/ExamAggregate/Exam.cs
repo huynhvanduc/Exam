@@ -84,6 +84,31 @@ public class Exam : Entity, IAggregateRoot
         Status = ExamStatus.Draft;
     }
 
+    public void UpdateDetails(string name, string shortDesc, string content, TimeSpan duration, Level level,
+        string categoryId, string categoryName, bool isTimeRestricted, int minimumPassingScore)
+    {
+        EnsureEditable();
+
+        if (string.IsNullOrWhiteSpace(name))
+            throw new ExamDomainException("Exam name is required.");
+
+        if (string.IsNullOrWhiteSpace(categoryId))
+            throw new ExamDomainException("Exam category is required.");
+
+        if (minimumPassingScore < 0)
+            throw new ExamDomainException("Minimum passing score must not be negative.");
+
+        Name = name;
+        ShortDesc = shortDesc;
+        Content = content;
+        Duration = duration;
+        Level = level;
+        CategoryId = categoryId;
+        CategoryName = categoryName;
+        IsTimeRestricted = isTimeRestricted;
+        MinimumPassingScore = minimumPassingScore;
+    }
+
     public void AddQuestion(string questionId)
     {
         EnsureEditable();

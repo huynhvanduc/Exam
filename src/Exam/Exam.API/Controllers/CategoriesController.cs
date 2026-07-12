@@ -49,9 +49,9 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    public async Task<IActionResult> Update(string id, [FromBody] UpdateCategoryCommand command, CancellationToken cancellationToken)
+    public async Task<IActionResult> Update(string id, [FromBody] UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(command with { Id = id }, cancellationToken);
+        var result = await _mediator.Send(new UpdateCategoryCommand(id, request.Name, request.UrlPath), cancellationToken);
         return Ok(result);
     }
 
@@ -62,3 +62,5 @@ public class CategoriesController : ControllerBase
         return NoContent();
     }
 }
+
+public record UpdateCategoryRequest(string Name, string UrlPath);

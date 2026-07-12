@@ -39,6 +39,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<ExamQuestionPoolService>();
         services.AddScoped<CategoryDeletionGuard>();
+        services.AddScoped<ExamResultGradingService>();
 
         services.AddHealthChecks()
             .AddCheck<MongoDbHealthCheck>("mongodb");

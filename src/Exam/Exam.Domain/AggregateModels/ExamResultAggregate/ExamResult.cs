@@ -6,6 +6,8 @@ namespace Exam.Domain.AggregateModels.ExamResultAggregate;
 public class ExamResult : Entity, IAggregateRoot
 {
     private List<QuestionResult> _questionResults = new();
+    private List<string> _questionIds = new();
+    private List<DraftAnswer> _draftAnswers = new();
 
     public string ExamId { get; private set; }
 
@@ -17,11 +19,27 @@ public class ExamResult : Entity, IAggregateRoot
 
     public string FullName { get; private set; }
 
+    public IReadOnlyCollection<string> QuestionIds
+    {
+        get => _questionIds;
+        private set => _questionIds = value?.ToList() ?? new List<string>();
+    }
+
     public IReadOnlyCollection<QuestionResult> QuestionResults
     {
         get => _questionResults;
         private set => _questionResults = value?.ToList() ?? new List<QuestionResult>();
     }
+
+    public IReadOnlyCollection<DraftAnswer> DraftAnswers
+    {
+        get => _draftAnswers;
+        private set => _draftAnswers = value?.ToList() ?? new List<DraftAnswer>();
+    }
+
+    public TimeSpan? Duration { get; private set; }
+
+    public DateTime? Deadline => Duration.HasValue ? ExamStartDate.Add(Duration.Value) : null;
 
     public int CorrectQuestionCount { get; private set; }
 
@@ -73,6 +91,43 @@ public class ExamResult : Entity, IAggregateRoot
     {
         Email = email;
         FullName = fullName;
+    }
+
+    public void SetDuration(TimeSpan? duration)
+    {
+        Duration = duration;
+    }
+
+    public bool IsExpired(DateTime at) => !Finished && Deadline.HasValue && at >= Deadline.Value;
+
+    public void RecordAnswer(string questionId, IEnumerable<string> selectedAnswerIds)
+    {
+        if (Finished)
+            throw new ExamDomainException("Cannot record an answer after the exam has finished.");
+
+        if (!_questionIds.Contains(questionId))
+            throw new ExamDomainException("This question is not part of the current exam attempt.");
+
+        var ids = selectedAnswerIds?.ToList() ?? new List<string>();
+
+        _draftAnswers.RemoveAll(d => d.QuestionId == questionId);
+        _draftAnswers.Add(new DraftAnswer(questionId, ids));
+    }
+
+    public void AssignQuestions(IEnumerable<string> questionIds)
+    {
+        if (Finished)
+            throw new ExamDomainException("Cannot assign questions after the exam has finished.");
+
+        if (_questionIds.Count > 0)
+            throw new ExamDomainException("Questions have already been assigned to this attempt.");
+
+        var ids = questionIds?.ToList() ?? new List<string>();
+
+        if (ids.Count == 0)
+            throw new ExamDomainException("At least one question must be assigned to this attempt.");
+
+        _questionIds = ids;
     }
 
     public void AddQuestionResult(QuestionResult questionResult)

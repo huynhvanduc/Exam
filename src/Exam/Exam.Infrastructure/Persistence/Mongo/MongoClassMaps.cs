@@ -111,6 +111,11 @@ public static class MongoClassMaps
             });
         }
 
+        if (!BsonClassMap.IsClassMapRegistered(typeof(DraftAnswer)))
+        {
+            BsonClassMap.RegisterClassMap<DraftAnswer>(cm => cm.AutoMap());
+        }
+
         if (!BsonClassMap.IsClassMapRegistered(typeof(ExamResult)))
         {
             BsonClassMap.RegisterClassMap<ExamResult>(cm =>

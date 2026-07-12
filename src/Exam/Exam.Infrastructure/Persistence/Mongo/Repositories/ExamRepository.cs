@@ -13,6 +13,12 @@ public class ExamRepository : MongoRepositoryBase<ExamEntity>, IExamRepository
     {
     }
 
+    public async Task<IReadOnlyCollection<ExamEntity>> GetByCategoryAsync(string categoryId, CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("Getting Exams by CategoryId {CategoryId}.", categoryId);
+        return await Collection.Find(x => x.CategoryId == categoryId).ToListAsync(cancellationToken);
+    }
+
     public async Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default)
     {
         Logger.LogDebug("Checking Exam existence by CategoryId {CategoryId}.", categoryId);
