@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Exam.Application.ExamResultAggregate.Queries.GetMyExamHistory;
 
-public class GetMyExamHistoryQueryHandler : IRequestHandler<GetMyExamHistoryQuery, IReadOnlyCollection<ExamResultSummaryDto>>
+public class GetMyExamHistoryQueryHandler : IRequestHandler<GetMyExamHistoryQuery, PagedResult<ExamResultSummaryDto>>
 {
     private readonly IExamResultRepository _examResultRepository;
 
@@ -12,10 +12,8 @@ public class GetMyExamHistoryQueryHandler : IRequestHandler<GetMyExamHistoryQuer
         _examResultRepository = examResultRepository;
     }
 
-    public async Task<IReadOnlyCollection<ExamResultSummaryDto>> Handle(GetMyExamHistoryQuery request, CancellationToken cancellationToken)
-    {
-        var results = await _examResultRepository.GetByUserIdAsync(request.UserId, cancellationToken);
-
-        return results.Select(ExamResultMapper.ToSummaryDto).ToList();
-    }
+    public Task<PagedResult<ExamResultSummaryDto>> Handle(GetMyExamHistoryQuery request, CancellationToken cancellationToken) =>
+        PagedResultFactory.CreateAsync<ExamResultSummaryDto>(request.Page, request.PageSize,
+            async (skip, take) => (await _examResultRepository.GetByUserIdAsync(request.UserId, skip, take, cancellationToken)).Select(ExamResultMapper.ToSummaryDto).ToList(),
+            () => _examResultRepository.CountByUserIdAsync(request.UserId, cancellationToken));
 }

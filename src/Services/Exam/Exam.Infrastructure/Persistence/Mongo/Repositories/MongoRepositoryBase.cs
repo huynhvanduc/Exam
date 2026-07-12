@@ -46,6 +46,18 @@ public abstract class MongoRepositoryBase<T> : IRepositoryBase<T> where T : Enti
         return Collection.DeleteOneAsync(x => x.Id == id, cancellationToken);
     }
 
+    protected async Task<IReadOnlyCollection<T>> FindPagedAsync(FilterDefinition<T> filter, SortDefinition<T> sort, int skip, int take, CancellationToken cancellationToken)
+    {
+        Logger.LogDebug("Getting {Type}, skip {Skip}, take {Take}.", typeof(T).Name, skip, take);
+        return await Collection.Find(filter).Sort(sort).Skip(skip).Limit(take).ToListAsync(cancellationToken);
+    }
+
+    protected Task<long> CountFilteredAsync(FilterDefinition<T> filter, CancellationToken cancellationToken)
+    {
+        Logger.LogDebug("Counting {Type}.", typeof(T).Name);
+        return Collection.CountDocumentsAsync(filter, cancellationToken: cancellationToken);
+    }
+
     private async Task DispatchDomainEventsAsync(T obj, CancellationToken cancellationToken)
     {
         var domainEvents = obj.DomainEvents;

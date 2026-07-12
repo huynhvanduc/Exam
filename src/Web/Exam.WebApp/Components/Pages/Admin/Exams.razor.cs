@@ -1,76 +1,49 @@
 using Exam.WebApp.Services;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class Exams : ComponentBase
+public partial class Exams : AdminPageBase
 {
     private IReadOnlyCollection<CategoryDto>? categories;
-    private IReadOnlyCollection<ExamDto> exams = [];
+    private MudTable<ExamDto>? table;
     private string? selectedCategoryId;
-    private bool isLoading;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            categories = await Api.GetCategoriesAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách môn học: {ex.Message}", Severity.Error);
-        }
-    }
+    protected override async Task OnInitializedAsync() =>
+        await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách môn học");
 
     private void NavigateToDetail(string examId) => Navigation.NavigateTo($"/admin/exams/{examId}");
 
     private async Task OnCategoryChangedAsync(string categoryId)
     {
         selectedCategoryId = categoryId;
-        await LoadExamsAsync();
+        if (table != null)
+            await table.ReloadServerData();
     }
 
-    private async Task LoadExamsAsync()
+    private Task<TableData<ExamDto>> LoadServerData(TableState state, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(selectedCategoryId))
-            return;
+            return Task.FromResult(new TableData<ExamDto> { Items = [], TotalItems = 0 });
 
-        isLoading = true;
-        try
+        return LoadTableDataAsync(async () =>
         {
-            exams = await Api.GetExamsByCategoryAsync(selectedCategoryId);
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách đề thi: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
-        }
+            var result = await Api.GetExamsByCategoryAsync(selectedCategoryId, state.Page + 1, state.PageSize, cancellationToken);
+            return new TableData<ExamDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+        }, "Không tải được danh sách đề thi");
     }
 
     private async Task OpenCreateDialog()
     {
         var parameters = new DialogParameters<ExamFormDialog> { { x => x.CategoryId, selectedCategoryId! } };
-        var dialog = await DialogService.ShowAsync<ExamFormDialog>("Thêm đề thi", parameters,
+        var data = await ShowFormDialogAsync<ExamFormDialog, ExamRequest>("Thêm đề thi", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
-        var result = await dialog.Result;
+        if (data == null)
+            return;
 
-        if (result is { Canceled: false, Data: ExamRequest data })
-        {
-            try
-            {
-                await Api.CreateExamAsync(data);
-                Snackbar.Add("Đã thêm đề thi.", Severity.Success);
-                await LoadExamsAsync();
-            }
-            catch (ExamApiException ex)
-            {
-                Snackbar.Add($"Tạo thất bại: {ex.Message}", Severity.Error);
-            }
-        }
+        await ExecuteAsync(() => Api.CreateExamAsync(data), "Tạo thất bại", "Đã thêm đề thi.");
+        if (table != null)
+            await table.ReloadServerData();
     }
 
     private async Task OpenEditDialog(ExamDto exam)
@@ -80,66 +53,24 @@ public partial class Exams : ComponentBase
             { x => x.CategoryId, exam.CategoryId },
             { x => x.Model, exam }
         };
-        var dialog = await DialogService.ShowAsync<ExamFormDialog>("Sửa đề thi", parameters,
+        var data = await ShowFormDialogAsync<ExamFormDialog, ExamRequest>("Sửa đề thi", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false, Data: ExamRequest data })
-        {
-            try
-            {
-                await Api.UpdateExamAsync(exam.Id, data);
-                Snackbar.Add("Đã cập nhật.", Severity.Success);
-                await LoadExamsAsync();
-            }
-            catch (ExamApiException ex)
-            {
-                Snackbar.Add($"Cập nhật thất bại: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-
-    private async Task DeleteAsync(ExamDto exam)
-    {
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "Xác nhận xoá", $"Xoá đề thi '{exam.Name}'?", yesText: "Xoá", cancelText: "Huỷ");
-
-        if (confirmed != true)
+        if (data == null)
             return;
 
-        try
-        {
-            await Api.DeleteExamAsync(exam.Id);
-            Snackbar.Add("Đã xoá.", Severity.Success);
-            await LoadExamsAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Xoá thất bại: {ex.Message}", Severity.Error);
-        }
+        await ExecuteAsync(() => Api.UpdateExamAsync(exam.Id, data), "Cập nhật thất bại", "Đã cập nhật.");
+        if (table != null)
+            await table.ReloadServerData();
     }
 
-    private static string LevelLabel(Level level) => level switch
-    {
-        Level.Easy => "Dễ",
-        Level.Medium => "Trung bình",
-        Level.Difficult => "Khó",
-        _ => level.ToString()
-    };
+    private Task DeleteAsync(ExamDto exam) => ConfirmAndExecuteAsync(
+        "Xác nhận xoá", $"Xoá đề thi '{exam.Name}'?",
+        async () =>
+        {
+            await Api.DeleteExamAsync(exam.Id);
+            if (table != null)
+                await table.ReloadServerData();
+        },
+        "Xoá thất bại", "Đã xoá.");
 
-    private static string StatusLabel(ExamStatus status) => status switch
-    {
-        ExamStatus.Draft => "Nháp",
-        ExamStatus.Published => "Đã xuất bản",
-        ExamStatus.Archived => "Lưu trữ",
-        _ => status.ToString()
-    };
-
-    private static Color StatusColor(ExamStatus status) => status switch
-    {
-        ExamStatus.Draft => Color.Default,
-        ExamStatus.Published => Color.Success,
-        ExamStatus.Archived => Color.Dark,
-        _ => Color.Default
-    };
 }

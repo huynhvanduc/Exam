@@ -7,6 +7,7 @@ public static class ApiRoutes
         public const string Base = "/api/users";
         public const string Me = "/api/users/me";
         public static string Role(string externalId) => $"{Base}/{externalId}/role";
+        public static string Paged(int page, int pageSize) => $"{Base}?page={page}&pageSize={pageSize}";
     }
 
     public static class Categories
@@ -20,13 +21,14 @@ public static class ApiRoutes
         public const string Base = "/api/questions";
         public static string ById(string id) => $"{Base}/{id}";
         public static string ByCategory(string categoryId) => $"{Base}/by-category/{categoryId}";
+        public static string ByCategoryPaged(string categoryId, int page, int pageSize) => $"{Base}/by-category/{categoryId}/page?page={page}&pageSize={pageSize}";
     }
 
     public static class Exams
     {
         public const string Base = "/api/exams";
         public static string ById(string id) => $"{Base}/{id}";
-        public static string ByCategory(string categoryId) => $"{Base}/by-category/{categoryId}";
+        public static string ByCategory(string categoryId, int page, int pageSize) => $"{Base}/by-category/{categoryId}?page={page}&pageSize={pageSize}";
         public static string Question(string examId, string questionId) => $"{Base}/{examId}/questions/{questionId}";
         public static string QuestionPool(string examId) => $"{Base}/{examId}/question-pool";
         public static string Availability(string examId) => $"{Base}/{examId}/availability";
@@ -45,5 +47,6 @@ public static class ApiRoutes
     public static class AuditLog
     {
         public const string Base = "/api/audit-log";
+        public static string Paged(int page, int pageSize) => $"{Base}?page={page}&pageSize={pageSize}";
     }
 }

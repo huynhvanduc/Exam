@@ -4,15 +4,11 @@ using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class CategoryFormDialog : ComponentBase
+public partial class CategoryFormDialog : FormDialogBase
 {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = null!;
-
     [Parameter]
     public CategoryRequest Model { get; set; } = new("", "");
 
-    private MudForm form = null!;
     private string name = "";
     private string urlPath = "";
 
@@ -24,12 +20,9 @@ public partial class CategoryFormDialog : ComponentBase
 
     private async Task Submit()
     {
-        await form.ValidateAsync();
-        if (!form.IsValid)
+        if (!await ValidateAsync())
             return;
 
         MudDialog.Close(DialogResult.Ok(new CategoryRequest(name, urlPath)));
     }
-
-    private void Cancel() => MudDialog.Cancel();
 }

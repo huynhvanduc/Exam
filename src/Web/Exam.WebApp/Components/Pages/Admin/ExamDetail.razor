@@ -1,8 +1,6 @@
 @page "/admin/exams/{Id}"
 @attribute [Authorize(Roles = "Instructor,Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
+@inherits AdminPageBase
 @inject NavigationManager Navigation
 
 <PageTitle>Chi tiết đề thi</PageTitle>
@@ -16,7 +14,7 @@ else
     <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
         <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/admin/exams"))" />
         <MudText Typo="Typo.h4">@exam.Name</MudText>
-        <MudChip T="string" Color="@StatusColor(exam.Status)">@StatusLabel(exam.Status)</MudChip>
+        <MudChip T="string" Color="@exam.Status.ToColor()">@exam.Status.ToLabel()</MudChip>
         <MudSpacer />
         @if (exam.Status == ExamStatus.Draft)
         {
@@ -43,7 +41,7 @@ else
                 <MudText Typo="Typo.h6" GutterBottom="true">Thông tin chung</MudText>
                 <MudText><b>Mô tả:</b> @exam.ShortDesc</MudText>
                 <MudText><b>Thời lượng:</b> @exam.Duration.TotalMinutes phút</MudText>
-                <MudText><b>Mức độ:</b> @LevelLabel(exam.Level)</MudText>
+                <MudText><b>Mức độ:</b> @exam.Level.ToLabel()</MudText>
                 <MudText><b>Điểm đạt:</b> @exam.MinimumPassingScore</MudText>
                 <MudText><b>Số câu hỏi:</b> @exam.NumberOfQuestions</MudText>
             </MudPaper>

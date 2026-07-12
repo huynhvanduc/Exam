@@ -4,18 +4,14 @@ using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class ExamFormDialog : ComponentBase
+public partial class ExamFormDialog : FormDialogBase
 {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = null!;
-
     [Parameter]
     public string CategoryId { get; set; } = "";
 
     [Parameter]
     public ExamDto? Model { get; set; }
 
-    private MudForm form = null!;
     private string name = "";
     private string shortDesc = "";
     private string content = "";
@@ -40,8 +36,7 @@ public partial class ExamFormDialog : ComponentBase
 
     private async Task Submit()
     {
-        await form.ValidateAsync();
-        if (!form.IsValid)
+        if (!await ValidateAsync())
             return;
 
         var request = new ExamRequest(
@@ -56,6 +51,4 @@ public partial class ExamFormDialog : ComponentBase
 
         MudDialog.Close(DialogResult.Ok(request));
     }
-
-    private void Cancel() => MudDialog.Cancel();
 }

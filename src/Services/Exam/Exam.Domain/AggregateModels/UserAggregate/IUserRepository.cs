@@ -9,4 +9,8 @@ public interface IUserRepository : IRepositoryBase<User>
     Task<bool> AnyAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<User>> GetPagedAsync(int skip, int take, CancellationToken cancellationToken = default);
+
+    Task<long> CountAsync(CancellationToken cancellationToken = default);
 }

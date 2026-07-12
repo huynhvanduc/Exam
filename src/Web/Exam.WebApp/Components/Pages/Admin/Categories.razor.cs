@@ -1,55 +1,29 @@
 using Exam.WebApp.Services;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class Categories : ComponentBase
+public partial class Categories : AdminPageBase
 {
     private IReadOnlyCollection<CategoryDto>? categories;
-    private bool isLoading;
 
     protected override async Task OnInitializedAsync()
     {
         await LoadAsync();
     }
 
-    private async Task LoadAsync()
-    {
-        isLoading = true;
-        try
-        {
-            categories = await Api.GetCategoriesAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
-        }
-    }
+    private async Task LoadAsync() =>
+        await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách");
 
     private async Task OpenCreateDialog()
     {
         var parameters = new DialogParameters<CategoryFormDialog> { { x => x.Model, new CategoryRequest("", "") } };
-        var dialog = await DialogService.ShowAsync<CategoryFormDialog>("Thêm môn học", parameters);
-        var result = await dialog.Result;
+        var data = await ShowFormDialogAsync<CategoryFormDialog, CategoryRequest>("Thêm môn học", parameters);
+        if (data == null)
+            return;
 
-        if (result is { Canceled: false, Data: CategoryRequest data })
-        {
-            try
-            {
-                await Api.CreateCategoryAsync(data);
-                Snackbar.Add("Đã thêm môn học.", Severity.Success);
-                await LoadAsync();
-            }
-            catch (ExamApiException ex)
-            {
-                Snackbar.Add($"Tạo thất bại: {ex.Message}", Severity.Error);
-            }
-        }
+        await ExecuteAsync(() => Api.CreateCategoryAsync(data), "Tạo thất bại", "Đã thêm môn học.");
+        await LoadAsync();
     }
 
     private async Task OpenEditDialog(CategoryDto category)
@@ -58,41 +32,20 @@ public partial class Categories : ComponentBase
         {
             { x => x.Model, new CategoryRequest(category.Name, category.UrlPath) }
         };
-        var dialog = await DialogService.ShowAsync<CategoryFormDialog>("Sửa môn học", parameters);
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false, Data: CategoryRequest data })
-        {
-            try
-            {
-                await Api.UpdateCategoryAsync(category.Id, data);
-                Snackbar.Add("Đã cập nhật.", Severity.Success);
-                await LoadAsync();
-            }
-            catch (ExamApiException ex)
-            {
-                Snackbar.Add($"Cập nhật thất bại: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-
-    private async Task DeleteAsync(CategoryDto category)
-    {
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "Xác nhận xoá", $"Xoá môn học '{category.Name}'?", yesText: "Xoá", cancelText: "Huỷ");
-
-        if (confirmed != true)
+        var data = await ShowFormDialogAsync<CategoryFormDialog, CategoryRequest>("Sửa môn học", parameters);
+        if (data == null)
             return;
 
-        try
+        await ExecuteAsync(() => Api.UpdateCategoryAsync(category.Id, data), "Cập nhật thất bại", "Đã cập nhật.");
+        await LoadAsync();
+    }
+
+    private Task DeleteAsync(CategoryDto category) => ConfirmAndExecuteAsync(
+        "Xác nhận xoá", $"Xoá môn học '{category.Name}'?",
+        async () =>
         {
             await Api.DeleteCategoryAsync(category.Id);
-            Snackbar.Add("Đã xoá.", Severity.Success);
             await LoadAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Xoá thất bại (có thể còn Question/Exam đang dùng): {ex.Message}", Severity.Error);
-        }
-    }
+        },
+        "Xoá thất bại (có thể còn Question/Exam đang dùng)", "Đã xoá.");
 }

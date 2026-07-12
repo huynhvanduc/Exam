@@ -29,9 +29,11 @@ public class UsersController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = Permissions.User.View)]
-    public async Task<IActionResult> GetAll(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetUsersQuery(), cancellationToken);
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
+        var query = new GetUsersQuery(normalizedPage, normalizedPageSize);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 

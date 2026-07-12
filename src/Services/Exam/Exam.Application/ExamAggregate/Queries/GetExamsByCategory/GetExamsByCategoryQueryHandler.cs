@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Exam.Application.ExamAggregate.Queries.GetExamsByCategory;
 
-public class GetExamsByCategoryQueryHandler : IRequestHandler<GetExamsByCategoryQuery, IReadOnlyCollection<ExamDto>>
+public class GetExamsByCategoryQueryHandler : IRequestHandler<GetExamsByCategoryQuery, PagedResult<ExamDto>>
 {
     private readonly IExamRepository _examRepository;
 
@@ -12,10 +12,8 @@ public class GetExamsByCategoryQueryHandler : IRequestHandler<GetExamsByCategory
         _examRepository = examRepository;
     }
 
-    public async Task<IReadOnlyCollection<ExamDto>> Handle(GetExamsByCategoryQuery request, CancellationToken cancellationToken)
-    {
-        var exams = await _examRepository.GetByCategoryAsync(request.CategoryId, cancellationToken);
-
-        return exams.Select(ExamMapper.ToDto).ToList();
-    }
+    public Task<PagedResult<ExamDto>> Handle(GetExamsByCategoryQuery request, CancellationToken cancellationToken) =>
+        PagedResultFactory.CreateAsync<ExamDto>(request.Page, request.PageSize,
+            async (skip, take) => (await _examRepository.GetByCategoryAsync(request.CategoryId, skip, take, cancellationToken)).Select(ExamMapper.ToDto).ToList(),
+            () => _examRepository.CountByCategoryAsync(request.CategoryId, cancellationToken));
 }

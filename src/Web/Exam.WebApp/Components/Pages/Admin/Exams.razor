@@ -1,29 +1,18 @@
 @page "/admin/exams"
 @attribute [Authorize(Roles = "Instructor,Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
+@inherits AdminPageBase
 @inject NavigationManager Navigation
 
 <PageTitle>Quản lý đề thi</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Quản lý đề thi</MudText>
+<AdminPageHeader Title="Quản lý đề thi">
+    <CategorySelector Categories="categories" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
 
-<MudSelect T="string" Label="Môn học" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync"
-           Class="mb-4" Style="max-width: 400px;" Disabled="categories == null">
-    @if (categories != null)
-    {
-        @foreach (var category in categories)
-        {
-            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
-        }
-    }
-</MudSelect>
-
-<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-           Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
-    Thêm đề thi
-</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
+        Thêm đề thi
+    </MudButton>
+</AdminPageHeader>
 
 @if (categories == null)
 {
@@ -35,7 +24,7 @@ else if (string.IsNullOrEmpty(selectedCategoryId))
 }
 else
 {
-    <MudTable Items="exams" Hover="true" Loading="isLoading">
+    <MudTable T="ExamDto" @ref="table" ServerData="LoadServerData" Hover="true">
         <HeaderContent>
             <MudTh>Tên đề thi</MudTh>
             <MudTh>Mức độ</MudTh>
@@ -46,9 +35,9 @@ else
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Tên đề thi">@context.Name</MudTd>
-            <MudTd DataLabel="Mức độ">@LevelLabel(context.Level)</MudTd>
+            <MudTd DataLabel="Mức độ">@context.Level.ToLabel()</MudTd>
             <MudTd DataLabel="Trạng thái">
-                <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@StatusLabel(context.Status)</MudChip>
+                <MudChip T="string" Size="Size.Small" Color="@context.Status.ToColor()">@context.Status.ToLabel()</MudChip>
             </MudTd>
             <MudTd DataLabel="Số câu hỏi">@context.NumberOfQuestions</MudTd>
             <MudTd DataLabel="Điểm đạt">@context.MinimumPassingScore</MudTd>
@@ -66,5 +55,8 @@ else
         <NoRecordsContent>
             <MudText>Chưa có đề thi nào trong môn học này.</MudText>
         </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 }

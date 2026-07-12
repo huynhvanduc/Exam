@@ -18,6 +18,12 @@ public class QuestionRepository : MongoRepositoryBase<Question>, IQuestionReposi
         return await Collection.Find(x => x.CategoryId == categoryId).ToListAsync(cancellationToken);
     }
 
+    public Task<IReadOnlyCollection<Question>> GetByCategoryAsync(string categoryId, int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(Builders<Question>.Filter.Eq(x => x.CategoryId, categoryId), Builders<Question>.Sort.Descending(x => x.DateCreated), skip, take, cancellationToken);
+
+    public Task<long> CountByCategoryAsync(string categoryId, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(Builders<Question>.Filter.Eq(x => x.CategoryId, categoryId), cancellationToken);
+
     public async Task<IReadOnlyCollection<Question>> GetByIdsAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default)
     {
         var idList = ids?.ToList() ?? new List<string>();

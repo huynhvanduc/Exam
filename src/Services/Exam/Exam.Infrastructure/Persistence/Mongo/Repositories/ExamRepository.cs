@@ -14,27 +14,19 @@ public class ExamRepository : MongoRepositoryBase<ExamEntity>, IExamRepository
     {
     }
 
-    public async Task<IReadOnlyCollection<ExamEntity>> GetByCategoryAsync(string categoryId, CancellationToken cancellationToken = default)
-    {
-        Logger.LogDebug("Getting Exams by CategoryId {CategoryId}.", categoryId);
-        return await Collection.Find(x => x.CategoryId == categoryId).ToListAsync(cancellationToken);
-    }
+    private static readonly SortDefinition<ExamEntity> ByDateCreatedDesc = Builders<ExamEntity>.Sort.Descending(x => x.DateCreated);
 
-    public async Task<IReadOnlyCollection<ExamEntity>> GetAvailableAsync(DateTime at, int skip, int take, CancellationToken cancellationToken = default)
-    {
-        Logger.LogDebug("Getting available Exams at {At}, skip {Skip}, take {Take}.", at, skip, take);
-        return await Collection.Find(AvailableFilter(at))
-            .SortByDescending(x => x.DateCreated)
-            .Skip(skip)
-            .Limit(take)
-            .ToListAsync(cancellationToken);
-    }
+    public Task<IReadOnlyCollection<ExamEntity>> GetByCategoryAsync(string categoryId, int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(Builders<ExamEntity>.Filter.Eq(x => x.CategoryId, categoryId), ByDateCreatedDesc, skip, take, cancellationToken);
 
-    public async Task<long> CountAvailableAsync(DateTime at, CancellationToken cancellationToken = default)
-    {
-        Logger.LogDebug("Counting available Exams at {At}.", at);
-        return await Collection.CountDocumentsAsync(AvailableFilter(at), cancellationToken: cancellationToken);
-    }
+    public Task<long> CountByCategoryAsync(string categoryId, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(Builders<ExamEntity>.Filter.Eq(x => x.CategoryId, categoryId), cancellationToken);
+
+    public Task<IReadOnlyCollection<ExamEntity>> GetAvailableAsync(DateTime at, int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(AvailableFilter(at), ByDateCreatedDesc, skip, take, cancellationToken);
+
+    public Task<long> CountAvailableAsync(DateTime at, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(AvailableFilter(at), cancellationToken);
 
     private static FilterDefinition<ExamEntity> AvailableFilter(DateTime at) =>
         Builders<ExamEntity>.Filter.Eq(x => x.Status, ExamStatus.Published) &

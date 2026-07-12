@@ -1,24 +1,18 @@
 using Exam.WebApp.Services;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class AuditLog : ComponentBase
+public partial class AuditLog : AdminPageBase
 {
-    private IReadOnlyCollection<AuditLogEntryDto>? entries;
+    private MudTable<AuditLogEntryDto>? table;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
+    private Task<TableData<AuditLogEntryDto>> LoadServerData(TableState state, CancellationToken cancellationToken) =>
+        LoadTableDataAsync(async () =>
         {
-            entries = await Api.GetAuditLogAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được nhật ký: {ex.Message}", Severity.Error);
-        }
-    }
+            var result = await Api.GetAuditLogAsync(state.Page + 1, state.PageSize, cancellationToken);
+            return new TableData<AuditLogEntryDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+        }, "Không tải được nhật ký");
 
     private static string ActionLabel(string action) => action switch
     {

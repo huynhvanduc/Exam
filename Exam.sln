@@ -7,6 +7,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 	ProjectSection(SolutionItems) = preProject
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
+		docs\blazor-admin-conventions.md = docs\blazor-admin-conventions.md
 		docker-compose.yml = docker-compose.yml
 		docs\postman\Exam-API.postman_collection.json = docs\postman\Exam-API.postman_collection.json
 		docs\postman\Exam-API.postman_environment.json = docs\postman\Exam-API.postman_environment.json

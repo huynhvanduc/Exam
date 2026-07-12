@@ -1,17 +1,15 @@
 @page "/admin/categories"
 @attribute [Authorize(Roles = "Instructor,Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
+@inherits AdminPageBase
 
 <PageTitle>Quản lý môn học</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Quản lý môn học</MudText>
-
-<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-           Class="mb-4" OnClick="OpenCreateDialog">
-    Thêm môn học
-</MudButton>
+<AdminPageHeader Title="Quản lý môn học">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               Class="mb-4" OnClick="OpenCreateDialog">
+        Thêm môn học
+    </MudButton>
+</AdminPageHeader>
 
 @if (categories == null)
 {
@@ -19,7 +17,7 @@
 }
 else
 {
-    <MudTable Items="categories" Hover="true" Loading="isLoading">
+    <MudTable Items="categories" Hover="true">
         <HeaderContent>
             <MudTh>Tên</MudTh>
             <MudTh>Url Path</MudTh>

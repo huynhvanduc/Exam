@@ -58,9 +58,11 @@ public class ExamAttemptsController : ControllerBase
     }
 
     [HttpGet("history")]
-    public async Task<IActionResult> GetHistory(CancellationToken cancellationToken)
+    public async Task<IActionResult> GetHistory([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetMyExamHistoryQuery(User.GetUserId()!), cancellationToken);
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
+        var query = new GetMyExamHistoryQuery(User.GetUserId()!, normalizedPage, normalizedPageSize);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 }

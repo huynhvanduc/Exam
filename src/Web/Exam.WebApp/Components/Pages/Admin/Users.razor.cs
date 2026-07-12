@@ -1,44 +1,29 @@
 using Exam.WebApp.Services;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class Users : ComponentBase
+public partial class Users : AdminPageBase
 {
-    private IReadOnlyCollection<UserDto>? users;
+    private MudTable<UserDto>? table;
 
-    protected override async Task OnInitializedAsync()
-    {
-        await LoadAsync();
-    }
-
-    private async Task LoadAsync()
-    {
-        try
+    private Task<TableData<UserDto>> LoadServerData(TableState state, CancellationToken cancellationToken) =>
+        LoadTableDataAsync(async () =>
         {
-            users = await Api.GetUsersAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách người dùng: {ex.Message}", Severity.Error);
-        }
-    }
+            var result = await Api.GetUsersAsync(state.Page + 1, state.PageSize, cancellationToken);
+            return new TableData<UserDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+        }, "Không tải được danh sách người dùng");
 
-    private async Task ChangeRoleAsync(UserDto user, UserRole role)
+    private Task ChangeRoleAsync(UserDto user, UserRole role)
     {
         if (role == user.Role)
-            return;
+            return Task.CompletedTask;
 
-        try
+        return ExecuteAsync(async () =>
         {
             await Api.PromoteUserRoleAsync(user.ExternalId, new PromoteUserRoleRequest(role));
-            Snackbar.Add($"Đã đổi vai trò của {user.FirstName} {user.LastName} thành {role}.", Severity.Success);
-            await LoadAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Đổi vai trò thất bại: {ex.Message}", Severity.Error);
-        }
+            if (table != null)
+                await table.ReloadServerData();
+        }, "Đổi vai trò thất bại", $"Đã đổi vai trò của {user.FirstName} {user.LastName} thành {role}.");
     }
 }

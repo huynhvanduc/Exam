@@ -4,6 +4,7 @@ using Exam.Application.QuestionAggregate.Commands.DeleteQuestion;
 using Exam.Application.QuestionAggregate.Commands.UpdateQuestion;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionById;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionsByCategory;
+using Exam.Application.QuestionAggregate.Queries.GetQuestionsByCategoryPaged;
 using Exam.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -45,6 +46,16 @@ public class QuestionsController : ControllerBase
     public async Task<IActionResult> GetByCategory(string categoryId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetQuestionsByCategoryQuery(categoryId), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("by-category/{categoryId}/page")]
+    [Authorize(Policy = Permissions.Question.View)]
+    public async Task<IActionResult> GetByCategoryPaged(string categoryId, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    {
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
+        var query = new GetQuestionsByCategoryPagedQuery(categoryId, normalizedPage, normalizedPageSize);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 

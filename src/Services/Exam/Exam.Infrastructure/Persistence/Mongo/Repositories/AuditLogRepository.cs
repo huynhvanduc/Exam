@@ -12,12 +12,9 @@ public class AuditLogRepository : MongoRepositoryBase<AuditLogEntry>, IAuditLogR
     {
     }
 
-    public async Task<IReadOnlyCollection<AuditLogEntry>> GetRecentAsync(int limit, CancellationToken cancellationToken = default)
-    {
-        Logger.LogDebug("Getting {Limit} most recent AuditLogEntries.", limit);
-        return await Collection.Find(FilterDefinition<AuditLogEntry>.Empty)
-            .SortByDescending(x => x.Timestamp)
-            .Limit(limit)
-            .ToListAsync(cancellationToken);
-    }
+    public Task<IReadOnlyCollection<AuditLogEntry>> GetPagedAsync(int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(FilterDefinition<AuditLogEntry>.Empty, Builders<AuditLogEntry>.Sort.Descending(x => x.Timestamp), skip, take, cancellationToken);
+
+    public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(FilterDefinition<AuditLogEntry>.Empty, cancellationToken);
 }

@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Exam.Application.UserAggregate.Queries.GetUsers;
 
-public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, IReadOnlyCollection<UserDto>>
+public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<UserDto>>
 {
     private readonly IUserRepository _userRepository;
 
@@ -12,10 +12,8 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, IReadOnlyColl
         _userRepository = userRepository;
     }
 
-    public async Task<IReadOnlyCollection<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken)
-    {
-        var users = await _userRepository.GetAllAsync(cancellationToken);
-
-        return users.Select(UserMapper.ToDto).ToList();
-    }
+    public Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken) =>
+        PagedResultFactory.CreateAsync<UserDto>(request.Page, request.PageSize,
+            async (skip, take) => (await _userRepository.GetPagedAsync(skip, take, cancellationToken)).Select(UserMapper.ToDto).ToList(),
+            () => _userRepository.CountAsync(cancellationToken));
 }

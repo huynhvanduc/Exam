@@ -4,18 +4,14 @@ using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class QuestionFormDialog : ComponentBase
+public partial class QuestionFormDialog : FormDialogBase
 {
-    [CascadingParameter]
-    private IMudDialogInstance MudDialog { get; set; } = null!;
-
     [Parameter]
     public string CategoryId { get; set; } = "";
 
     [Parameter]
     public QuestionDto? Model { get; set; }
 
-    private MudForm form = null!;
     private string content = "";
     private QuestionType questionType = QuestionType.SingleSelection;
     private Level level = Level.Easy;
@@ -68,8 +64,7 @@ public partial class QuestionFormDialog : ComponentBase
 
     private async Task Submit()
     {
-        await form.ValidateAsync();
-        if (!form.IsValid)
+        if (!await ValidateAsync())
             return;
 
         answerError = null;
@@ -98,8 +93,6 @@ public partial class QuestionFormDialog : ComponentBase
 
         MudDialog.Close(DialogResult.Ok(request));
     }
-
-    private void Cancel() => MudDialog.Cancel();
 
     private class AnswerRow
     {

@@ -3,7 +3,7 @@ using MediatR;
 
 namespace Exam.Application.AuditAggregate.Queries.GetAuditLog;
 
-public class GetAuditLogQueryHandler : IRequestHandler<GetAuditLogQuery, IReadOnlyCollection<AuditLogEntryDto>>
+public class GetAuditLogQueryHandler : IRequestHandler<GetAuditLogQuery, PagedResult<AuditLogEntryDto>>
 {
     private readonly IAuditLogRepository _auditLogRepository;
 
@@ -12,13 +12,10 @@ public class GetAuditLogQueryHandler : IRequestHandler<GetAuditLogQuery, IReadOn
         _auditLogRepository = auditLogRepository;
     }
 
-    public async Task<IReadOnlyCollection<AuditLogEntryDto>> Handle(GetAuditLogQuery request, CancellationToken cancellationToken)
-    {
-        var limit = request.Limit <= 0 ? 100 : request.Limit;
-        var entries = await _auditLogRepository.GetRecentAsync(limit, cancellationToken);
-
-        return entries
-            .Select(e => new AuditLogEntryDto(e.Id, e.Timestamp, e.ActorUserId, e.Action, e.TargetId, e.Description))
-            .ToList();
-    }
+    public Task<PagedResult<AuditLogEntryDto>> Handle(GetAuditLogQuery request, CancellationToken cancellationToken) =>
+        PagedResultFactory.CreateAsync<AuditLogEntryDto>(request.Page, request.PageSize,
+            async (skip, take) => (await _auditLogRepository.GetPagedAsync(skip, take, cancellationToken))
+                .Select(e => new AuditLogEntryDto(e.Id, e.Timestamp, e.ActorUserId, e.Action, e.TargetId, e.Description))
+                .ToList(),
+            () => _auditLogRepository.CountAsync(cancellationToken));
 }

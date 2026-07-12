@@ -1,20 +1,12 @@
 @page "/admin/users"
 @attribute [Authorize(Roles = "Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
+@inherits AdminPageBase
 
 <PageTitle>Quản lý người dùng</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Quản lý người dùng</MudText>
-<MudText Typo="Typo.body2" Class="mb-4">Đổi vai trò có hiệu lực ngay từ lần request tiếp theo của người dùng đó.</MudText>
+<AdminPageHeader Title="Quản lý người dùng" Subtitle="Đổi vai trò có hiệu lực ngay từ lần request tiếp theo của người dùng đó." />
 
-@if (users == null)
-{
-    <MudProgressCircular Indeterminate="true" />
-}
-else
-{
-    <MudTable Items="users" Hover="true">
+<MudTable T="UserDto" @ref="table" ServerData="LoadServerData" Hover="true">
         <HeaderContent>
             <MudTh>Họ tên</MudTh>
             <MudTh>External Id</MudTh>
@@ -34,5 +26,7 @@ else
         <NoRecordsContent>
             <MudText>Chưa có người dùng nào.</MudText>
         </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
-}

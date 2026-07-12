@@ -1,28 +1,17 @@
 @page "/admin/questions"
 @attribute [Authorize(Roles = "Instructor,Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
-@inject IDialogService DialogService
+@inherits AdminPageBase
 
 <PageTitle>Ngân hàng câu hỏi</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Ngân hàng câu hỏi</MudText>
+<AdminPageHeader Title="Ngân hàng câu hỏi">
+    <CategorySelector Categories="categories" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
 
-<MudSelect T="string" Label="Môn học" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync"
-           Class="mb-4" Style="max-width: 400px;" Disabled="categories == null">
-    @if (categories != null)
-    {
-        @foreach (var category in categories)
-        {
-            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
-        }
-    }
-</MudSelect>
-
-<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-           Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
-    Thêm câu hỏi
-</MudButton>
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
+        Thêm câu hỏi
+    </MudButton>
+</AdminPageHeader>
 
 @if (categories == null)
 {
@@ -34,7 +23,7 @@ else if (string.IsNullOrEmpty(selectedCategoryId))
 }
 else
 {
-    <MudTable Items="questions" Hover="true" Loading="isLoading">
+    <MudTable T="QuestionDto" @ref="table" ServerData="LoadServerData" Hover="true">
         <HeaderContent>
             <MudTh>Nội dung</MudTh>
             <MudTh>Loại</MudTh>
@@ -46,7 +35,7 @@ else
         <RowTemplate>
             <MudTd DataLabel="Nội dung">@Truncate(context.Content)</MudTd>
             <MudTd DataLabel="Loại">@QuestionTypeLabel(context.QuestionType)</MudTd>
-            <MudTd DataLabel="Mức độ">@LevelLabel(context.Level)</MudTd>
+            <MudTd DataLabel="Mức độ">@context.Level.ToLabel()</MudTd>
             <MudTd DataLabel="Điểm">@context.Points</MudTd>
             <MudTd DataLabel="Đáp án">@context.Answers.Count(a => a.IsCorrect)/@context.Answers.Count đúng</MudTd>
             <MudTd DataLabel="Hành động">
@@ -57,5 +46,8 @@ else
         <NoRecordsContent>
             <MudText>Chưa có câu hỏi nào trong môn học này.</MudText>
         </NoRecordsContent>
+        <PagerContent>
+            <MudTablePager />
+        </PagerContent>
     </MudTable>
 }

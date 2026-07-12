@@ -13,14 +13,12 @@ public class GetAvailableExamsQueryHandler : IRequestHandler<GetAvailableExamsQu
         _examRepository = examRepository;
     }
 
-    public async Task<PagedResult<ExamDto>> Handle(GetAvailableExamsQuery request, CancellationToken cancellationToken)
+    public Task<PagedResult<ExamDto>> Handle(GetAvailableExamsQuery request, CancellationToken cancellationToken)
     {
         var now = DateTime.UtcNow;
-        var skip = (request.Page - 1) * request.PageSize;
 
-        var exams = await _examRepository.GetAvailableAsync(now, skip, request.PageSize, cancellationToken);
-        var totalCount = await _examRepository.CountAvailableAsync(now, cancellationToken);
-
-        return new PagedResult<ExamDto>(exams.Select(ExamMapper.ToDto).ToList(), request.Page, request.PageSize, totalCount);
+        return PagedResultFactory.CreateAsync<ExamDto>(request.Page, request.PageSize,
+            async (skip, take) => (await _examRepository.GetAvailableAsync(now, skip, take, cancellationToken)).Select(ExamMapper.ToDto).ToList(),
+            () => _examRepository.CountAvailableAsync(now, cancellationToken));
     }
 }

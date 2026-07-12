@@ -1,14 +1,11 @@
 @page "/admin/permissions"
 @attribute [Authorize(Roles = "Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
+@inherits AdminPageBase
 
 <PageTitle>Phân quyền</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Phân quyền theo Role</MudText>
-<MudText Typo="Typo.body2" Class="mb-4">
-    Admin luôn có toàn quyền, không thể chỉnh. Student/Instructor chỉ thực hiện được hành động nào khi được tick ở đây.
-</MudText>
+<AdminPageHeader Title="Phân quyền theo Role"
+                 Subtitle="Admin luôn có toàn quyền, không thể chỉnh. Student/Instructor chỉ thực hiện được hành động nào khi được tick ở đây." />
 
 @if (rows == null)
 {

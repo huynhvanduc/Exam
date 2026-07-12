@@ -1,10 +1,8 @@
 using Exam.WebApp.Services;
-using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class Permissions : ComponentBase
+public partial class Permissions : AdminPageBase
 {
     private record PermissionRow(string Key, string Label, string GroupName);
 
@@ -37,9 +35,8 @@ public partial class Permissions : ComponentBase
     private Dictionary<string, bool> studentChecks = new();
     private Dictionary<string, bool> instructorChecks = new();
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
+    protected override async Task OnInitializedAsync() =>
+        await ExecuteAsync(async () =>
         {
             var rolePermissions = await Api.GetRolePermissionsAsync();
             var studentPermissions = rolePermissions.FirstOrDefault(r => r.Role == UserRole.Student)?.Permissions ?? [];
@@ -48,28 +45,17 @@ public partial class Permissions : ComponentBase
             studentChecks = AllRows.ToDictionary(r => r.Key, r => studentPermissions.Contains(r.Key));
             instructorChecks = AllRows.ToDictionary(r => r.Key, r => instructorPermissions.Contains(r.Key));
             rows = AllRows;
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách quyền: {ex.Message}", Severity.Error);
-        }
-    }
+        }, "Không tải được danh sách quyền");
 
-    private async Task SaveAsync()
+    private Task SaveAsync()
     {
-        try
-        {
-            var studentSelected = studentChecks.Where(x => x.Value).Select(x => x.Key).ToList();
-            var instructorSelected = instructorChecks.Where(x => x.Value).Select(x => x.Key).ToList();
+        var studentSelected = studentChecks.Where(x => x.Value).Select(x => x.Key).ToList();
+        var instructorSelected = instructorChecks.Where(x => x.Value).Select(x => x.Key).ToList();
 
+        return ExecuteAsync(async () =>
+        {
             await Api.UpdateRolePermissionsAsync(UserRole.Student, new UpdateRolePermissionsRequest(studentSelected));
             await Api.UpdateRolePermissionsAsync(UserRole.Instructor, new UpdateRolePermissionsRequest(instructorSelected));
-
-            Snackbar.Add("Đã lưu phân quyền.", Severity.Success);
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Lưu thất bại: {ex.Message}", Severity.Error);
-        }
+        }, "Lưu thất bại", "Đã lưu phân quyền.");
     }
 }

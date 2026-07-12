@@ -1,36 +1,30 @@
 @page "/admin/audit-log"
 @attribute [Authorize(Roles = "Admin")]
-@inject ExamApiClient Api
-@inject ISnackbar Snackbar
+@inherits AdminPageBase
 
 <PageTitle>Nhật ký hoạt động</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Nhật ký thay đổi quyền / role</MudText>
-<MudText Typo="Typo.body2" Class="mb-4">Hiển thị 100 thay đổi gần nhất.</MudText>
+<AdminPageHeader Title="Nhật ký thay đổi quyền / role" />
 
-@if (entries == null)
-{
-    <MudProgressCircular Indeterminate="true" />
-}
-else
-{
-    <MudTable Items="entries" Hover="true" Dense="true">
-        <HeaderContent>
-            <MudTh>Thời gian</MudTh>
-            <MudTh>Người thực hiện</MudTh>
-            <MudTh>Hành động</MudTh>
-            <MudTh>Đối tượng</MudTh>
-            <MudTh>Chi tiết</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Thời gian">@context.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</MudTd>
-            <MudTd DataLabel="Người thực hiện">@context.ActorUserId</MudTd>
-            <MudTd DataLabel="Hành động">@ActionLabel(context.Action)</MudTd>
-            <MudTd DataLabel="Đối tượng">@context.TargetId</MudTd>
-            <MudTd DataLabel="Chi tiết">@context.Description</MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>Chưa có thay đổi nào được ghi nhận.</MudText>
-        </NoRecordsContent>
-    </MudTable>
-}
+<MudTable T="AuditLogEntryDto" @ref="table" ServerData="LoadServerData" Hover="true" Dense="true">
+    <HeaderContent>
+        <MudTh>Thời gian</MudTh>
+        <MudTh>Người thực hiện</MudTh>
+        <MudTh>Hành động</MudTh>
+        <MudTh>Đối tượng</MudTh>
+        <MudTh>Chi tiết</MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Thời gian">@context.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm:ss")</MudTd>
+        <MudTd DataLabel="Người thực hiện">@context.ActorUserId</MudTd>
+        <MudTd DataLabel="Hành động">@ActionLabel(context.Action)</MudTd>
+        <MudTd DataLabel="Đối tượng">@context.TargetId</MudTd>
+        <MudTd DataLabel="Chi tiết">@context.Description</MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>Chưa có thay đổi nào được ghi nhận.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>

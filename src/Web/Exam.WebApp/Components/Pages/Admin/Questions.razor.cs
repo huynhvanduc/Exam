@@ -1,74 +1,47 @@
 using Exam.WebApp.Services;
-using Microsoft.AspNetCore.Components;
 using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
-public partial class Questions : ComponentBase
+public partial class Questions : AdminPageBase
 {
     private IReadOnlyCollection<CategoryDto>? categories;
-    private IReadOnlyCollection<QuestionDto> questions = [];
+    private MudTable<QuestionDto>? table;
     private string? selectedCategoryId;
-    private bool isLoading;
 
-    protected override async Task OnInitializedAsync()
-    {
-        try
-        {
-            categories = await Api.GetCategoriesAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách môn học: {ex.Message}", Severity.Error);
-        }
-    }
+    protected override async Task OnInitializedAsync() =>
+        await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách môn học");
 
     private async Task OnCategoryChangedAsync(string categoryId)
     {
         selectedCategoryId = categoryId;
-        await LoadQuestionsAsync();
+        if (table != null)
+            await table.ReloadServerData();
     }
 
-    private async Task LoadQuestionsAsync()
+    private Task<TableData<QuestionDto>> LoadServerData(TableState state, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(selectedCategoryId))
-            return;
+            return Task.FromResult(new TableData<QuestionDto> { Items = [], TotalItems = 0 });
 
-        isLoading = true;
-        try
+        return LoadTableDataAsync(async () =>
         {
-            questions = await Api.GetQuestionsByCategoryAsync(selectedCategoryId);
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Không tải được danh sách câu hỏi: {ex.Message}", Severity.Error);
-        }
-        finally
-        {
-            isLoading = false;
-        }
+            var result = await Api.GetQuestionsByCategoryPagedAsync(selectedCategoryId, state.Page + 1, state.PageSize, cancellationToken);
+            return new TableData<QuestionDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+        }, "Không tải được danh sách câu hỏi");
     }
 
     private async Task OpenCreateDialog()
     {
         var parameters = new DialogParameters<QuestionFormDialog> { { x => x.CategoryId, selectedCategoryId! } };
-        var dialog = await DialogService.ShowAsync<QuestionFormDialog>("Thêm câu hỏi", parameters,
+        var data = await ShowFormDialogAsync<QuestionFormDialog, QuestionRequest>("Thêm câu hỏi", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
-        var result = await dialog.Result;
+        if (data == null)
+            return;
 
-        if (result is { Canceled: false, Data: QuestionRequest data })
-        {
-            try
-            {
-                await Api.CreateQuestionAsync(data);
-                Snackbar.Add("Đã thêm câu hỏi.", Severity.Success);
-                await LoadQuestionsAsync();
-            }
-            catch (ExamApiException ex)
-            {
-                Snackbar.Add($"Tạo thất bại: {ex.Message}", Severity.Error);
-            }
-        }
+        await ExecuteAsync(() => Api.CreateQuestionAsync(data), "Tạo thất bại", "Đã thêm câu hỏi.");
+        if (table != null)
+            await table.ReloadServerData();
     }
 
     private async Task OpenEditDialog(QuestionDto question)
@@ -78,44 +51,25 @@ public partial class Questions : ComponentBase
             { x => x.CategoryId, question.CategoryId },
             { x => x.Model, question }
         };
-        var dialog = await DialogService.ShowAsync<QuestionFormDialog>("Sửa câu hỏi", parameters,
+        var data = await ShowFormDialogAsync<QuestionFormDialog, QuestionRequest>("Sửa câu hỏi", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
-        var result = await dialog.Result;
-
-        if (result is { Canceled: false, Data: QuestionRequest data })
-        {
-            try
-            {
-                await Api.UpdateQuestionAsync(question.Id, data);
-                Snackbar.Add("Đã cập nhật.", Severity.Success);
-                await LoadQuestionsAsync();
-            }
-            catch (ExamApiException ex)
-            {
-                Snackbar.Add($"Cập nhật thất bại: {ex.Message}", Severity.Error);
-            }
-        }
-    }
-
-    private async Task DeleteAsync(QuestionDto question)
-    {
-        var confirmed = await DialogService.ShowMessageBoxAsync(
-            "Xác nhận xoá", $"Xoá câu hỏi '{Truncate(question.Content)}'?", yesText: "Xoá", cancelText: "Huỷ");
-
-        if (confirmed != true)
+        if (data == null)
             return;
 
-        try
+        await ExecuteAsync(() => Api.UpdateQuestionAsync(question.Id, data), "Cập nhật thất bại", "Đã cập nhật.");
+        if (table != null)
+            await table.ReloadServerData();
+    }
+
+    private Task DeleteAsync(QuestionDto question) => ConfirmAndExecuteAsync(
+        "Xác nhận xoá", $"Xoá câu hỏi '{Truncate(question.Content)}'?",
+        async () =>
         {
             await Api.DeleteQuestionAsync(question.Id);
-            Snackbar.Add("Đã xoá.", Severity.Success);
-            await LoadQuestionsAsync();
-        }
-        catch (ExamApiException ex)
-        {
-            Snackbar.Add($"Xoá thất bại (có thể còn đề thi đang dùng): {ex.Message}", Severity.Error);
-        }
-    }
+            if (table != null)
+                await table.ReloadServerData();
+        },
+        "Xoá thất bại (có thể còn đề thi đang dùng)", "Đã xoá.");
 
     private static string Truncate(string content) => content.Length <= 80 ? content : content[..80] + "…";
 
@@ -126,11 +80,4 @@ public partial class Questions : ComponentBase
         _ => type.ToString()
     };
 
-    private static string LevelLabel(Level level) => level switch
-    {
-        Level.Easy => "Dễ",
-        Level.Medium => "Trung bình",
-        Level.Difficult => "Khó",
-        _ => level.ToString()
-    };
 }

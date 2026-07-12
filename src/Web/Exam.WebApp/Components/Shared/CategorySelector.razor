@@ -1,0 +1,16 @@
+<MudSelect T="string" Label="Môn học" Value="Value" ValueChanged="ValueChanged"
+           Class="mb-4" Style="max-width: 400px;" Disabled="Categories == null">
+    @if (Categories != null)
+    {
+        @foreach (var category in Categories)
+        {
+            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+        }
+    }
+</MudSelect>
+
+@code {
+    [Parameter, EditorRequired] public IReadOnlyCollection<CategoryDto>? Categories { get; set; }
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string> ValueChanged { get; set; }
+}

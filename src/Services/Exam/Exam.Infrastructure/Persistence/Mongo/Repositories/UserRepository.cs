@@ -28,4 +28,10 @@ public class UserRepository : MongoRepositoryBase<User>, IUserRepository
         Logger.LogDebug("Getting all Users.");
         return await Collection.Find(FilterDefinition<User>.Empty).ToListAsync(cancellationToken);
     }
+
+    public Task<IReadOnlyCollection<User>> GetPagedAsync(int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(FilterDefinition<User>.Empty, Builders<User>.Sort.Ascending(x => x.Id), skip, take, cancellationToken);
+
+    public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(FilterDefinition<User>.Empty, cancellationToken);
 }

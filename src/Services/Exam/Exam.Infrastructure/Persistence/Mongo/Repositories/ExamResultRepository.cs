@@ -19,11 +19,9 @@ public class ExamResultRepository : MongoRepositoryBase<ExamResult>, IExamResult
             .FirstOrDefaultAsync(cancellationToken);
     }
 
-    public async Task<IReadOnlyCollection<ExamResult>> GetByUserIdAsync(string userId, CancellationToken cancellationToken = default)
-    {
-        Logger.LogDebug("Getting ExamResults by UserId {UserId}.", userId);
-        return await Collection.Find(x => x.UserId == userId)
-            .SortByDescending(x => x.ExamStartDate)
-            .ToListAsync(cancellationToken);
-    }
+    public Task<IReadOnlyCollection<ExamResult>> GetByUserIdAsync(string userId, int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(Builders<ExamResult>.Filter.Eq(x => x.UserId, userId), Builders<ExamResult>.Sort.Descending(x => x.ExamStartDate), skip, take, cancellationToken);
+
+    public Task<long> CountByUserIdAsync(string userId, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(Builders<ExamResult>.Filter.Eq(x => x.UserId, userId), cancellationToken);
 }

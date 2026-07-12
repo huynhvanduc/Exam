@@ -1,3 +1,4 @@
+using Exam.API.Extensions;
 using Exam.Application.AuditAggregate.Queries.GetAuditLog;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -18,9 +19,11 @@ public class AuditLogController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetRecent([FromQuery] int limit, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetRecent([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetAuditLogQuery(limit), cancellationToken);
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 50);
+        var query = new GetAuditLogQuery(normalizedPage, normalizedPageSize);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 }

@@ -49,16 +49,19 @@ public class ExamsController : ControllerBase
     }
 
     [HttpGet("by-category/{categoryId}")]
-    public async Task<IActionResult> GetByCategory(string categoryId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByCategory(string categoryId, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new GetExamsByCategoryQuery(categoryId), cancellationToken);
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
+        var query = new GetExamsByCategoryQuery(categoryId, normalizedPage, normalizedPageSize);
+        var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
 
     [HttpGet("available")]
     public async Task<IActionResult> GetAvailable([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
-        var query = new GetAvailableExamsQuery(page <= 0 ? 1 : page, pageSize <= 0 ? 20 : pageSize);
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
+        var query = new GetAvailableExamsQuery(normalizedPage, normalizedPageSize);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
