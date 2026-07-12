@@ -74,12 +74,23 @@ namespace Identity.API.Persistence
                     ctx.ApiResources.Add(a.ToEntity());
             }
 
-            var existingClientIds = ctx.Clients.Select(c => c.ClientId).ToHashSet();
-            foreach (var c in Config.GetClients(settings))
-            {
-                if (existingClientIds.Add(c.ClientId))
-                    ctx.Clients.Add(c.ToEntity());
-            }
+            ctx.SaveChanges();
+
+            // Clients được đồng bộ lại toàn bộ mỗi lần khởi động (không chỉ thêm-nếu-thiếu),
+            // vì cấu hình trong appsettings.json là nguồn sự thật duy nhất - tránh DB bị lệch
+            // so với appsettings.json khi client đã tồn tại nhưng thuộc tính (redirect_uri,
+            // require_consent...) đã đổi.
+            var configuredClients = Config.GetClients(settings).ToList();
+            var configuredClientIds = configuredClients.Select(c => c.ClientId).ToHashSet();
+
+            var staleClients = ctx.Clients
+                .Where(c => configuredClientIds.Contains(c.ClientId))
+                .ToList();
+            ctx.Clients.RemoveRange(staleClients);
+            ctx.SaveChanges();
+
+            foreach (var c in configuredClients)
+                ctx.Clients.Add(c.ToEntity());
 
             ctx.SaveChanges();
         }

@@ -39,7 +39,8 @@ public static class Config
                 AllowAccessTokensViaBrowser = c.AllowAccessTokensViaBrowser,
                 AllowedScopes = c.AllowedScopes,
                 RedirectUris = c.RedirectUris,
-                PostLogoutRedirectUris = c.PostLogoutRedirectUris
+                PostLogoutRedirectUris = c.PostLogoutRedirectUris,
+                RequireConsent = false
             };
 
             if (!string.IsNullOrEmpty(c.ClientSecret))

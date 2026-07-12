@@ -1,0 +1,51 @@
+@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<MudThemeProvider />
+<MudPopoverProvider />
+<MudDialogProvider />
+<MudSnackbarProvider />
+
+<MudLayout>
+    <MudAppBar Elevation="1">
+        <MudText Typo="Typo.h6" Class="ml-2">Exam Platform — Quản trị</MudText>
+        <MudSpacer />
+        <AuthorizeView>
+            <Authorized>
+                <MudText Class="mr-4">@context.User.Identity?.Name</MudText>
+                <form action="/account/logout" method="post" data-enhance="false">
+                    <MudButton ButtonType="ButtonType.Submit" Variant="Variant.Text" Color="Color.Inherit">Đăng xuất</MudButton>
+                </form>
+            </Authorized>
+            <NotAuthorized>
+                <MudButton OnClick="GoToLogin" Variant="Variant.Filled" Color="Color.Primary">Đăng nhập</MudButton>
+            </NotAuthorized>
+        </AuthorizeView>
+    </MudAppBar>
+
+    <MudDrawer Open="true" Elevation="0" Variant="DrawerVariant.Persistent">
+        <MudNavMenu>
+            <AuthorizeView Roles="Instructor,Admin">
+                <Authorized>
+                    <MudNavLink Href="/admin/categories" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Category">Môn học</MudNavLink>
+                    <MudNavLink Href="/admin/questions" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.QuestionAnswer">Ngân hàng câu hỏi</MudNavLink>
+                    <MudNavLink Href="/admin/exams" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">Đề thi</MudNavLink>
+                </Authorized>
+            </AuthorizeView>
+        </MudNavMenu>
+    </MudDrawer>
+
+    <MudMainContent Class="pa-4">
+        @Body
+    </MudMainContent>
+</MudLayout>
+
+<div id="blazor-error-ui" data-nosnippet>
+    An unhandled error has occurred.
+    <a href="." class="reload">Reload</a>
+    <span class="dismiss">🗙</span>
+</div>
+
+@code {
+    private void GoToLogin() => Navigation.NavigateTo("/account/login", forceLoad: true);
+}

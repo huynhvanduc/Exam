@@ -1,0 +1,132 @@
+@page "/admin/categories"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inject ExamApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Quản lý môn học</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Quản lý môn học</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           Class="mb-4" OnClick="OpenCreateDialog">
+    Thêm môn học
+</MudButton>
+
+@if (categories == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="categories" Hover="true" Loading="isLoading">
+        <HeaderContent>
+            <MudTh>Tên</MudTh>
+            <MudTh>Url Path</MudTh>
+            <MudTh>Hành động</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Tên">@context.Name</MudTd>
+            <MudTd DataLabel="Url Path">@context.UrlPath</MudTd>
+            <MudTd DataLabel="Hành động">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>Chưa có môn học nào.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}
+
+@code {
+    private IReadOnlyCollection<CategoryDto>? categories;
+    private bool isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadAsync();
+    }
+
+    private async Task LoadAsync()
+    {
+        isLoading = true;
+        try
+        {
+            categories = await Api.GetCategoriesAsync();
+        }
+        catch (ExamApiException ex)
+        {
+            Snackbar.Add($"Không tải được danh sách: {ex.Message}", Severity.Error);
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task OpenCreateDialog()
+    {
+        var parameters = new DialogParameters<CategoryFormDialog> { { x => x.Model, new CreateCategoryRequest("", "") } };
+        var dialog = await DialogService.ShowAsync<CategoryFormDialog>("Thêm môn học", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: CreateCategoryRequest data })
+        {
+            try
+            {
+                await Api.CreateCategoryAsync(data);
+                Snackbar.Add("Đã thêm môn học.", Severity.Success);
+                await LoadAsync();
+            }
+            catch (ExamApiException ex)
+            {
+                Snackbar.Add($"Tạo thất bại: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task OpenEditDialog(CategoryDto category)
+    {
+        var parameters = new DialogParameters<CategoryFormDialog>
+        {
+            { x => x.Model, new CreateCategoryRequest(category.Name, category.UrlPath) }
+        };
+        var dialog = await DialogService.ShowAsync<CategoryFormDialog>("Sửa môn học", parameters);
+        var result = await dialog.Result;
+
+        if (result is { Canceled: false, Data: CreateCategoryRequest data })
+        {
+            try
+            {
+                await Api.UpdateCategoryAsync(category.Id, data);
+                Snackbar.Add("Đã cập nhật.", Severity.Success);
+                await LoadAsync();
+            }
+            catch (ExamApiException ex)
+            {
+                Snackbar.Add($"Cập nhật thất bại: {ex.Message}", Severity.Error);
+            }
+        }
+    }
+
+    private async Task DeleteAsync(CategoryDto category)
+    {
+        var confirmed = await DialogService.ShowMessageBoxAsync(
+            "Xác nhận xoá", $"Xoá môn học '{category.Name}'?", yesText: "Xoá", cancelText: "Huỷ");
+
+        if (confirmed != true)
+            return;
+
+        try
+        {
+            await Api.DeleteCategoryAsync(category.Id);
+            Snackbar.Add("Đã xoá.", Severity.Success);
+            await LoadAsync();
+        }
+        catch (ExamApiException ex)
+        {
+            Snackbar.Add($"Xoá thất bại (có thể còn Question/Exam đang dùng): {ex.Message}", Severity.Error);
+        }
+    }
+}

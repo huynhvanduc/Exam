@@ -1,4 +1,5 @@
 using Exam.Domain.AggregateModels.UserAggregate;
+using Exam.Domain.Enums;
 using MediatR;
 
 namespace Exam.Application.UserAggregate.Commands.EnsureUserProvisioned;
@@ -21,7 +22,12 @@ public class EnsureUserProvisionedCommandHandler : IRequestHandler<EnsureUserPro
         var firstName = string.IsNullOrWhiteSpace(request.FirstName) ? "Unknown" : request.FirstName;
         var lastName = string.IsNullOrWhiteSpace(request.LastName) ? "User" : request.LastName;
 
-        var user = User.CreateNewUser(request.ExternalId, firstName, lastName);
+        // Chưa có ai trong hệ thống -> người đăng nhập đầu tiên tự động là Admin (bootstrap),
+        // tránh tình trạng không ai có quyền promote user khác.
+        var isFirstUser = !await _userRepository.AnyAsync(cancellationToken);
+        var role = isFirstUser ? UserRole.Admin : UserRole.Student;
+
+        var user = User.CreateNewUser(request.ExternalId, firstName, lastName, role);
 
         await _userRepository.InsertAsync(user, cancellationToken);
 

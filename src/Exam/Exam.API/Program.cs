@@ -2,8 +2,10 @@ using Exam.API.Middleware;
 using Exam.Application;
 using Exam.Infrastructure;
 using Exam.Infrastructure.Persistence.Mongo;
+using HealthChecks.UI.Client;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -38,6 +40,12 @@ builder.Services.AddProblemDetails();
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
 
+builder.Services.AddHealthChecksUI(setup =>
+{
+    setup.SetEvaluationTimeInSeconds(15);
+    setup.MaximumHistoryEntriesPerEndpoint(50);
+}).AddInMemoryStorage();
+
 var app = builder.Build();
 
 using (var scope = app.Services.CreateScope())
@@ -60,6 +68,12 @@ app.UseAuthorization();
 
 app.MapControllers();
 
-app.MapHealthChecks("/health").AllowAnonymous();
+app.MapHealthChecks("/health", new HealthCheckOptions
+{
+    Predicate = _ => true,
+    ResponseWriter = UIResponseWriter.WriteHealthCheckUIResponse
+}).AllowAnonymous();
+
+app.MapHealthChecksUI(options => options.UIPath = "/healthchecks-ui").AllowAnonymous();
 
 app.Run();

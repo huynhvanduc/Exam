@@ -41,6 +41,46 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__IdentitySqlConnection: "Server=sqlserver.db,1433;Database=ExamIdentity;User Id=sa;Password=Admin@12345;TrustServerCertificate=True;"
+  exam.api:
+    container_name: exam.api
+    build:
+      context: .
+      dockerfile: src/Exam/Exam.API/Dockerfile
+    ports:
+        - '5000:8080'
+    networks:
+        - exam
+    restart: always
+    depends_on:
+      - mongodb
+      - identity.api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      MongoDb__ConnectionString: "mongodb://admin:Admin%4012345@mongo.db:27017/?authSource=admin"
+      MongoDb__DatabaseName: "ExamDb"
+      IdentityServer__Authority: "http://identity.api:8080"
+      IdentityServer__Audience: "exam_api"
+      HealthChecksUI__HealthChecks__0__Uri: "http://localhost:8080/health"
+  exam.webapp:
+    container_name: exam.webapp
+    build:
+      context: .
+      dockerfile: src/Exam/Exam.WebApp/Dockerfile
+    ports:
+        - '6004:8080'
+    networks:
+        - exam
+    restart: always
+    depends_on:
+      - exam.api
+      - identity.api
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      IdentityServer__Authority: "http://identity.api:8080"
+      IdentityServer__PublicAuthority: "http://localhost:5001"
+      ExamApi__BaseUrl: "http://exam.api:8080"
 
 networks:
     exam:

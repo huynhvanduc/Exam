@@ -5,12 +5,14 @@ using Exam.Application.QuestionAggregate.Queries.GetQuestionById;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionsByCategory;
 using Exam.Domain.Enums;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Exam.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
+[Authorize(Roles = "Instructor,Admin")]
 public class QuestionsController : ControllerBase
 {
     private readonly IMediator _mediator;

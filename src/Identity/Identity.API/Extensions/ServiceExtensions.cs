@@ -1,5 +1,6 @@
 ﻿using Identity.API.Database;
 using Identity.API.Models;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 
@@ -26,6 +27,15 @@ public static class ServiceExtensions
         })
         .AddEntityFrameworkStores<AppIdentityDbContext>()
         .AddDefaultTokenProviders();
+
+        // Mặc định IdentityServer4/ASP.NET Identity dùng SameSite=None cho cookie đăng nhập,
+        // yêu cầu Secure=true (chỉ hoạt động qua HTTPS thật). Ở môi trường dev chạy HTTP,
+        // Chrome sẽ âm thầm từ chối lưu cookie này -> đăng nhập xong vẫn bị coi là chưa đăng nhập.
+        // Dùng Lax vì toàn bộ luồng OIDC ở đây là same-site redirect, không cần None.
+        services.ConfigureApplicationCookie(options =>
+        {
+            options.Cookie.SameSite = SameSiteMode.Lax;
+        });
     }
 
     public static void ConfigureIdentityServer(this IServiceCollection services,
@@ -38,6 +48,8 @@ public static class ServiceExtensions
         services.AddIdentityServer(options => {
             options.IssuerUri = configuration["IdentityServer:IssuerUri"]!;
             options.Authentication.CookieLifetime = TimeSpan.FromHours(2);
+            // Cùng lý do với ConfigureApplicationCookie ở trên: mặc định None yêu cầu HTTPS.
+            options.Authentication.CookieSameSiteMode = SameSiteMode.Lax;
         })
         .AddDeveloperSigningCredential()
         .AddAspNetIdentity<ApplicationUser>()

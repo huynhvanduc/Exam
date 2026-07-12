@@ -17,4 +17,9 @@ public class UserRepository : MongoRepositoryBase<User>, IUserRepository
         Logger.LogDebug("Getting User by ExternalId {ExternalId}.", externalId);
         return Collection.Find(x => x.ExternalId == externalId).FirstOrDefaultAsync(cancellationToken);
     }
+
+    public Task<bool> AnyAsync(CancellationToken cancellationToken = default)
+    {
+        return Collection.Find(FilterDefinition<User>.Empty).AnyAsync(cancellationToken);
+    }
 }

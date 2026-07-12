@@ -1,0 +1,14 @@
+<Router AppAssembly="typeof(Program).Assembly">
+    <Found Context="routeData">
+        <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
+            <NotAuthorized>
+                <MudContainer Class="mt-8">
+                    <MudAlert Severity="MudBlazor.Severity.Warning">
+                        Bạn không có quyền truy cập trang này.
+                    </MudAlert>
+                </MudContainer>
+            </NotAuthorized>
+        </AuthorizeRouteView>
+        <FocusOnNavigate RouteData="routeData" Selector="h1" />
+    </Found>
+</Router>

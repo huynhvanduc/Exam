@@ -5,6 +5,7 @@ using Exam.Application.CategoryAggregate.Queries.GetCategories;
 using Exam.Application.CategoryAggregate.Queries.GetCategoryById;
 using Exam.Application.CategoryAggregate.Queries.GetCategoryByUrlPath;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Exam.API.Controllers;
@@ -21,6 +22,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Roles = "Instructor,Admin")]
     public async Task<IActionResult> Create([FromBody] CreateCategoryCommand command, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(command, cancellationToken);
@@ -49,6 +51,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Roles = "Instructor,Admin")]
     public async Task<IActionResult> Update(string id, [FromBody] UpdateCategoryRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateCategoryCommand(id, request.Name, request.UrlPath), cancellationToken);
@@ -56,6 +59,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Roles = "Instructor,Admin")]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
         await _mediator.Send(new DeleteCategoryCommand(id), cancellationToken);

@@ -1,3 +1,5 @@
+using System.Security.Cryptography;
+using System.Text;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 
@@ -9,8 +11,10 @@ internal static class ExamResultMapper
     {
         var questionsById = questions.ToDictionary(q => q.Id);
 
-        var orderedQuestions = examResult.QuestionIds
-            .Where(questionsById.ContainsKey)
+        // Xáo thứ tự câu hỏi/đáp án phía server (chống gian lận - client không thể lấy được thứ tự gốc
+        // qua Network tab). Seed lấy từ ExamResult.Id nên ổn định trong suốt 1 lượt thi (refresh trang
+        // không bị đảo lại), nhưng khác nhau giữa các lượt thi/học viên.
+        var orderedQuestions = DeterministicShuffle(examResult.QuestionIds.Where(questionsById.ContainsKey), examResult.Id)
             .Select(id => questionsById[id])
             .Select(q => new ExamAttemptQuestionDto(
                 q.Id,
@@ -18,7 +22,9 @@ internal static class ExamResultMapper
                 q.QuestionType,
                 q.Level,
                 q.Points,
-                q.Answers.Select(a => new ExamAttemptAnswerOptionDto(a.Id, a.Content)).ToList()))
+                DeterministicShuffle(q.Answers, examResult.Id + q.Id)
+                    .Select(a => new ExamAttemptAnswerOptionDto(a.Id, a.Content))
+                    .ToList()))
             .ToList();
 
         var selections = examResult.DraftAnswers
@@ -66,4 +72,24 @@ internal static class ExamResultMapper
             examResult.ExamStartDate,
             examResult.ExamFinishDate,
             examResult.Finished);
+
+    private static List<T> DeterministicShuffle<T>(IEnumerable<T> source, string seed)
+    {
+        var list = source.ToList();
+        var rng = new Random(StableSeed(seed));
+
+        for (var i = list.Count - 1; i > 0; i--)
+        {
+            var j = rng.Next(i + 1);
+            (list[i], list[j]) = (list[j], list[i]);
+        }
+
+        return list;
+    }
+
+    private static int StableSeed(string input)
+    {
+        var hash = MD5.HashData(Encoding.UTF8.GetBytes(input));
+        return BitConverter.ToInt32(hash, 0);
+    }
 }
