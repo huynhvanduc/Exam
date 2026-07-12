@@ -27,7 +27,7 @@ public class UsersController : ControllerBase
     }
 
     [HttpPut("{externalId}/role")]
-    [Authorize(Roles = "Admin")]
+    [Authorize(Policy = Permissions.User.PromoteRole)]
     public async Task<IActionResult> PromoteRole(string externalId, [FromBody] PromoteUserRoleRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new PromoteUserRoleCommand(externalId, request.Role), cancellationToken);

@@ -188,6 +188,22 @@ public class ExamApiClient
         return (await response.Content.ReadFromJsonAsync<QuestionDto>(cancellationToken: cancellationToken))!;
     }
 
+    public async Task<IReadOnlyCollection<RolePermissionDto>> GetRolePermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        var request = await CreateRequestAsync(HttpMethod.Get, ApiRoutes.RolePermissions.Base);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<RolePermissionDto>>(cancellationToken: cancellationToken) ?? [];
+    }
+
+    public async Task<RolePermissionDto> UpdateRolePermissionsAsync(UserRole role, UpdateRolePermissionsRequest body, CancellationToken cancellationToken = default)
+    {
+        var request = await CreateRequestAsync(HttpMethod.Put, ApiRoutes.RolePermissions.ByRole(role), body);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return (await response.Content.ReadFromJsonAsync<RolePermissionDto>(cancellationToken: cancellationToken))!;
+    }
+
     private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string url, object? body = null)
     {
         var request = new HttpRequestMessage(method, url);

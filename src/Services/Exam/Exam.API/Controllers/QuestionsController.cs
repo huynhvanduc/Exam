@@ -13,7 +13,6 @@ namespace Exam.API.Controllers;
 
 [ApiController]
 [Route("api/[controller]")]
-[Authorize(Roles = "Instructor,Admin")]
 public class QuestionsController : ControllerBase
 {
     private readonly IMediator _mediator;
@@ -24,6 +23,7 @@ public class QuestionsController : ControllerBase
     }
 
     [HttpPost]
+    [Authorize(Policy = Permissions.Question.Create)]
     public async Task<IActionResult> Create([FromBody] QuestionRequest request, CancellationToken cancellationToken)
     {
         var command = new CreateQuestionCommand(request.Content, request.QuestionType, request.Level,
@@ -33,6 +33,7 @@ public class QuestionsController : ControllerBase
     }
 
     [HttpGet("{id}")]
+    [Authorize(Policy = Permissions.Question.View)]
     public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetQuestionByIdQuery(id), cancellationToken);
@@ -40,6 +41,7 @@ public class QuestionsController : ControllerBase
     }
 
     [HttpGet("by-category/{categoryId}")]
+    [Authorize(Policy = Permissions.Question.View)]
     public async Task<IActionResult> GetByCategory(string categoryId, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetQuestionsByCategoryQuery(categoryId), cancellationToken);
@@ -47,18 +49,20 @@ public class QuestionsController : ControllerBase
     }
 
     [HttpPut("{id}")]
+    [Authorize(Policy = Permissions.Question.Update)]
     public async Task<IActionResult> Update(string id, [FromBody] QuestionRequest request, CancellationToken cancellationToken)
     {
         var command = new UpdateQuestionCommand(id, request.Content, request.QuestionType, request.Level,
-            request.CategoryId, request.Answers, request.Explain, request.Points);
+            request.CategoryId, request.Answers, request.Explain, request.Points, User.GetActor());
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }
 
     [HttpDelete("{id}")]
+    [Authorize(Policy = Permissions.Question.Delete)]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
-        await _mediator.Send(new DeleteQuestionCommand(id), cancellationToken);
+        await _mediator.Send(new DeleteQuestionCommand(id, User.GetActor()), cancellationToken);
         return NoContent();
     }
 }

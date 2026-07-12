@@ -23,7 +23,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPost]
-    [Authorize(Roles = "Instructor,Admin")]
+    [Authorize(Policy = Permissions.Category.Create)]
     public async Task<IActionResult> Create([FromBody] CategoryRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new CreateCategoryCommand(request.Name, request.UrlPath), cancellationToken);
@@ -52,7 +52,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpPut("{id}")]
-    [Authorize(Roles = "Instructor,Admin")]
+    [Authorize(Policy = Permissions.Category.Update)]
     public async Task<IActionResult> Update(string id, [FromBody] CategoryRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new UpdateCategoryCommand(id, request.Name, request.UrlPath), cancellationToken);
@@ -60,7 +60,7 @@ public class CategoriesController : ControllerBase
     }
 
     [HttpDelete("{id}")]
-    [Authorize(Roles = "Instructor,Admin")]
+    [Authorize(Policy = Permissions.Category.Delete)]
     public async Task<IActionResult> Delete(string id, CancellationToken cancellationToken)
     {
         await _mediator.Send(new DeleteCategoryCommand(id), cancellationToken);

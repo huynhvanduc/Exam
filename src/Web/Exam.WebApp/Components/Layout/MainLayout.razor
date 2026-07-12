@@ -32,6 +32,11 @@
                     <MudNavLink Href="/admin/exams" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.Assignment">Đề thi</MudNavLink>
                 </Authorized>
             </AuthorizeView>
+            <AuthorizeView Roles="Admin">
+                <Authorized>
+                    <MudNavLink Href="/admin/permissions" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AdminPanelSettings">Phân quyền</MudNavLink>
+                </Authorized>
+            </AuthorizeView>
         </MudNavMenu>
     </MudDrawer>
 

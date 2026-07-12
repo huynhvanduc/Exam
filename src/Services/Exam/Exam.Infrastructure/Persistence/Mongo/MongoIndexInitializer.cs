@@ -1,5 +1,6 @@
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
+using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using MongoDB.Driver;
 
@@ -28,5 +29,12 @@ public static class MongoIndexInitializer
             new CreateIndexOptions { Unique = true });
 
         await categories.Indexes.CreateOneAsync(categoryUrlPathIndex, cancellationToken: cancellationToken);
+
+        var rolePermissions = context.GetCollection<RolePermissionSet>("rolePermissions");
+        var rolePermissionRoleIndex = new CreateIndexModel<RolePermissionSet>(
+            Builders<RolePermissionSet>.IndexKeys.Ascending(x => x.Role),
+            new CreateIndexOptions { Unique = true });
+
+        await rolePermissions.Indexes.CreateOneAsync(rolePermissionRoleIndex, cancellationToken: cancellationToken);
     }
 }

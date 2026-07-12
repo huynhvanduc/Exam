@@ -12,4 +12,5 @@ public record UpdateExamCommand(
     Level Level,
     string CategoryId,
     bool IsTimeRestricted,
-    int MinimumPassingScore) : IRequest<ExamDto>;
+    int MinimumPassingScore,
+    Actor Actor) : IRequest<ExamDto>;

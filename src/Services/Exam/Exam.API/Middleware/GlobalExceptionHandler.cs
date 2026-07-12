@@ -28,6 +28,17 @@ public class GlobalExceptionHandler : IExceptionHandler
                 _logger.LogWarning(exception, "Validation failed for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
                 break;
 
+            case ForbiddenException forbiddenException:
+                statusCode = StatusCodes.Status403Forbidden;
+                problemDetails = new ProblemDetails
+                {
+                    Title = "Forbidden",
+                    Detail = forbiddenException.Message,
+                    Status = statusCode,
+                };
+                _logger.LogWarning(exception, "Forbidden for {Method} {Path}", httpContext.Request.Method, httpContext.Request.Path);
+                break;
+
             case NotFoundException notFoundException:
                 statusCode = StatusCodes.Status404NotFound;
                 problemDetails = new ProblemDetails

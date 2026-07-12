@@ -1,5 +1,8 @@
+using Exam.API.Authorization;
 using Exam.API.Middleware;
 using Exam.Application;
+using Exam.Contracts;
+using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Infrastructure;
 using Exam.Infrastructure.Persistence.Mongo;
 using HealthChecks.UI.Client;
@@ -32,7 +35,12 @@ builder.Services.AddAuthorization(options =>
     options.FallbackPolicy = new AuthorizationPolicyBuilder()
         .RequireAuthenticatedUser()
         .Build();
+
+    foreach (var permission in Permissions.All)
+        options.AddPolicy(permission, policy => policy.Requirements.Add(new PermissionRequirement(permission)));
 });
+
+builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();
@@ -51,6 +59,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     await MongoIndexInitializer.EnsureIndexesAsync(scope.ServiceProvider.GetRequiredService<MongoDbContext>());
+    await RolePermissionSeeder.EnsureDefaultsAsync(scope.ServiceProvider.GetRequiredService<IRolePermissionRepository>());
 }
 
 app.UseExceptionHandler();

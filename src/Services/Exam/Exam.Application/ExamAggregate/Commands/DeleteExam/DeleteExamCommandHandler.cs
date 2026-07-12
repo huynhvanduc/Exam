@@ -18,6 +18,8 @@ public class DeleteExamCommandHandler : IRequestHandler<DeleteExamCommand>
         var exam = await _examRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw NotFoundException.For(nameof(Domain.AggregateModels.ExamAggregate.Exam), request.Id);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, exam.OwnerUserId, nameof(Domain.AggregateModels.ExamAggregate.Exam), exam.Id);
+
         await _examRepository.DeleteAsync(exam.Id, cancellationToken);
     }
 }

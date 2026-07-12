@@ -1,6 +1,7 @@
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
+using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using Exam.Domain.SeedWork;
 using MongoDB.Bson;
@@ -132,6 +133,15 @@ public static class MongoClassMaps
             {
                 cm.AutoMap();
                 cm.MapCreator(u => new User(u.ExternalId, u.FirstName, u.LastName, u.Role));
+            });
+        }
+
+        if (!BsonClassMap.IsClassMapRegistered(typeof(RolePermissionSet)))
+        {
+            BsonClassMap.RegisterClassMap<RolePermissionSet>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(rp => new RolePermissionSet(rp.Role, rp.Permissions));
             });
         }
     }

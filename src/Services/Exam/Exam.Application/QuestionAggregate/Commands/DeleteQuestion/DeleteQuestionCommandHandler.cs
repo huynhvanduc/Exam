@@ -18,6 +18,8 @@ public class DeleteQuestionCommandHandler : IRequestHandler<DeleteQuestionComman
         var question = await _questionRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw NotFoundException.For(nameof(Question), request.Id);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, question.OwnerUserId, nameof(Question), question.Id);
+
         await _questionRepository.DeleteAsync(question.Id, cancellationToken);
     }
 }

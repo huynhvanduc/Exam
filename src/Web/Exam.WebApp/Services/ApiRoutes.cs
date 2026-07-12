@@ -33,4 +33,10 @@ public static class ApiRoutes
         public static string Unpublish(string examId) => $"{Base}/{examId}/unpublish";
         public static string Archive(string examId) => $"{Base}/{examId}/archive";
     }
+
+    public static class RolePermissions
+    {
+        public const string Base = "/api/role-permissions";
+        public static string ByRole(UserRole role) => $"{Base}/{role}";
+    }
 }

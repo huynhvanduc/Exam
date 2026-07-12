@@ -21,6 +21,8 @@ public class AddQuestionToExamCommandHandler : IRequestHandler<AddQuestionToExam
         var exam = await _examRepository.GetByIdAsync(request.ExamId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Domain.AggregateModels.ExamAggregate.Exam), request.ExamId);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, exam.OwnerUserId, nameof(Domain.AggregateModels.ExamAggregate.Exam), exam.Id);
+
         var question = await _questionRepository.GetByIdAsync(request.QuestionId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Question), request.QuestionId);
 

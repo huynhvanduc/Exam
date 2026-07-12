@@ -1,0 +1,60 @@
+@page "/admin/permissions"
+@attribute [Authorize(Roles = "Admin")]
+@inject ExamApiClient Api
+@inject ISnackbar Snackbar
+
+<PageTitle>Phân quyền</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Phân quyền theo Role</MudText>
+<MudText Typo="Typo.body2" Class="mb-4">
+    Admin luôn có toàn quyền, không thể chỉnh. Student/Instructor chỉ thực hiện được hành động nào khi được tick ở đây.
+</MudText>
+
+@if (rows == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudPaper Class="pa-4" Elevation="1">
+        <table style="width:100%; border-collapse: collapse;">
+            <thead>
+                <tr>
+                    <th style="text-align:left; padding:8px;">Quyền</th>
+                    <th style="text-align:center; padding:8px; width:100px;">Student</th>
+                    <th style="text-align:center; padding:8px; width:100px;">Instructor</th>
+                    <th style="text-align:center; padding:8px; width:100px;">Admin</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var group in rows.GroupBy(r => r.GroupName))
+                {
+                    <tr>
+                        <td colspan="4" style="padding:12px 8px 4px 8px;">
+                            <MudText Typo="Typo.subtitle1"><b>@group.Key</b></MudText>
+                        </td>
+                    </tr>
+                    @foreach (var row in group)
+                    {
+                        <tr>
+                            <td style="padding:4px 8px;">@row.Label</td>
+                            <td style="text-align:center;">
+                                <MudCheckBox T="bool" Value="studentChecks[row.Key]" ValueChanged="v => studentChecks[row.Key] = v" Color="Color.Primary" />
+                            </td>
+                            <td style="text-align:center;">
+                                <MudCheckBox T="bool" Value="instructorChecks[row.Key]" ValueChanged="v => instructorChecks[row.Key] = v" Color="Color.Primary" />
+                            </td>
+                            <td style="text-align:center;">
+                                <MudCheckBox T="bool" Value="true" Disabled="true" Color="Color.Primary" />
+                            </td>
+                        </tr>
+                    }
+                }
+            </tbody>
+        </table>
+    </MudPaper>
+
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="SaveAsync">
+        Lưu thay đổi
+    </MudButton>
+}

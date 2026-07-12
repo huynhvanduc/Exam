@@ -26,6 +26,8 @@ public class ConfigureQuestionPoolCommandHandler : IRequestHandler<ConfigureQues
         var exam = await _examRepository.GetByIdAsync(request.ExamId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Domain.AggregateModels.ExamAggregate.Exam), request.ExamId);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, exam.OwnerUserId, nameof(Domain.AggregateModels.ExamAggregate.Exam), exam.Id);
+
         var category = await _categoryRepository.GetByIdAsync(request.PoolCategoryId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Category), request.PoolCategoryId);
 

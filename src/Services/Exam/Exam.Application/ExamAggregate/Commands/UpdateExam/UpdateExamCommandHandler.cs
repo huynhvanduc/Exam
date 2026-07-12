@@ -21,6 +21,8 @@ public class UpdateExamCommandHandler : IRequestHandler<UpdateExamCommand, ExamD
         var exam = await _examRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw NotFoundException.For(nameof(Domain.AggregateModels.ExamAggregate.Exam), request.Id);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, exam.OwnerUserId, nameof(Domain.AggregateModels.ExamAggregate.Exam), exam.Id);
+
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Category), request.CategoryId);
 

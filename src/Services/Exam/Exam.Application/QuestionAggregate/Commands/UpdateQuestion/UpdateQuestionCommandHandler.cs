@@ -22,6 +22,8 @@ public class UpdateQuestionCommandHandler : IRequestHandler<UpdateQuestionComman
         var question = await _questionRepository.GetByIdAsync(request.Id, cancellationToken)
             ?? throw NotFoundException.For(nameof(Question), request.Id);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, question.OwnerUserId, nameof(Question), question.Id);
+
         var category = await _categoryRepository.GetByIdAsync(request.CategoryId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Category), request.CategoryId);
 

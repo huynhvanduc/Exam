@@ -18,6 +18,8 @@ public class ConfigureNegativeMarkingCommandHandler : IRequestHandler<ConfigureN
         var exam = await _examRepository.GetByIdAsync(request.ExamId, cancellationToken)
             ?? throw NotFoundException.For(nameof(Domain.AggregateModels.ExamAggregate.Exam), request.ExamId);
 
+        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, exam.OwnerUserId, nameof(Domain.AggregateModels.ExamAggregate.Exam), exam.Id);
+
         exam.ConfigureNegativeMarking(request.Ratio);
 
         await _examRepository.UpdateAsync(exam, cancellationToken);

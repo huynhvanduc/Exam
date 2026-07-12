@@ -2,6 +2,7 @@ using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.ExamAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
+using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using Exam.Domain.Services;
 using Exam.Infrastructure.Persistence.Mongo;
@@ -35,6 +36,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IQuestionRepository, QuestionRepository>();
         services.AddScoped<IExamResultRepository, ExamResultRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
+        services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
 
         services.AddScoped<ExamQuestionPoolService>();
         services.AddScoped<CategoryDeletionGuard>();
