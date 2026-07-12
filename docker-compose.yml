@@ -25,11 +25,11 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: Admin@12345
-  identity.api:
-    container_name: identity.api
+  identity.server:
+    container_name: identity.server
     build:
       context: .
-      dockerfile: src/Identity/Identity.API/Dockerfile
+      dockerfile: src/Identity/Identity.Server/Dockerfile
     ports:
         - '5001:8080'
     networks:
@@ -53,13 +53,13 @@ services:
     restart: always
     depends_on:
       - mongodb
-      - identity.api
+      - identity.server
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       MongoDb__ConnectionString: "mongodb://admin:Admin%4012345@mongo.db:27017/?authSource=admin"
       MongoDb__DatabaseName: "ExamDb"
-      IdentityServer__Authority: "http://identity.api:8080"
+      IdentityServer__Authority: "http://identity.server:8080"
       IdentityServer__Audience: "exam_api"
       HealthChecksUI__HealthChecks__0__Uri: "http://localhost:8080/health"
   exam.webapp:
@@ -74,11 +74,11 @@ services:
     restart: always
     depends_on:
       - exam.api
-      - identity.api
+      - identity.server
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      IdentityServer__Authority: "http://identity.api:8080"
+      IdentityServer__Authority: "http://identity.server:8080"
       IdentityServer__PublicAuthority: "http://localhost:5001"
       ExamApi__BaseUrl: "http://exam.api:8080"
 

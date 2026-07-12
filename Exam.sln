@@ -19,9 +19,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "tests", "tests", "{C360E2DE
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exam.Infrastructure.IntegrationTest", "tests\Exam.Infrastructure.IntegrationTest\Exam.Infrastructure.IntegrationTest.csproj", "{96177C94-F3CE-4D14-9D31-FB3E9A020411}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exam.Applicaion.UnitTests", "tests\Exam.Applicaion.UnitTests\Exam.Applicaion.UnitTests.csproj", "{A1932A19-4C1E-4EF9-930E-BE9E8D328E27}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exam.Application.UnitTests", "tests\Exam.Application.UnitTests\Exam.Application.UnitTests.csproj", "{A1932A19-4C1E-4EF9-930E-BE9E8D328E27}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.API.IntegrationTests", "tests\Identity.API.IntegrationTests\Identity.API.IntegrationTests.csproj", "{CDEAD639-3510-795F-833A-5C324C0F3D02}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Server.IntegrationTests", "tests\Identity.Server.IntegrationTests\Identity.Server.IntegrationTests.csproj", "{CDEAD639-3510-795F-833A-5C324C0F3D02}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Exam", "Exam", "{19EB42E7-A8D7-4861-B2A8-AD07A97B2D0A}"
 EndProject
@@ -29,7 +29,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Identity", "Identity", "{34
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exam.Domain.UnitTests", "tests\Exam.Domain.UnitTests\Exam.Domain.UnitTests.csproj", "{69DF0FB2-AACE-FBD5-9979-321232D0EB5C}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.API", "src\Identity\Identity.API\Identity.API.csproj", "{AAE47002-5FE4-1EB3-2A7E-BE934BA1D30B}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Identity.Server", "src\Identity\Identity.Server\Identity.Server.csproj", "{AAE47002-5FE4-1EB3-2A7E-BE934BA1D30B}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Exam.API", "src\Exam\Exam.API\Exam.API.csproj", "{363F88C5-2BC7-5F9D-8897-C5E6666A6D4E}"
 EndProject

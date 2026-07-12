@@ -17,8 +17,8 @@ builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 
 var identityAuthority = builder.Configuration["IdentityServer:Authority"]!;
-// Trong Docker, backend gọi Identity qua tên container (identity.api:8080) nhưng trình duyệt
-// phải redirect tới địa chỉ public (localhost:5001) vì "identity.api" không resolve được từ máy host.
+// Trong Docker, backend gọi Identity qua tên container (identity.server:8080) nhưng trình duyệt
+// phải redirect tới địa chỉ public (localhost:5001) vì "identity.server" không resolve được từ máy host.
 var identityPublicAuthority = builder.Configuration["IdentityServer:PublicAuthority"] ?? identityAuthority;
 var examApiBaseUrl = builder.Configuration["ExamApi:BaseUrl"]!;
 

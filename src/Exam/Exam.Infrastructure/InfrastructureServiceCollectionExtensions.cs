@@ -3,7 +3,6 @@ using Exam.Domain.AggregateModels.ExamAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
-using Exam.Domain.Events;
 using Exam.Domain.Services;
 using Exam.Infrastructure.Persistence.Mongo;
 using Exam.Infrastructure.Persistence.Mongo.Repositories;
@@ -29,7 +28,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddSingleton<MongoDbContext>();
 
-        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(ExamStartDomainEvent).Assembly));
+        services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(Category).Assembly));
 
         services.AddScoped<ICategoryRepository, CategoryRepository>();
         services.AddScoped<IExamRepository, ExamRepository>();

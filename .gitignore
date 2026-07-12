@@ -394,4 +394,4 @@ PublishOutput/
 
 # EF Core migrations bundle output (nếu build ra file exe)
 efbundle*
-/src/Identity/Identity.API/tempkey.jwk
+/src/Identity/Identity.Server/tempkey.jwk

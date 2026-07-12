@@ -14,7 +14,7 @@ Toàn bộ hệ thống giờ chạy bằng **Docker Compose** — không cần 
 
 | Container | Vai trò | Port (host) |
 |---|---|---|
-| `identity.api` | Identity Server (IdentityServer4) + **UI đăng nhập bằng Blazor** | `http://localhost:5001` |
+| `identity.server` | Identity Server (IdentityServer4) + **UI đăng nhập bằng Blazor** | `http://localhost:5001` |
 | `exam.api` | API nghiệp vụ chính (Category/Question/Exam/ExamAttempts) + Health Check UI | `http://localhost:5000` |
 | `mongo.db` | Lưu dữ liệu nghiệp vụ (Category/Question/Exam/ExamResult) | `localhost:27017` |
 | `sqlserver.db` | Lưu dữ liệu Identity Server (user, client, scope) | `localhost:1433` |
@@ -38,7 +38,7 @@ docker compose ps
 
 Xác nhận: `GET http://localhost:5000/health` phải trả `200` (endpoint duy nhất **không** cần token).
 
-Xem log nếu có lỗi: `docker logs exam.api` / `docker logs identity.api`.
+Xem log nếu có lỗi: `docker logs exam.api` / `docker logs identity.server`.
 
 ---
 
@@ -48,7 +48,7 @@ Xem log nếu có lỗi: `docker logs exam.api` / `docker logs identity.api`.
 
 ### ✅ Login UI đã có (Blazor) — cập nhật so với trước
 
-`Identity.API` giờ đã có trang đăng nhập thật tại `http://localhost:5001/Account/Login`, xây bằng Blazor. Có thể đăng nhập trực tiếp qua trình duyệt với tài khoản admin đã seed sẵn:
+`Identity.Server` giờ đã có trang đăng nhập thật tại `http://localhost:5001/Account/Login`, xây bằng Blazor. Có thể đăng nhập trực tiếp qua trình duyệt với tài khoản admin đã seed sẵn:
 - **Username:** `admin`
 - **Password:** `Admin@123$`
 
