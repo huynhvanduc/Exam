@@ -62,6 +62,12 @@ services:
       IdentityServer__Authority: "http://identity.server:8080"
       IdentityServer__Audience: "exam_api"
       HealthChecksUI__HealthChecks__0__Uri: "http://localhost:8080/health"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
   exam.webapp:
     container_name: exam.webapp
     build:
@@ -69,6 +75,8 @@ services:
       dockerfile: src/Web/Exam.WebApp/Dockerfile
     ports:
         - '6004:8080'
+    volumes:
+        - webapp-dataprotection-keys:/app/dataprotection-keys
     networks:
         - exam
     restart: always
@@ -81,6 +89,12 @@ services:
       IdentityServer__Authority: "http://identity.server:8080"
       IdentityServer__PublicAuthority: "http://localhost:5001"
       ExamApi__BaseUrl: "http://exam.api:8080"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
 networks:
     exam:
@@ -88,3 +102,4 @@ networks:
 volumes:
     mongo-data:
     sqlserver_data:
+    webapp-dataprotection-keys:

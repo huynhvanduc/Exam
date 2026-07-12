@@ -4,8 +4,13 @@ using Exam.WebApp.Components;
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
+using Microsoft.AspNetCore.DataProtection;
+using Microsoft.Extensions.Http.Resilience;
 using MudBlazor;
 using MudBlazor.Services;
+using Polly;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -20,10 +25,13 @@ builder.Services.AddMudServices(config =>
 });
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
+builder.Services.AddHealthChecks();
+
+builder.Services.AddDataProtection()
+    .SetApplicationName("Exam.WebApp")
+    .PersistKeysToFileSystem(new DirectoryInfo("/app/dataprotection-keys"));
 
 var identityAuthority = builder.Configuration["IdentityServer:Authority"]!;
-// Trong Docker, backend gọi Identity qua tên container (identity.server:8080) nhưng trình duyệt
-// phải redirect tới địa chỉ public (localhost:5001) vì "identity.server" không resolve được từ máy host.
 var identityPublicAuthority = builder.Configuration["IdentityServer:PublicAuthority"] ?? identityAuthority;
 var examApiBaseUrl = builder.Configuration["ExamApi:BaseUrl"]!;
 
@@ -65,29 +73,46 @@ builder.Services.AddAuthentication(options =>
         },
         OnTokenValidated = async context =>
         {
-            // Role sống trong Exam.Domain.User (Exam.API), không nằm trong JWT do Identity Server phát hành.
-            // Gọi /api/users/me 1 lần lúc đăng nhập để lấy Role, gắn vào cookie claims cho cả phiên làm việc.
             var accessToken = context.TokenEndpointResponse?.AccessToken;
             if (string.IsNullOrEmpty(accessToken) || context.Principal?.Identity is not ClaimsIdentity identity)
                 return;
 
-            var httpClientFactory = context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
-            var client = httpClientFactory.CreateClient();
-            client.BaseAddress = new Uri(examApiBaseUrl);
-            client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+            try
+            {
+                var httpClientFactory = context.HttpContext.RequestServices.GetRequiredService<IHttpClientFactory>();
+                var client = httpClientFactory.CreateClient();
+                client.BaseAddress = new Uri(examApiBaseUrl);
+                client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
-            var response = await client.GetAsync(ApiRoutes.Users.Me);
-            if (!response.IsSuccessStatusCode)
-                return;
+                var response = await client.GetAsync(ApiRoutes.Users.Me);
+                if (!response.IsSuccessStatusCode)
+                    return;
 
-            var user = await response.Content.ReadFromJsonAsync<UserDto>();
-            if (user != null)
-                identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
+                var user = await response.Content.ReadFromJsonAsync<UserDto>();
+                if (user != null)
+                    identity.AddClaim(new Claim(ClaimTypes.Role, user.Role.ToString()));
+            }
+            catch (Exception ex) when (ex is HttpRequestException or BrokenCircuitException or TimeoutRejectedException)
+            {
+                var logger = context.HttpContext.RequestServices.GetRequiredService<ILoggerFactory>()
+                    .CreateLogger("OpenIdConnect.OnTokenValidated");
+                logger.LogWarning(ex, "Could not fetch user role from exam.api during login; proceeding without Role claim.");
+            }
         }
     };
 });
 
 builder.Services.AddAuthorization();
+
+builder.Services.ConfigureHttpClientDefaults(http => http.AddStandardResilienceHandler(options =>
+{
+    options.Retry.ShouldHandle = args =>
+    {
+        var isTransient = HttpClientResiliencePredicates.IsTransient(args.Outcome);
+        var isSafeMethod = args.Context.GetRequestMessage()?.Method == HttpMethod.Get;
+        return ValueTask.FromResult(isTransient && isSafeMethod);
+    };
+}));
 
 builder.Services.AddHttpClient<ExamApiClient>(client =>
 {
@@ -96,7 +121,6 @@ builder.Services.AddHttpClient<ExamApiClient>(client =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error", createScopeForErrors: true);
@@ -110,6 +134,8 @@ app.UseAntiforgery();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
+
+app.MapHealthChecks("/health").AllowAnonymous();
 
 app.MapGet("/account/login", (string? returnUrl, HttpContext http) =>
     Results.Challenge(new Microsoft.AspNetCore.Authentication.AuthenticationProperties { RedirectUri = returnUrl ?? "/" },

@@ -1,11 +1,15 @@
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
 using MudBlazor;
+using Polly.CircuitBreaker;
+using Polly.Timeout;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public abstract class AdminPageBase : ComponentBase
 {
+    private const string ConnectivityErrorMessage = "Không kết nối được máy chủ, vui lòng thử lại sau.";
+
     [Inject] protected ExamApiClient Api { get; set; } = null!;
     [Inject] protected ISnackbar Snackbar { get; set; } = null!;
     [Inject] protected IDialogService DialogService { get; set; } = null!;
@@ -21,6 +25,10 @@ public abstract class AdminPageBase : ComponentBase
         catch (ExamApiException ex)
         {
             Snackbar.Add($"{errorPrefix}: {ex.Message}", Severity.Error);
+        }
+        catch (Exception ex) when (IsConnectivityFailure(ex))
+        {
+            Snackbar.Add($"{errorPrefix}: {ConnectivityErrorMessage}", Severity.Error);
         }
     }
 
@@ -55,5 +63,13 @@ public abstract class AdminPageBase : ComponentBase
             Snackbar.Add($"{errorPrefix}: {ex.Message}", Severity.Error);
             return new TableData<TItem> { Items = [], TotalItems = 0 };
         }
+        catch (Exception ex) when (IsConnectivityFailure(ex))
+        {
+            Snackbar.Add($"{errorPrefix}: {ConnectivityErrorMessage}", Severity.Error);
+            return new TableData<TItem> { Items = [], TotalItems = 0 };
+        }
     }
+
+    private static bool IsConnectivityFailure(Exception ex) =>
+        ex is HttpRequestException or BrokenCircuitException or TimeoutRejectedException;
 }
