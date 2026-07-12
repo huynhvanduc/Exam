@@ -1,3 +1,4 @@
+using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
@@ -142,6 +143,15 @@ public static class MongoClassMaps
             {
                 cm.AutoMap();
                 cm.MapCreator(rp => new RolePermissionSet(rp.Role, rp.Permissions));
+            });
+        }
+
+        if (!BsonClassMap.IsClassMapRegistered(typeof(AuditLogEntry)))
+        {
+            BsonClassMap.RegisterClassMap<AuditLogEntry>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(a => new AuditLogEntry(a.ActorUserId, a.Action, a.TargetId, a.Description));
             });
         }
     }

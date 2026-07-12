@@ -204,6 +204,30 @@ public class ExamApiClient
         return (await response.Content.ReadFromJsonAsync<RolePermissionDto>(cancellationToken: cancellationToken))!;
     }
 
+    public async Task<IReadOnlyCollection<UserDto>> GetUsersAsync(CancellationToken cancellationToken = default)
+    {
+        var request = await CreateRequestAsync(HttpMethod.Get, ApiRoutes.Users.Base);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<UserDto>>(cancellationToken: cancellationToken) ?? [];
+    }
+
+    public async Task<UserDto> PromoteUserRoleAsync(string externalId, PromoteUserRoleRequest body, CancellationToken cancellationToken = default)
+    {
+        var request = await CreateRequestAsync(HttpMethod.Put, ApiRoutes.Users.Role(externalId), body);
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return (await response.Content.ReadFromJsonAsync<UserDto>(cancellationToken: cancellationToken))!;
+    }
+
+    public async Task<IReadOnlyCollection<AuditLogEntryDto>> GetAuditLogAsync(int limit = 100, CancellationToken cancellationToken = default)
+    {
+        var request = await CreateRequestAsync(HttpMethod.Get, $"{ApiRoutes.AuditLog.Base}?limit={limit}");
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadFromJsonAsync<IReadOnlyCollection<AuditLogEntryDto>>(cancellationToken: cancellationToken) ?? [];
+    }
+
     private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string url, object? body = null)
     {
         var request = new HttpRequestMessage(method, url);

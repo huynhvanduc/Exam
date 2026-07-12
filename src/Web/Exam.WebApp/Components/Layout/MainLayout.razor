@@ -35,6 +35,8 @@
             <AuthorizeView Roles="Admin">
                 <Authorized>
                     <MudNavLink Href="/admin/permissions" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.AdminPanelSettings">Phân quyền</MudNavLink>
+                    <MudNavLink Href="/admin/users" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.People">Người dùng</MudNavLink>
+                    <MudNavLink Href="/admin/audit-log" Match="NavLinkMatch.Prefix" Icon="@Icons.Material.Filled.History">Nhật ký</MudNavLink>
                 </Authorized>
             </AuthorizeView>
         </MudNavMenu>

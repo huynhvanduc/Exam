@@ -4,7 +4,9 @@ public static class ApiRoutes
 {
     public static class Users
     {
+        public const string Base = "/api/users";
         public const string Me = "/api/users/me";
+        public static string Role(string externalId) => $"{Base}/{externalId}/role";
     }
 
     public static class Categories
@@ -38,5 +40,10 @@ public static class ApiRoutes
     {
         public const string Base = "/api/role-permissions";
         public static string ByRole(UserRole role) => $"{Base}/{role}";
+    }
+
+    public static class AuditLog
+    {
+        public const string Base = "/api/audit-log";
     }
 }

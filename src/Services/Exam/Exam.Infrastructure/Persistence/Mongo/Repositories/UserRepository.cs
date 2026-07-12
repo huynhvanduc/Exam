@@ -22,4 +22,10 @@ public class UserRepository : MongoRepositoryBase<User>, IUserRepository
     {
         return Collection.Find(FilterDefinition<User>.Empty).AnyAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("Getting all Users.");
+        return await Collection.Find(FilterDefinition<User>.Empty).ToListAsync(cancellationToken);
+    }
 }

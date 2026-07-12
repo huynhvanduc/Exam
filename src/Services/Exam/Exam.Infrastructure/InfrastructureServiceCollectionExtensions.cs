@@ -1,3 +1,4 @@
+using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.ExamAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
@@ -37,6 +38,7 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<IExamResultRepository, ExamResultRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
         services.AddScoped<IRolePermissionRepository, RolePermissionRepository>();
+        services.AddScoped<IAuditLogRepository, AuditLogRepository>();
 
         services.AddScoped<ExamQuestionPoolService>();
         services.AddScoped<CategoryDeletionGuard>();

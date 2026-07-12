@@ -1,3 +1,4 @@
+using Exam.API.Extensions;
 using Exam.Application.RoleAggregate.Commands.UpdateRolePermissions;
 using Exam.Application.RoleAggregate.Queries.GetRolePermissions;
 using Exam.Contracts;
@@ -29,7 +30,7 @@ public class RolePermissionsController : ControllerBase
     [HttpPut("{role}")]
     public async Task<IActionResult> Update(UserRole role, [FromBody] UpdateRolePermissionsRequest request, CancellationToken cancellationToken)
     {
-        var result = await _mediator.Send(new UpdateRolePermissionsCommand(role, request.Permissions), cancellationToken);
+        var result = await _mediator.Send(new UpdateRolePermissionsCommand(role, request.Permissions, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 }

@@ -12,11 +12,11 @@ public static class RolePermissionSeeder
             return;
 
         // Instructor mặc định có đủ quyền Category/Question/Exam như hành vi trước khi có permission-based
-        // authorization (trước đây [Authorize(Roles="Instructor,Admin")]). Riêng User.PromoteRole trước đây
-        // CHỈ dành cho Admin ([Authorize(Roles="Admin")]) nên không đưa vào mặc định của Instructor.
+        // authorization (trước đây [Authorize(Roles="Instructor,Admin")]). Riêng quản lý user (xem danh sách,
+        // đổi role) trước đây CHỈ dành cho Admin nên không đưa vào mặc định của Instructor.
         var instructorDefaults = new RolePermissionSet(
             UserRole.Instructor,
-            Permissions.All.Where(p => p != Permissions.User.PromoteRole).ToList());
+            Permissions.All.Where(p => p != Permissions.User.View && p != Permissions.User.PromoteRole).ToList());
         await repository.InsertAsync(instructorDefaults, cancellationToken);
     }
 }

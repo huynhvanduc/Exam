@@ -33,6 +33,7 @@ public static class Permissions
 
     public static class User
     {
+        public const string View = "User.View";
         public const string PromoteRole = "User.PromoteRole";
     }
 
@@ -42,6 +43,6 @@ public static class Permissions
         Question.View, Question.Create, Question.Update, Question.Delete,
         Exam.Create, Exam.Update, Exam.Delete, Exam.ManageQuestions, Exam.ManagePool,
         Exam.ManageAvailability, Exam.ManageNegativeMarking, Exam.Publish, Exam.Unpublish, Exam.Archive,
-        User.PromoteRole
+        User.View, User.PromoteRole
     ];
 }
