@@ -1,0 +1,886 @@
+{
+  "info": {
+    "_postman_id": "c3a1e9d0-1a2b-4c3d-9e8f-1234567890ab",
+    "name": "Exam API",
+    "description": "Collection test cho Exam Platform API (Category/Question/Exam/ExamAttempts). Xem docs/TESTING_GUIDE.md để biết chi tiết setup, mapping enum và known issues.\n\nChạy folder '00 - Auth' trước tiên để lấy token (tự lưu vào biến môi trường `token`), sau đó các folder khác sẽ tự dùng token này qua Bearer Auth kế thừa ở mức Collection.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "bearer",
+    "bearer": [{ "key": "token", "value": "{{token}}", "type": "string" }]
+  },
+  "item": [
+    {
+      "name": "00 - Auth",
+      "item": [
+        {
+          "name": "Get Token (exam.tester - read+write)",
+          "auth": { "type": "noauth" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Has access_token', () => pm.expect(body).to.have.property('access_token'));",
+                  "if (body.access_token) { pm.environment.set('token', body.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials", "type": "text" },
+                { "key": "client_id", "value": "{{clientId}}", "type": "text" },
+                { "key": "client_secret", "value": "{{clientSecret}}", "type": "text" },
+                { "key": "scope", "value": "exam_api.read exam_api.write", "type": "text" }
+              ]
+            },
+            "url": "{{identityUrl}}/connect/token"
+          }
+        },
+        {
+          "name": "Get Token (read-only worker - optional)",
+          "auth": { "type": "noauth" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "if (body.access_token) { pm.environment.set('readonlyToken', body.access_token); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "body": {
+              "mode": "urlencoded",
+              "urlencoded": [
+                { "key": "grant_type", "value": "client_credentials", "type": "text" },
+                { "key": "client_id", "value": "{{readonlyClientId}}", "type": "text" },
+                { "key": "client_secret", "value": "{{readonlyClientSecret}}", "type": "text" },
+                { "key": "scope", "value": "exam_api.read", "type": "text" }
+              ]
+            },
+            "url": "{{identityUrl}}/connect/token"
+          }
+        },
+        {
+          "name": "[Negative] GET Categories WITHOUT token (expect 401)",
+          "auth": { "type": "noauth" },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 401 - unauthenticated request rejected', () => pm.response.to.have.status(401));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/categories"
+          }
+        }
+      ]
+    },
+    {
+      "name": "01 - Categories",
+      "item": [
+        {
+          "name": "POST Create Category",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(body).to.have.property('id'));",
+                  "if (body.id) { pm.environment.set('newCategoryId', body.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Category test - Postman\",\n  \"urlPath\": \"category-test-postman\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "GET All Categories",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/categories" }
+        },
+        {
+          "name": "GET Category By Id (new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Id matches', () => pm.expect(pm.response.json().id).to.eql(pm.environment.get('newCategoryId')));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/categories/{{newCategoryId}}" }
+        },
+        {
+          "name": "GET Category By UrlPath (seeded: csharp)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Id matches seeded C# category', () => pm.expect(pm.response.json().id).to.eql(pm.environment.get('categoryCSharpId')));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/categories/by-url-path/csharp" }
+        },
+        {
+          "name": "PUT Update Category (new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Name updated', () => pm.expect(pm.response.json().name).to.eql('Category test - Postman (updated)'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Category test - Postman (updated)\",\n  \"urlPath\": \"category-test-postman\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/categories/{{newCategoryId}}"
+          }
+        },
+        {
+          "name": "DELETE Category (new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/categories/{{newCategoryId}}" }
+        },
+        {
+          "name": "[Negative] POST Create Category - missing name (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"\",\n  \"urlPath\": \"missing-name\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/categories"
+          }
+        },
+        {
+          "name": "[Negative] DELETE Category in use by Question/Exam (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 - category still referenced', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/categories/{{categoryCSharpId}}" }
+        }
+      ]
+    },
+    {
+      "name": "02 - Questions",
+      "item": [
+        {
+          "name": "POST Create Question (under C# category)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Has id', () => pm.expect(body).to.have.property('id'));",
+                  "if (body.id) { pm.environment.set('newQuestionId', body.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Câu hỏi test Postman\",\n  \"questionType\": 0,\n  \"level\": 0,\n  \"categoryId\": \"{{categoryCSharpId}}\",\n  \"answers\": [\n    { \"content\": \"Đúng\", \"isCorrect\": true },\n    { \"content\": \"Sai\", \"isCorrect\": false }\n  ],\n  \"explain\": \"Câu hỏi tạo để test Postman\",\n  \"points\": 1,\n  \"ownerUserId\": \"postman-tester\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/questions"
+          }
+        },
+        {
+          "name": "GET Question By Id (new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/questions/{{newQuestionId}}" }
+        },
+        {
+          "name": "GET Questions By Category (C#, seeded + new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Is non-empty array', () => { pm.expect(body).to.be.an('array'); pm.expect(body.length).to.be.above(0); });"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/questions/by-category/{{categoryCSharpId}}" }
+        },
+        {
+          "name": "PUT Update Question (new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Points updated', () => pm.expect(pm.response.json().points).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Câu hỏi test Postman (updated)\",\n  \"questionType\": 0,\n  \"level\": 1,\n  \"categoryId\": \"{{categoryCSharpId}}\",\n  \"answers\": [\n    { \"content\": \"Đúng\", \"isCorrect\": true },\n    { \"content\": \"Sai\", \"isCorrect\": false }\n  ],\n  \"explain\": \"Đã update qua Postman\",\n  \"points\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/questions/{{newQuestionId}}"
+          }
+        },
+        {
+          "name": "DELETE Question (new)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/questions/{{newQuestionId}}" }
+        },
+        {
+          "name": "[Negative] POST Create Question - SingleSelection with 2 correct answers (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Câu hỏi lỗi - 2 đáp án đúng\",\n  \"questionType\": 0,\n  \"level\": 0,\n  \"categoryId\": \"{{categoryCSharpId}}\",\n  \"answers\": [\n    { \"content\": \"A\", \"isCorrect\": true },\n    { \"content\": \"B\", \"isCorrect\": true }\n  ],\n  \"explain\": \"Phải bị từ chối\",\n  \"points\": 1,\n  \"ownerUserId\": \"postman-tester\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/questions"
+          }
+        },
+        {
+          "name": "[Negative] POST Create Question - categoryId không tồn tại (expect 404)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 404', () => pm.response.to.have.status(404));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"Câu hỏi với category không tồn tại\",\n  \"questionType\": 0,\n  \"level\": 0,\n  \"categoryId\": \"000000000000000000000000\",\n  \"answers\": [\n    { \"content\": \"A\", \"isCorrect\": true },\n    { \"content\": \"B\", \"isCorrect\": false }\n  ],\n  \"explain\": \"Phải bị 404\",\n  \"points\": 1,\n  \"ownerUserId\": \"postman-tester\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/questions"
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Exams",
+      "item": [
+        {
+          "name": "POST Create Exam (Fixed lifecycle)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "pm.test('Status is Draft (0)', () => pm.expect(body.status).to.eql(0));",
+                  "if (body.id) { pm.environment.set('newExamId', body.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Exam test - Postman (Fixed)\",\n  \"shortDesc\": \"Tạo để test qua Postman\",\n  \"content\": \"Nội dung đề test\",\n  \"duration\": \"00:10:00\",\n  \"level\": 0,\n  \"categoryId\": \"{{categoryNetId}}\",\n  \"isTimeRestricted\": true,\n  \"minimumPassingScore\": 1,\n  \"ownerUserId\": \"postman-tester\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams"
+          }
+        },
+        {
+          "name": "POST Add Question to Exam (netQ1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('numberOfQuestions == 1', () => pm.expect(body.numberOfQuestions).to.eql(1));",
+                  "pm.test('questionIds contains netQ1', () => pm.expect(body.questionIds).to.include(pm.environment.get('netQ1Id')));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": "{{baseUrl}}/api/exams/{{newExamId}}/questions/{{netQ1Id}}"
+          }
+        },
+        {
+          "name": "PUT Configure Negative Marking (newExamId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Ratio == 0.25', () => pm.expect(pm.response.json().negativeMarkingRatio).to.eql(0.25));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"ratio\": 0.25\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams/{{newExamId}}/negative-marking"
+          }
+        },
+        {
+          "name": "PUT Schedule Availability (newExamId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 200', () => pm.response.to.have.status(200));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"availableFrom\": null,\n  \"availableTo\": null\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams/{{newExamId}}/availability"
+          }
+        },
+        {
+          "name": "POST Publish Exam (newExamId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is Published (1)', () => pm.expect(pm.response.json().status).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/exams/{{newExamId}}/publish" }
+        },
+        {
+          "name": "[Negative] PUT Update Exam while Published (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 - cannot edit a published exam', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Exam test - Postman (Fixed) - should fail\",\n  \"shortDesc\": \"...\",\n  \"content\": \"...\",\n  \"duration\": \"00:10:00\",\n  \"level\": 0,\n  \"categoryId\": \"{{categoryNetId}}\",\n  \"isTimeRestricted\": true,\n  \"minimumPassingScore\": 1\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams/{{newExamId}}"
+          }
+        },
+        {
+          "name": "POST Unpublish Exam (newExamId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status back to Draft (0)', () => pm.expect(pm.response.json().status).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/exams/{{newExamId}}/unpublish" }
+        },
+        {
+          "name": "DELETE Question from Exam (netQ1)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('numberOfQuestions == 0', () => pm.expect(pm.response.json().numberOfQuestions).to.eql(0));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/exams/{{newExamId}}/questions/{{netQ1Id}}"
+          }
+        },
+        {
+          "name": "POST Archive Exam (newExamId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is Archived (2)', () => pm.expect(pm.response.json().status).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/exams/{{newExamId}}/archive" }
+        },
+        {
+          "name": "DELETE Exam (newExamId)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/exams/{{newExamId}}" }
+        },
+        {
+          "name": "POST Create Exam (Pool lifecycle)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 201', () => pm.response.to.have.status(201));",
+                  "const body = pm.response.json();",
+                  "if (body.id) { pm.environment.set('newPoolExamId', body.id); }"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"Exam test - Postman (Pool)\",\n  \"shortDesc\": \"Tạo để test Pool qua Postman\",\n  \"content\": \"Nội dung đề test pool\",\n  \"duration\": \"00:10:00\",\n  \"level\": 0,\n  \"categoryId\": \"{{categoryNetId}}\",\n  \"isTimeRestricted\": true,\n  \"minimumPassingScore\": 1,\n  \"ownerUserId\": \"postman-tester\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams"
+          }
+        },
+        {
+          "name": "[Negative] POST Publish Pool Exam with 0 questions (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 - cannot publish exam with no questions', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/exams/{{newPoolExamId}}/publish" }
+        },
+        {
+          "name": "[Negative] PUT Configure Question Pool - count quá lớn (expect 400)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 - not enough questions in category', () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poolCategoryId\": \"{{categoryNetId}}\",\n  \"poolQuestionCount\": 100\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams/{{newPoolExamId}}/question-pool"
+          }
+        },
+        {
+          "name": "PUT Configure Question Pool - hợp lệ (count=2)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Mode is Pool (1)', () => pm.expect(body.questionSelectionMode).to.eql(1));",
+                  "pm.test('poolQuestionCount == 2', () => pm.expect(body.poolQuestionCount).to.eql(2));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "PUT",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"poolCategoryId\": \"{{categoryNetId}}\",\n  \"poolQuestionCount\": 2\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exams/{{newPoolExamId}}/question-pool"
+          }
+        },
+        {
+          "name": "POST Publish Pool Exam (now valid)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Status is Published (1)', () => pm.expect(pm.response.json().status).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/exams/{{newPoolExamId}}/publish" }
+        },
+        {
+          "name": "DELETE Pool Exam (cleanup)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 204', () => pm.response.to.have.status(204));"]
+              }
+            }
+          ],
+          "request": { "method": "DELETE", "header": [], "url": "{{baseUrl}}/api/exams/{{newPoolExamId}}" }
+        },
+        {
+          "name": "GET Exam By Id (seeded reference: C# Fixed Published)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Fixed mode (0)', () => pm.expect(body.questionSelectionMode).to.eql(0));",
+                  "pm.test('Published (1)', () => pm.expect(body.status).to.eql(1));",
+                  "pm.test('4 questions', () => pm.expect(body.numberOfQuestions).to.eql(4));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/exams/{{examCsId}}" }
+        },
+        {
+          "name": "GET Exam By Id (seeded reference: DB Pool Published)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "const body = pm.response.json();",
+                  "pm.test('Pool mode (1)', () => pm.expect(body.questionSelectionMode).to.eql(1));",
+                  "pm.test('Published (1)', () => pm.expect(body.status).to.eql(1));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/exams/{{examDbId}}" }
+        },
+        {
+          "name": "GET Exams By Category (seeded: C#)",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', () => pm.response.to.have.status(200));",
+                  "pm.test('Is array', () => pm.expect(pm.response.json()).to.be.an('array'));"
+                ]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/exams/by-category/{{categoryCSharpId}}" }
+        }
+      ]
+    },
+    {
+      "name": "04 - ExamAttempts (known limitation - luon expect 400)",
+      "description": "Nhom nay LUON tra ve 400 vi Identity.API chua co login UI, nen token client_credentials khong co claim 'sub' (khong gan voi user that). Day la hanh vi DUNG (chan gia danh user), khong phai bug. Xem muc 3 va 7 trong docs/TESTING_GUIDE.md.",
+      "item": [
+        {
+          "name": "[Expected 400] POST Start Exam Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 400 - no user claim available', () => pm.response.to.have.status(400));",
+                  "pm.test('Error mentions User Id', () => pm.expect(pm.response.text()).to.include('User Id'));"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"examId\": \"{{examCsId}}\"\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exam-attempts/start"
+          }
+        },
+        {
+          "name": "[Expected 400] GET Attempt Status",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/exam-attempts/{{examResultSampleId}}" }
+        },
+        {
+          "name": "[Expected 400] POST Record Answer",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [{ "key": "Content-Type", "value": "application/json" }],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"questionId\": \"{{csQ1Id}}\",\n  \"selectedAnswerIds\": [\"{{csQ1CorrectAnswerId}}\"]\n}",
+              "options": { "raw": { "language": "json" } }
+            },
+            "url": "{{baseUrl}}/api/exam-attempts/{{examResultSampleId}}/answers"
+          }
+        },
+        {
+          "name": "[Expected 400] POST Finish Attempt",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": { "method": "POST", "header": [], "url": "{{baseUrl}}/api/exam-attempts/{{examResultSampleId}}/finish" }
+        },
+        {
+          "name": "[Expected 400] GET Attempt Result",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/exam-attempts/{{examResultSampleId}}/result" }
+        },
+        {
+          "name": "[Expected 400] GET My Exam History",
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": ["pm.test('Status 400', () => pm.response.to.have.status(400));"]
+              }
+            }
+          ],
+          "request": { "method": "GET", "header": [], "url": "{{baseUrl}}/api/exam-attempts/history" }
+        }
+      ]
+    }
+  ]
+}

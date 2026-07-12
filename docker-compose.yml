@@ -25,6 +25,22 @@ services:
     environment:
       ACCEPT_EULA: "Y"
       MSSQL_SA_PASSWORD: Admin@12345
+  identity.api:
+    container_name: identity.api
+    build:
+      context: .
+      dockerfile: src/Identity/Identity.API/Dockerfile
+    ports:
+        - '5001:8080'
+    networks:
+        - exam
+    restart: always
+    depends_on:
+      - sqlserver
+    environment:
+      ASPNETCORE_ENVIRONMENT: Development
+      ASPNETCORE_URLS: http://+:8080
+      ConnectionStrings__IdentitySqlConnection: "Server=sqlserver.db,1433;Database=ExamIdentity;User Id=sa;Password=Admin@12345;TrustServerCertificate=True;"
 
 networks:
     exam:

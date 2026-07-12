@@ -1,0 +1,10 @@
+**/bin/
+**/obj/
+**/.vs/
+**/.vscode/
+**/.git/
+**/.github/
+**/Logs/
+**/*.user
+.dockerignore
+docker-compose.yml
