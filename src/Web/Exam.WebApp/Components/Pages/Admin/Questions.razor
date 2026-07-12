@@ -1,0 +1,61 @@
+@page "/admin/questions"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inject ExamApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Ngân hàng câu hỏi</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Ngân hàng câu hỏi</MudText>
+
+<MudSelect T="string" Label="Môn học" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync"
+           Class="mb-4" Style="max-width: 400px;" Disabled="categories == null">
+    @if (categories != null)
+    {
+        @foreach (var category in categories)
+        {
+            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+        }
+    }
+</MudSelect>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
+    Thêm câu hỏi
+</MudButton>
+
+@if (categories == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (string.IsNullOrEmpty(selectedCategoryId))
+{
+    <MudAlert Severity="Severity.Info">Chọn môn học để xem danh sách câu hỏi.</MudAlert>
+}
+else
+{
+    <MudTable Items="questions" Hover="true" Loading="isLoading">
+        <HeaderContent>
+            <MudTh>Nội dung</MudTh>
+            <MudTh>Loại</MudTh>
+            <MudTh>Mức độ</MudTh>
+            <MudTh>Điểm</MudTh>
+            <MudTh>Đáp án</MudTh>
+            <MudTh>Hành động</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Nội dung">@Truncate(context.Content)</MudTd>
+            <MudTd DataLabel="Loại">@QuestionTypeLabel(context.QuestionType)</MudTd>
+            <MudTd DataLabel="Mức độ">@LevelLabel(context.Level)</MudTd>
+            <MudTd DataLabel="Điểm">@context.Points</MudTd>
+            <MudTd DataLabel="Đáp án">@context.Answers.Count(a => a.IsCorrect)/@context.Answers.Count đúng</MudTd>
+            <MudTd DataLabel="Hành động">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>Chưa có câu hỏi nào trong môn học này.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}

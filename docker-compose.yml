@@ -29,7 +29,7 @@ services:
     container_name: identity.server
     build:
       context: .
-      dockerfile: src/Identity/Identity.Server/Dockerfile
+      dockerfile: src/Services/Identity/Identity.Server/Dockerfile
     ports:
         - '5001:8080'
     networks:
@@ -45,7 +45,7 @@ services:
     container_name: exam.api
     build:
       context: .
-      dockerfile: src/Exam/Exam.API/Dockerfile
+      dockerfile: src/Services/Exam/Exam.API/Dockerfile
     ports:
         - '5000:8080'
     networks:
@@ -66,7 +66,7 @@ services:
     container_name: exam.webapp
     build:
       context: .
-      dockerfile: src/Exam/Exam.WebApp/Dockerfile
+      dockerfile: src/Web/Exam.WebApp/Dockerfile
     ports:
         - '6004:8080'
     networks:

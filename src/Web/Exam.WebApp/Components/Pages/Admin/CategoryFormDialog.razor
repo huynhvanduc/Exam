@@ -1,0 +1,15 @@
+@inject ExamApiClient Api
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField T="string" Label="Tên môn học" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên." />
+            <MudTextField T="string" Label="Url Path" @bind-Value="urlPath" Required="true" RequiredError="Bắt buộc nhập url path."
+                          HelperText="Dùng cho đường dẫn, vd: cong-nghe-thong-tin" Class="mt-3" />
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Huỷ</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>

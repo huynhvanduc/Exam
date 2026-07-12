@@ -1,0 +1,40 @@
+@page "/admin/categories"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inject ExamApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+
+<PageTitle>Quản lý môn học</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Quản lý môn học</MudText>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           Class="mb-4" OnClick="OpenCreateDialog">
+    Thêm môn học
+</MudButton>
+
+@if (categories == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="categories" Hover="true" Loading="isLoading">
+        <HeaderContent>
+            <MudTh>Tên</MudTh>
+            <MudTh>Url Path</MudTh>
+            <MudTh>Hành động</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Tên">@context.Name</MudTd>
+            <MudTd DataLabel="Url Path">@context.UrlPath</MudTd>
+            <MudTd DataLabel="Hành động">
+                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>Chưa có môn học nào.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}

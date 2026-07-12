@@ -1,0 +1,16 @@
+@page "/"
+@inject NavigationManager Navigation
+
+<PageTitle>Exam Platform</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Exam Platform</MudText>
+
+<AuthorizeView>
+    <Authorized>
+        <MudText>Xin chào, @context.User.Identity?.Name.</MudText>
+    </Authorized>
+    <NotAuthorized>
+        <MudText Class="mb-4">Vui lòng đăng nhập để tiếp tục.</MudText>
+        <MudButton OnClick="GoToLogin" Variant="Variant.Filled" Color="Color.Primary">Đăng nhập</MudButton>
+    </NotAuthorized>
+</AuthorizeView>

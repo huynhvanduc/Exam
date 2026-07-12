@@ -1,0 +1,73 @@
+@inject ISnackbar Snackbar
+
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField T="string" Label="Nội dung câu hỏi" @bind-Value="content" Lines="3" Required="true"
+                          RequiredError="Bắt buộc nhập nội dung." />
+
+            <MudGrid Class="mt-2">
+                <MudItem xs="6">
+                    <MudSelect T="QuestionType" Label="Loại câu hỏi" @bind-Value="questionType" @bind-Value:after="OnQuestionTypeChanged">
+                        <MudSelectItem Value="QuestionType.SingleSelection">Một đáp án đúng</MudSelectItem>
+                        <MudSelectItem Value="QuestionType.MultipleSelection">Nhiều đáp án đúng</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSelect T="Level" Label="Mức độ" @bind-Value="level">
+                        <MudSelectItem Value="Level.Easy">Dễ</MudSelectItem>
+                        <MudSelectItem Value="Level.Medium">Trung bình</MudSelectItem>
+                        <MudSelectItem Value="Level.Difficult">Khó</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <MudNumericField T="int" Label="Điểm" @bind-Value="points" Min="1" Class="mt-3" Style="max-width: 200px;" />
+
+            <MudTextField T="string" Label="Giải thích (không bắt buộc)" @bind-Value="explain" Lines="2" Class="mt-3" />
+
+            <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">Đáp án</MudText>
+            @if (answerError != null)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">@answerError</MudAlert>
+            }
+
+            @if (questionType == QuestionType.SingleSelection)
+            {
+                <MudRadioGroup T="int" Value="singleCorrectIndex" ValueChanged="OnSingleCorrectChanged">
+                    @for (var i = 0; i < answers.Count; i++)
+                    {
+                        var index = i;
+                        <div class="d-flex align-center mb-2">
+                            <MudRadio T="int" Value="index" Color="Color.Primary" />
+                            <MudTextField T="string" @bind-Value="answers[index].Content" Placeholder="Nội dung đáp án"
+                                          Class="flex-grow-1 mx-2" />
+                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="() => RemoveAnswer(index)" />
+                        </div>
+                    }
+                </MudRadioGroup>
+            }
+            else
+            {
+                @for (var i = 0; i < answers.Count; i++)
+                {
+                    var index = i;
+                    <div class="d-flex align-center mb-2">
+                        <MudCheckBox T="bool" Value="answers[index].IsCorrect" ValueChanged="v => answers[index].IsCorrect = v" Color="Color.Primary" />
+                        <MudTextField T="string" @bind-Value="answers[index].Content" Placeholder="Nội dung đáp án"
+                                      Class="flex-grow-1 mx-2" />
+                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="() => RemoveAnswer(index)" />
+                    </div>
+                }
+            }
+
+            <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="AddAnswer" Class="mt-1">
+                Thêm đáp án
+            </MudButton>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Huỷ</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>

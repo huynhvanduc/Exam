@@ -1,0 +1,70 @@
+@page "/admin/exams"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inject ExamApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<PageTitle>Quản lý đề thi</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Quản lý đề thi</MudText>
+
+<MudSelect T="string" Label="Môn học" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync"
+           Class="mb-4" Style="max-width: 400px;" Disabled="categories == null">
+    @if (categories != null)
+    {
+        @foreach (var category in categories)
+        {
+            <MudSelectItem Value="@category.Id">@category.Name</MudSelectItem>
+        }
+    }
+</MudSelect>
+
+<MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+           Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
+    Thêm đề thi
+</MudButton>
+
+@if (categories == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (string.IsNullOrEmpty(selectedCategoryId))
+{
+    <MudAlert Severity="Severity.Info">Chọn môn học để xem danh sách đề thi.</MudAlert>
+}
+else
+{
+    <MudTable Items="exams" Hover="true" Loading="isLoading">
+        <HeaderContent>
+            <MudTh>Tên đề thi</MudTh>
+            <MudTh>Mức độ</MudTh>
+            <MudTh>Trạng thái</MudTh>
+            <MudTh>Số câu hỏi</MudTh>
+            <MudTh>Điểm đạt</MudTh>
+            <MudTh>Hành động</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Tên đề thi">@context.Name</MudTd>
+            <MudTd DataLabel="Mức độ">@LevelLabel(context.Level)</MudTd>
+            <MudTd DataLabel="Trạng thái">
+                <MudChip T="string" Size="Size.Small" Color="@StatusColor(context.Status)">@StatusLabel(context.Status)</MudChip>
+            </MudTd>
+            <MudTd DataLabel="Số câu hỏi">@context.NumberOfQuestions</MudTd>
+            <MudTd DataLabel="Điểm đạt">@context.MinimumPassingScore</MudTd>
+            <MudTd DataLabel="Hành động">
+                <MudTooltip Text="Cấu hình chi tiết">
+                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="() => NavigateToDetail(context.Id)" />
+                </MudTooltip>
+                <MudTooltip Text="Chỉ sửa được khi đang Nháp">
+                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)"
+                                   Disabled="context.Status != ExamStatus.Draft" />
+                </MudTooltip>
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>Chưa có đề thi nào trong môn học này.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}

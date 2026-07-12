@@ -1,0 +1,127 @@
+@page "/admin/exams/{Id}"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inject ExamApiClient Api
+@inject ISnackbar Snackbar
+@inject IDialogService DialogService
+@inject NavigationManager Navigation
+
+<PageTitle>Chi tiết đề thi</PageTitle>
+
+@if (exam == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/admin/exams"))" />
+        <MudText Typo="Typo.h4">@exam.Name</MudText>
+        <MudChip T="string" Color="@StatusColor(exam.Status)">@StatusLabel(exam.Status)</MudChip>
+        <MudSpacer />
+        @if (exam.Status == ExamStatus.Draft)
+        {
+            <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="PublishAsync">Xuất bản</MudButton>
+        }
+        @if (exam.Status == ExamStatus.Published)
+        {
+            <MudButton Variant="Variant.Outlined" OnClick="UnpublishAsync">Chuyển về Nháp</MudButton>
+        }
+        @if (exam.Status != ExamStatus.Archived)
+        {
+            <MudButton Variant="Variant.Outlined" Color="Color.Error" OnClick="ArchiveAsync">Lưu trữ</MudButton>
+        }
+    </MudStack>
+
+    @if (exam.Status != ExamStatus.Draft)
+    {
+        <MudAlert Severity="Severity.Info" Class="mb-4">Chỉ có thể sửa câu hỏi / pool / trừ điểm khi đề thi ở trạng thái Nháp.</MudAlert>
+    }
+
+    <MudGrid>
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Thông tin chung</MudText>
+                <MudText><b>Mô tả:</b> @exam.ShortDesc</MudText>
+                <MudText><b>Thời lượng:</b> @exam.Duration.TotalMinutes phút</MudText>
+                <MudText><b>Mức độ:</b> @LevelLabel(exam.Level)</MudText>
+                <MudText><b>Điểm đạt:</b> @exam.MinimumPassingScore</MudText>
+                <MudText><b>Số câu hỏi:</b> @exam.NumberOfQuestions</MudText>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 mt-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Lịch phát hành</MudText>
+                <MudDatePicker Label="Mở từ ngày" @bind-Date="availableFrom" Disabled="exam.Status == ExamStatus.Archived" />
+                <MudDatePicker Label="Đóng vào ngày" @bind-Date="availableTo" Class="mt-2" Disabled="exam.Status == ExamStatus.Archived" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SaveAvailabilityAsync"
+                           Disabled="exam.Status == ExamStatus.Archived">
+                    Lưu lịch phát hành
+                </MudButton>
+            </MudPaper>
+
+            <MudPaper Class="pa-4 mt-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Trừ điểm khi chọn sai</MudText>
+                <MudNumericField T="decimal" Label="Tỉ lệ trừ điểm (0 - 1)" @bind-Value="negativeMarkingRatio" Min="0" Max="1" Step="0.05M"
+                                 Disabled="exam.Status != ExamStatus.Draft" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SaveNegativeMarkingAsync"
+                           Disabled="exam.Status != ExamStatus.Draft">
+                    Lưu
+                </MudButton>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="6">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Câu hỏi</MudText>
+                <MudText Typo="Typo.body2" Class="mb-3">
+                    Chế độ hiện tại: <b>@(exam.QuestionSelectionMode == QuestionSelectionMode.Pool ? "Chọn ngẫu nhiên theo pool" : "Danh sách cố định")</b>
+                </MudText>
+
+                @if (exam.QuestionSelectionMode == QuestionSelectionMode.Pool)
+                {
+                    <MudNumericField T="int" Label="Số câu hỏi lấy ngẫu nhiên" @bind-Value="poolQuestionCount" Min="1"
+                                     Disabled="exam.Status != ExamStatus.Draft" />
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SavePoolAsync"
+                               Disabled="exam.Status != ExamStatus.Draft">
+                        Lưu cấu hình pool
+                    </MudButton>
+                }
+                else
+                {
+                    @if (categoryQuestions == null)
+                    {
+                        <MudProgressCircular Indeterminate="true" Size="Size.Small" />
+                    }
+                    else
+                    {
+                        <MudList T="string" Dense="true">
+                            @foreach (var question in categoryQuestions)
+                            {
+                                var inExam = exam.QuestionIds.Contains(question.Id);
+                                <MudListItem T="string">
+                                    <div class="d-flex align-center">
+                                        <MudCheckBox T="bool" Value="inExam" ValueChanged="v => ToggleQuestionAsync(question.Id, v)"
+                                                     Disabled="exam.Status != ExamStatus.Draft" Color="Color.Primary" />
+                                        <MudText Class="ml-2">@Truncate(question.Content)</MudText>
+                                    </div>
+                                </MudListItem>
+                            }
+                        </MudList>
+                        @if (categoryQuestions.Count == 0)
+                        {
+                            <MudAlert Severity="Severity.Info">Môn học này chưa có câu hỏi nào trong ngân hàng câu hỏi.</MudAlert>
+                        }
+                    }
+
+                    <MudDivider Class="my-3" />
+                    <MudText Typo="Typo.body2" Class="mb-2">Hoặc chuyển sang chọn ngẫu nhiên theo pool (chỉ khi chưa thêm câu hỏi cố định):</MudText>
+                    <MudNumericField T="int" Label="Số câu hỏi lấy ngẫu nhiên" @bind-Value="poolQuestionCount" Min="1"
+                                     Disabled="exam.Status != ExamStatus.Draft || exam.QuestionIds.Count > 0" />
+                    <MudButton Variant="Variant.Outlined" Class="mt-2" OnClick="SavePoolAsync"
+                               Disabled="exam.Status != ExamStatus.Draft || exam.QuestionIds.Count > 0">
+                        Chuyển sang pool
+                    </MudButton>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

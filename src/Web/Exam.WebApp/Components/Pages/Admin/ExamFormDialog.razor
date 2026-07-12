@@ -1,0 +1,35 @@
+<MudDialog>
+    <DialogContent>
+        <MudForm @ref="form">
+            <MudTextField T="string" Label="Tên đề thi" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên." />
+            <MudTextField T="string" Label="Mô tả ngắn" @bind-Value="shortDesc" Class="mt-3" />
+            <MudTextField T="string" Label="Nội dung / hướng dẫn" @bind-Value="content" Lines="3" Class="mt-3" />
+
+            <MudGrid Class="mt-2">
+                <MudItem xs="6">
+                    <MudNumericField T="int" Label="Thời lượng (phút)" @bind-Value="durationMinutes" Min="1" Required="true" />
+                </MudItem>
+                <MudItem xs="6">
+                    <MudSelect T="Level" Label="Mức độ" @bind-Value="level">
+                        <MudSelectItem Value="Level.Easy">Dễ</MudSelectItem>
+                        <MudSelectItem Value="Level.Medium">Trung bình</MudSelectItem>
+                        <MudSelectItem Value="Level.Difficult">Khó</MudSelectItem>
+                    </MudSelect>
+                </MudItem>
+            </MudGrid>
+
+            <MudGrid Class="mt-2">
+                <MudItem xs="6">
+                    <MudNumericField T="int" Label="Điểm đạt tối thiểu" @bind-Value="minimumPassingScore" Min="0" Required="true" />
+                </MudItem>
+                <MudItem xs="6" Class="d-flex align-center">
+                    <MudSwitch T="bool" @bind-Value="isTimeRestricted" Color="Color.Primary" Label="Giới hạn thời gian làm bài" />
+                </MudItem>
+            </MudGrid>
+        </MudForm>
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Huỷ</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Lưu</MudButton>
+    </DialogActions>
+</MudDialog>
