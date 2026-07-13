@@ -44,6 +44,7 @@ public static class InfrastructureServiceCollectionExtensions
 
         services.AddScoped<ExamQuestionPoolService>();
         services.AddScoped<CategoryDeletionGuard>();
+        services.AddScoped<QuestionDeletionGuard>();
         services.AddScoped<ExamResultGradingService>();
 
         services.AddHealthChecks()
