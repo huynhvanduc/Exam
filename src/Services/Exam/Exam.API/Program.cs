@@ -1,6 +1,8 @@
 using Exam.API.Authorization;
 using Exam.API.Middleware;
+using Exam.API.Services;
 using Exam.Application;
+using Exam.Application.Common;
 using Exam.Contracts;
 using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
@@ -47,6 +49,9 @@ builder.Services.AddAuthorization(options =>
 });
 
 builder.Services.AddScoped<IAuthorizationHandler, PermissionAuthorizationHandler>();
+
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<ICurrentUserAccessor, HttpContextCurrentUserAccessor>();
 
 builder.Services.AddExceptionHandler<GlobalExceptionHandler>();
 builder.Services.AddProblemDetails();

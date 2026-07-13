@@ -19,7 +19,11 @@
         <MudTd DataLabel="Người thực hiện">@context.ActorUserId</MudTd>
         <MudTd DataLabel="Hành động">@ActionLabel(context.Action)</MudTd>
         <MudTd DataLabel="Đối tượng">@context.TargetId</MudTd>
-        <MudTd DataLabel="Chi tiết">@context.Description</MudTd>
+        <MudTd DataLabel="Chi tiết">
+            <MudTooltip Text="@context.Description">
+                <MudText Typo="Typo.body2" Class="text-truncate" Style="max-width: 420px; display: block;">@context.Description</MudText>
+            </MudTooltip>
+        </MudTd>
     </RowTemplate>
     <NoRecordsContent>
         <MudText>Chưa có thay đổi nào được ghi nhận.</MudText>

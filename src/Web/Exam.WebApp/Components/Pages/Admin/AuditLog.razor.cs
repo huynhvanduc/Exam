@@ -21,6 +21,17 @@ public partial class AuditLog : AdminPageBase
         "Category.Create" => "Tạo môn học",
         "Question.Create" => "Thêm câu hỏi",
         "Exam.Publish" => "Xuất bản đề thi",
-        _ => action
+        _ => PrettifyAction(action)
     };
+
+    // Action tự sinh bởi AuditLoggingBehavior có dạng "{Aggregate}.{Verb}" (PascalCase, vd
+    // "Exam.CreateExam") - tách và chèn khoảng trắng để dễ đọc hơn thay vì hiện tên kỹ thuật thô.
+    private static string PrettifyAction(string action)
+    {
+        var parts = action.Split('.', 2);
+        return parts.Length != 2 ? action : $"{SpaceOutPascalCase(parts[0])} - {SpaceOutPascalCase(parts[1])}";
+    }
+
+    private static string SpaceOutPascalCase(string value) =>
+        string.Concat(value.Select((c, i) => i > 0 && char.IsUpper(c) ? " " + c : c.ToString()));
 }

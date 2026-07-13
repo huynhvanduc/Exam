@@ -1,3 +1,4 @@
+using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
@@ -51,5 +52,11 @@ public static class MongoIndexInitializer
             new CreateIndexOptions { Unique = true });
 
         await classes.Indexes.CreateOneAsync(classJoinCodeIndex, cancellationToken: cancellationToken);
+
+        var auditLog = context.GetCollection<AuditLogEntry>("auditLog");
+        var auditLogTimestampIndex = new CreateIndexModel<AuditLogEntry>(
+            Builders<AuditLogEntry>.IndexKeys.Descending(x => x.Timestamp));
+
+        await auditLog.Indexes.CreateOneAsync(auditLogTimestampIndex, cancellationToken: cancellationToken);
     }
 }
