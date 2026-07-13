@@ -185,7 +185,7 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> GetResults(string id, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
-        var result = await _mediator.Send(new GetExamResultsByExamQuery(id, normalizedPage, normalizedPageSize), cancellationToken);
+        var result = await _mediator.Send(new GetExamResultsByExamQuery(id, User.GetActor(), normalizedPage, normalizedPageSize), cancellationToken);
         return Ok(result);
     }
 }
