@@ -28,6 +28,43 @@
                     <MudSwitch T="bool" @bind-Value="isTimeRestricted" Color="Color.Primary" Label="Giới hạn thời gian làm bài" />
                 </MudItem>
             </MudGrid>
+
+            <MudExpansionPanels Class="mt-4" Elevation="0">
+                <MudExpansionPanel Text="Cấu hình nâng cao (tuỳ chọn)">
+                    <MudSwitch T="bool" @bind-Value="enableAvailability" Color="Color.Primary"
+                               Label="Giới hạn thời gian phát hành" Disabled="isArchived" />
+                    @if (enableAvailability)
+                    {
+                        <MudDatePicker Label="Mở từ ngày" @bind-Date="availableFrom" Disabled="isArchived" />
+                        <MudDatePicker Label="Đóng vào ngày" @bind-Date="availableTo" Class="mt-2" Disabled="isArchived" />
+                    }
+
+                    <MudSwitch T="bool" @bind-Value="enableNegativeMarking" Color="Color.Primary"
+                               Label="Trừ điểm khi chọn sai" Class="mt-4" Disabled="isLocked" />
+                    @if (enableNegativeMarking)
+                    {
+                        <MudNumericField T="decimal" Label="Tỉ lệ trừ điểm (0 - 1)" @bind-Value="negativeMarkingRatio"
+                                         Min="0" Max="1" Step="0.05M" Disabled="isLocked" />
+                    }
+
+                    @if (!hasFixedQuestions)
+                    {
+                        <MudSwitch T="bool" @bind-Value="enablePool" Color="Color.Primary"
+                                   Label="Chọn câu hỏi ngẫu nhiên theo pool (thay vì danh sách cố định)" Class="mt-4" Disabled="isLocked" />
+                        @if (enablePool)
+                        {
+                            <MudNumericField T="int" Label="Số câu hỏi lấy ngẫu nhiên từ môn học" @bind-Value="poolQuestionCount"
+                                             Min="1" Disabled="isLocked" />
+                        }
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">
+                            Đề thi đã có câu hỏi cố định - vào Chi tiết đề thi nếu muốn chuyển sang chế độ pool.
+                        </MudText>
+                    }
+                </MudExpansionPanel>
+            </MudExpansionPanels>
         </MudForm>
     </DialogContent>
     <DialogActions>

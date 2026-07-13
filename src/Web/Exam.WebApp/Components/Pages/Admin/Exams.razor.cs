@@ -36,12 +36,16 @@ public partial class Exams : AdminPageBase
     private async Task OpenCreateDialog()
     {
         var parameters = new DialogParameters<ExamFormDialog> { { x => x.CategoryId, selectedCategoryId! } };
-        var data = await ShowFormDialogAsync<ExamFormDialog, ExamRequest>("Thêm đề thi", parameters,
+        var data = await ShowFormDialogAsync<ExamFormDialog, ExamFormResult>("Thêm đề thi", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         if (data == null)
             return;
 
-        await ExecuteAsync(() => Api.CreateExamAsync(data), "Tạo thất bại", "Đã thêm đề thi.");
+        await ExecuteAsync(async () =>
+        {
+            var created = await Api.CreateExamAsync(data.Exam);
+            await ApplyAdvancedConfigAsync(created.Id, data);
+        }, "Tạo thất bại", "Đã thêm đề thi.");
         if (table != null)
             await table.ReloadServerData();
     }
@@ -53,14 +57,31 @@ public partial class Exams : AdminPageBase
             { x => x.CategoryId, exam.CategoryId },
             { x => x.Model, exam }
         };
-        var data = await ShowFormDialogAsync<ExamFormDialog, ExamRequest>("Sửa đề thi", parameters,
+        var data = await ShowFormDialogAsync<ExamFormDialog, ExamFormResult>("Sửa đề thi", parameters,
             new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
         if (data == null)
             return;
 
-        await ExecuteAsync(() => Api.UpdateExamAsync(exam.Id, data), "Cập nhật thất bại", "Đã cập nhật.");
+        await ExecuteAsync(async () =>
+        {
+            await Api.UpdateExamAsync(exam.Id, data.Exam);
+            await ApplyAdvancedConfigAsync(exam.Id, data);
+        }, "Cập nhật thất bại", "Đã cập nhật.");
         if (table != null)
             await table.ReloadServerData();
+    }
+
+    // Availability/NegativeMarking/Pool vẫn là API riêng ở backend (policy quyền khác nhau: ManageAvailability/
+    // ManageNegativeMarking/ManagePool so với Exam.Create) - chỉ gộp ở UI bằng cách gọi tuần tự sau khi tạo/sửa
+    // xong đề thi, thay vì bắt admin phải mở lại Chi tiết đề thi để cấu hình từng phần.
+    private async Task ApplyAdvancedConfigAsync(string examId, ExamFormResult data)
+    {
+        if (data.Availability != null)
+            await Api.ScheduleExamAvailabilityAsync(examId, data.Availability);
+        if (data.NegativeMarking != null)
+            await Api.ConfigureNegativeMarkingAsync(examId, data.NegativeMarking);
+        if (data.Pool != null)
+            await Api.ConfigureQuestionPoolAsync(examId, data.Pool);
     }
 
     private Task DeleteAsync(ExamDto exam) => ConfirmAndExecuteAsync(

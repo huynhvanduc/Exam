@@ -20,6 +20,22 @@ public partial class ExamFormDialog : FormDialogBase
     private int minimumPassingScore = 5;
     private bool isTimeRestricted = true;
 
+    private bool enableAvailability;
+    private DateTime? availableFrom;
+    private DateTime? availableTo;
+
+    private bool enableNegativeMarking;
+    private decimal negativeMarkingRatio = 0.25M;
+
+    private bool enablePool;
+    private int poolQuestionCount = 10;
+
+    // Chỉ liên quan khi sửa đề thi đã tồn tại (Model != null) - đề mới tạo luôn Draft, chưa có câu hỏi.
+    private bool isLocked => Model != null && Model.Status != ExamStatus.Draft;
+    private bool isArchived => Model != null && Model.Status == ExamStatus.Archived;
+    private bool hasFixedQuestions => Model != null
+        && Model.QuestionSelectionMode != QuestionSelectionMode.Pool && Model.QuestionIds.Count > 0;
+
     protected override void OnInitialized()
     {
         if (Model != null)
@@ -31,6 +47,18 @@ public partial class ExamFormDialog : FormDialogBase
             level = Model.Level;
             minimumPassingScore = Model.MinimumPassingScore;
             isTimeRestricted = Model.IsTimeRestricted;
+
+            enableAvailability = Model.AvailableFrom.HasValue || Model.AvailableTo.HasValue;
+            availableFrom = Model.AvailableFrom;
+            availableTo = Model.AvailableTo;
+
+            enableNegativeMarking = Model.NegativeMarkingRatio > 0;
+            if (Model.NegativeMarkingRatio > 0)
+                negativeMarkingRatio = Model.NegativeMarkingRatio;
+
+            enablePool = Model.QuestionSelectionMode == QuestionSelectionMode.Pool;
+            if (Model.PoolQuestionCount > 0)
+                poolQuestionCount = Model.PoolQuestionCount;
         }
     }
 
@@ -49,6 +77,12 @@ public partial class ExamFormDialog : FormDialogBase
             isTimeRestricted,
             minimumPassingScore);
 
-        MudDialog.Close(DialogResult.Ok(request));
+        // Bỏ chọn (tắt switch) nghĩa là "không đổi gì" ở đây, không tự xóa cấu hình đã có khi sửa -
+        // muốn xóa hẳn Lịch phát hành / trừ điểm thì vẫn có thể vào Chi tiết đề thi.
+        var availability = enableAvailability ? new ScheduleExamAvailabilityRequest(availableFrom, availableTo) : null;
+        var negativeMarking = enableNegativeMarking ? new ConfigureNegativeMarkingRequest(negativeMarkingRatio) : null;
+        var pool = enablePool && !hasFixedQuestions ? new ConfigureQuestionPoolRequest(CategoryId, poolQuestionCount) : null;
+
+        MudDialog.Close(DialogResult.Ok(new ExamFormResult(request, availability, negativeMarking, pool)));
     }
 }
