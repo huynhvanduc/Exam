@@ -11,6 +11,14 @@
                Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
         Thêm câu hỏi
     </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
+               Class="mb-4 ml-2" OnClick="OpenImportDialogAsync">
+        Import Excel
+    </MudButton>
+    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
+               Class="mb-4 ml-2" OnClick="ExportAsync" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
+        Export Excel
+    </MudButton>
 </AdminPageHeader>
 
 @if (categories == null)

@@ -20,8 +20,10 @@ public static class ApiRoutes
     public static class Questions
     {
         public const string Base = "/api/questions";
+        public const string Import = "/api/questions/import";
         public static string ById(string id) => $"{Base}/{id}";
         public static string ByCategory(string categoryId) => $"{Base}/by-category/{categoryId}";
+        public static string Export(string categoryId) => $"{Base}/export?categoryId={Uri.EscapeDataString(categoryId)}";
 
         public static string ByCategoryPaged(string categoryId, int page, int pageSize, Level? level = null,
             QuestionType? questionType = null, string? keyword = null)

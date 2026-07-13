@@ -1,7 +1,9 @@
 using Exam.API.Extensions;
 using Exam.Application.QuestionAggregate.Commands.CreateQuestion;
 using Exam.Application.QuestionAggregate.Commands.DeleteQuestion;
+using Exam.Application.QuestionAggregate.Commands.ImportQuestions;
 using Exam.Application.QuestionAggregate.Commands.UpdateQuestion;
+using Exam.Application.QuestionAggregate.Queries.ExportQuestions;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionById;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionsByCategory;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionsByCategoryPaged;
@@ -76,5 +78,28 @@ public class QuestionsController : ControllerBase
     {
         await _mediator.Send(new DeleteQuestionCommand(id, User.GetActor()), cancellationToken);
         return NoContent();
+    }
+
+    [HttpPost("import")]
+    [Authorize(Policy = Permissions.Question.Create)]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> Import(IFormFile file, CancellationToken cancellationToken)
+    {
+        if (file.Length == 0)
+            return BadRequest("File is required.");
+
+        using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, cancellationToken);
+
+        var result = await _mediator.Send(new ImportQuestionsCommand(stream.ToArray(), User.GetUserId()!), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("export")]
+    [Authorize(Policy = Permissions.Question.View)]
+    public async Task<IActionResult> Export([FromQuery] string categoryId, CancellationToken cancellationToken)
+    {
+        var bytes = await _mediator.Send(new ExportQuestionsQuery(categoryId), cancellationToken);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "cau-hoi.xlsx");
     }
 }

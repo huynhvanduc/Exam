@@ -1,0 +1,31 @@
+@inherits FormDialogBase
+@using Microsoft.AspNetCore.Components.Forms
+
+<MudDialog>
+    <DialogContent>
+        <MudText Typo="Typo.body2" Class="mb-3">
+            Chọn file Excel (.xlsx) theo mẫu: Môn học, Mức độ, Loại câu hỏi, Nội dung câu hỏi, Đáp án A-D, Đáp án đúng, Giải thích, Điểm.
+            Dùng nút "Export Excel" ở trang danh sách để lấy file mẫu đúng định dạng.
+        </MudText>
+
+        <MudFileUpload T="IBrowserFile" @bind-Files="selectedFile" Accept=".xlsx">
+            <CustomContent Context="fileUpload">
+                <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary"
+                           StartIcon="@Icons.Material.Filled.CloudUpload" OnClick="@(() => fileUpload.OpenFilePickerAsync())">
+                    Chọn file Excel
+                </MudButton>
+            </CustomContent>
+        </MudFileUpload>
+
+        @if (selectedFile != null)
+        {
+            <MudText Typo="Typo.body2" Class="mt-2">Đã chọn: @selectedFile.Name</MudText>
+        }
+    </DialogContent>
+    <DialogActions>
+        <MudButton OnClick="Cancel">Huỷ</MudButton>
+        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="selectedFile == null">
+            Nhập câu hỏi
+        </MudButton>
+    </DialogActions>
+</MudDialog>

@@ -1,10 +1,15 @@
 using Exam.WebApp.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.AspNetCore.Components.Forms;
+using Microsoft.JSInterop;
 using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class Questions : AdminPageBase
 {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
     private IReadOnlyCollection<CategoryDto>? categories;
     private MudTable<QuestionDto>? table;
     private string? selectedCategoryId;
@@ -85,6 +90,44 @@ public partial class Questions : AdminPageBase
         if (table != null)
             await table.ReloadServerData();
     }
+
+    private async Task OpenImportDialogAsync()
+    {
+        var file = await ShowFormDialogAsync<ImportQuestionsDialog, IBrowserFile>("Nhập câu hỏi từ Excel",
+            new DialogParameters<ImportQuestionsDialog>(), new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+        if (file == null)
+            return;
+
+        ImportQuestionsResultDto? result = null;
+        await ExecuteAsync(async () =>
+        {
+            await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
+            result = await Api.ImportQuestionsAsync(stream, file.Name);
+        }, "Nhập câu hỏi thất bại");
+
+        if (result != null)
+        {
+            Snackbar.Add($"Đã nhập {result.SuccessCount}/{result.TotalRows} câu hỏi.",
+                result.Errors.Count == 0 ? Severity.Success : Severity.Warning);
+
+            if (result.Errors.Count > 0)
+            {
+                var message = string.Join("\n", result.Errors.Select(e => $"Dòng {e.RowNumber}: {e.Message}"));
+                await DialogService.ShowMessageBoxAsync("Chi tiết lỗi import", message, yesText: "Đóng");
+            }
+        }
+
+        if (table != null)
+            await table.ReloadServerData();
+    }
+
+    private Task ExportAsync() => ExecuteAsync(async () =>
+    {
+        var bytes = await Api.ExportQuestionsAsync(selectedCategoryId!);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", $"cau-hoi-{selectedCategoryId}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+    }, "Xuất Excel thất bại");
 
     private Task DeleteAsync(QuestionDto question) => ConfirmAndExecuteAsync(
         "Xác nhận xoá", $"Xoá câu hỏi '{Truncate(question.Content)}'?",

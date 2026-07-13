@@ -43,6 +43,31 @@ public class ExamApiClient
     public Task DeleteQuestionAsync(string id, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Delete, ApiRoutes.Questions.ById(id), cancellationToken: cancellationToken);
 
+    public async Task<ImportQuestionsResultDto> ImportQuestionsAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default)
+    {
+        using var content = new MultipartFormDataContent();
+        using var streamContent = new StreamContent(fileStream);
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(streamContent, "file", fileName);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, ApiRoutes.Questions.Import) { Content = content };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return (await response.Content.ReadFromJsonAsync<ImportQuestionsResultDto>(cancellationToken: cancellationToken))!;
+    }
+
+    public async Task<byte[]> ExportQuestionsAsync(string categoryId, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, ApiRoutes.Questions.Export(categoryId));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
     public Task<PagedResult<ExamDto>> GetExamsByCategoryAsync(string categoryId, int page, int pageSize, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<ExamDto>>(HttpMethod.Get, ApiRoutes.Exams.ByCategory(categoryId, page, pageSize), cancellationToken: cancellationToken);
 
@@ -189,15 +214,15 @@ public class ExamApiClient
     private async Task<HttpRequestMessage> CreateRequestAsync(HttpMethod method, string url, object? body = null)
     {
         var request = new HttpRequestMessage(method, url);
-
-        var accessToken = await _httpContextAccessor.HttpContext!.GetTokenAsync("access_token");
-        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
 
         if (body != null)
             request.Content = JsonContent.Create(body);
 
         return request;
     }
+
+    private Task<string?> GetAccessTokenAsync() => _httpContextAccessor.HttpContext!.GetTokenAsync("access_token");
 
     private static async Task EnsureSuccessAsync(HttpResponseMessage response)
     {
