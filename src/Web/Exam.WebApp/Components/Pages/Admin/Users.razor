@@ -12,6 +12,8 @@
             <MudTh>Email</MudTh>
             <MudTh>External Id</MudTh>
             <MudTh>Vai trò</MudTh>
+            <MudTh>Trạng thái</MudTh>
+            <MudTh></MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Họ tên">@context.FirstName @context.LastName</MudTd>
@@ -23,6 +25,28 @@
                     <MudSelectItem Value="UserRole.Instructor">Instructor</MudSelectItem>
                     <MudSelectItem Value="UserRole.Admin">Admin</MudSelectItem>
                 </MudSelect>
+            </MudTd>
+            <MudTd DataLabel="Trạng thái">
+                @if (context.IsActive)
+                {
+                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Hoạt động</MudChip>
+                }
+                else
+                {
+                    <MudChip T="string" Color="Color.Error" Size="Size.Small">Đã khóa</MudChip>
+                }
+            </MudTd>
+            <MudTd>
+                @if (context.IsActive)
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small"
+                                   title="Khóa tài khoản" OnClick="() => ToggleActiveAsync(context, false)" />
+                }
+                else
+                {
+                    <MudIconButton Icon="@Icons.Material.Filled.LockOpen" Color="Color.Success" Size="Size.Small"
+                                   title="Mở khóa tài khoản" OnClick="() => ToggleActiveAsync(context, true)" />
+                }
             </MudTd>
         </RowTemplate>
         <NoRecordsContent>

@@ -1,5 +1,6 @@
 using System.Security.Claims;
 using Exam.API.Extensions;
+using Exam.Application.Exceptions;
 using Exam.Application.UserAggregate.Commands.EnsureUserProvisioned;
 using MediatR;
 
@@ -25,6 +26,11 @@ public class UserProvisioningMiddleware
             var lastName = context.User.FindFirst("family_name")?.Value ?? string.Empty;
 
             var user = await mediator.Send(new EnsureUserProvisionedCommand(userId, email, firstName, lastName), context.RequestAborted);
+
+            // IsActive sống trong Exam.Domain.User, JWT của Identity Server không biết gì về trạng thái
+            // khoá này -> phải tự chặn ở đây cho MỌI request đã xác thực, không chỉ riêng action nhạy cảm.
+            if (!user.IsActive)
+                throw new ForbiddenException("Tài khoản của bạn đã bị khóa. Liên hệ quản trị viên để được hỗ trợ.");
 
             // Role sống trong Exam.Domain.User (không phải claim JWT do Identity Server phát hành),
             // nên gắn thêm vào ClaimsPrincipal ngay sau khi provision để [Authorize(Roles=...)] dùng được.

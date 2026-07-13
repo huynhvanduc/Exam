@@ -103,6 +103,9 @@ public class ExamApiClient
     public Task<UserDto> PromoteUserRoleAsync(string externalId, PromoteUserRoleRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<UserDto>(HttpMethod.Put, ApiRoutes.Users.Role(externalId), body, cancellationToken);
 
+    public Task<UserDto> ToggleUserActiveAsync(string externalId, ToggleUserActiveRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync<UserDto>(HttpMethod.Put, ApiRoutes.Users.Active(externalId), body, cancellationToken);
+
     public Task<PagedResult<AuditLogEntryDto>> GetAuditLogAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<AuditLogEntryDto>>(HttpMethod.Get, ApiRoutes.AuditLog.Paged(page, pageSize), cancellationToken: cancellationToken);
 

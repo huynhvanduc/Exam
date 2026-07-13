@@ -51,6 +51,7 @@ public static class Permissions
     {
         public const string View = "User.View";
         public const string PromoteRole = "User.PromoteRole";
+        public const string ToggleActive = "User.ToggleActive";
     }
 
     public static readonly IReadOnlyCollection<string> All =
@@ -61,7 +62,7 @@ public static class Permissions
         Exam.ManageAvailability, Exam.ManageNegativeMarking, Exam.Publish, Exam.Unpublish, Exam.Archive,
         Exam.ViewResults, Exam.ManageClassAssignment,
         Class.View, Class.Create, Class.Update, Class.Delete, Class.ManageMembers,
-        User.View, User.PromoteRole,
+        User.View, User.PromoteRole, User.ToggleActive,
         Dashboard.View
     ];
 }

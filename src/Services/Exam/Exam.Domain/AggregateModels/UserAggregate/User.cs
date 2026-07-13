@@ -16,6 +16,10 @@ public class User : Entity, IAggregateRoot
 
     public UserRole Role { get; private set; }
 
+    // Không đưa vào constructor có tham số (MapCreator ở MongoClassMaps) để tránh vỡ deserialize
+    // các document cũ chưa có field này - default true áp dụng luôn cho cả document cũ lẫn user mới.
+    public bool IsActive { get; private set; } = true;
+
     private User()
     {
     }
@@ -57,5 +61,15 @@ public class User : Entity, IAggregateRoot
     public void ChangeRole(UserRole role)
     {
         Role = role;
+    }
+
+    public void Activate()
+    {
+        IsActive = true;
+    }
+
+    public void Deactivate()
+    {
+        IsActive = false;
     }
 }

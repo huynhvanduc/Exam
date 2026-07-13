@@ -1,5 +1,6 @@
 using Exam.API.Extensions;
 using Exam.Application.UserAggregate.Commands.PromoteUserRole;
+using Exam.Application.UserAggregate.Commands.ToggleUserActive;
 using Exam.Application.UserAggregate.Queries.GetUserByExternalId;
 using Exam.Application.UserAggregate.Queries.GetUsers;
 using Exam.Contracts;
@@ -42,6 +43,14 @@ public class UsersController : ControllerBase
     public async Task<IActionResult> PromoteRole(string externalId, [FromBody] PromoteUserRoleRequest request, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new PromoteUserRoleCommand(externalId, request.Role, User.GetActor()), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("{externalId}/active")]
+    [Authorize(Policy = Permissions.User.ToggleActive)]
+    public async Task<IActionResult> ToggleActive(string externalId, [FromBody] ToggleUserActiveRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new ToggleUserActiveCommand(externalId, request.IsActive, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 }

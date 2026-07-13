@@ -26,4 +26,24 @@ public partial class Users : AdminPageBase
                 await table.ReloadServerData();
         }, "Đổi vai trò thất bại", $"Đã đổi vai trò của {user.FirstName} {user.LastName} thành {role}.");
     }
+
+    private Task ToggleActiveAsync(UserDto user, bool isActive)
+    {
+        var fullName = $"{user.FirstName} {user.LastName}";
+        return isActive
+            ? ConfirmAndExecuteAsync("Xác nhận mở khóa", $"Mở khóa tài khoản '{fullName}'?",
+                async () =>
+                {
+                    await Api.ToggleUserActiveAsync(user.ExternalId, new ToggleUserActiveRequest(true));
+                    if (table != null)
+                        await table.ReloadServerData();
+                }, "Mở khóa thất bại", $"Đã mở khóa tài khoản {fullName}.", yesText: "Mở khóa")
+            : ConfirmAndExecuteAsync("Xác nhận khóa", $"Khóa tài khoản '{fullName}'? Người dùng sẽ không thể sử dụng hệ thống cho tới khi được mở khóa lại.",
+                async () =>
+                {
+                    await Api.ToggleUserActiveAsync(user.ExternalId, new ToggleUserActiveRequest(false));
+                    if (table != null)
+                        await table.ReloadServerData();
+                }, "Khóa thất bại", $"Đã khóa tài khoản {fullName}.", yesText: "Khóa");
+    }
 }
