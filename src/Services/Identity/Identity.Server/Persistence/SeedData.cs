@@ -30,27 +30,41 @@ namespace Identity.Server.Persistence
         {
             var userManager = sp.GetRequiredService<UserManager<ApplicationUser>>();
 
-            if (userManager.FindByNameAsync("admin").Result is not null)
+            // Id cố định để khớp với ExternalId của các user tương ứng đã được DataSeeder tạo sẵn bên
+            // Exam service (role Admin/Student) - tránh việc lần đăng nhập đầu tiên bị coi là "first
+            // user" và bị gán nhầm role, đồng thời tên hiển thị khớp ngay từ đầu.
+            EnsureUser(userManager, "528ac9b1-20ff-4d42-bd6d-e85300acde89", "admin", "admin@.com.vn",
+                "Admin", "1", "Admin@123$");
+            EnsureUser(userManager, "33333333-3333-3333-3333-333333333333", "student1", "lan.nguyen@exam-platform.vn",
+                "Lan", "Nguyễn", "Student@123");
+            EnsureUser(userManager, "44444444-4444-4444-4444-444444444444", "student2", "hung.pham@exam-platform.vn",
+                "Hùng", "Phạm", "Student@123");
+            EnsureUser(userManager, "22222222-2222-2222-2222-222222222222", "instructor1", "minh.tran@exam-platform.vn",
+                "Minh", "Trần", "Instructor@123");
+            EnsureUser(userManager, "66666666-6666-6666-6666-666666666666", "instructor2", "tuan.le@exam-platform.vn",
+                "Tuấn", "Lê", "Instructor@123");
+        }
+
+        private static void EnsureUser(UserManager<ApplicationUser> userManager, string id, string userName,
+            string email, string firstName, string lastName, string password)
+        {
+            if (userManager.FindByNameAsync(userName).Result is not null)
                 return;
 
-            var admin = new ApplicationUser
+            var user = new ApplicationUser
             {
-                // Id cố định để khớp với ExternalId của user Admin được DataSeeder tạo sẵn bên Exam
-                // service - tránh việc lần đăng nhập đầu tiên của admin bị coi là "first user" và
-                // chỉ được cấp role Student do Users collection bên Exam không còn rỗng.
-                Id = "528ac9b1-20ff-4d42-bd6d-e85300acde89",
-                UserName = "admin",
-                Email = "admin@.com.vn",
+                Id = id,
+                UserName = userName,
+                Email = email,
                 EmailConfirmed = true,
-                FirstName = "Admin",
-                LastName = "1"
+                FirstName = firstName,
+                LastName = lastName
             };
 
-            var result = userManager.CreateAsync(admin, "Admin@123$")
-                .Result;
+            var result = userManager.CreateAsync(user, password).Result;
 
             if (!result.Succeeded)
-                throw new Exception("Seed admin thất bại: " +
+                throw new Exception($"Seed user '{userName}' thất bại: " +
                     string.Join("; ", result.Errors.Select(e => e.Description)));
         }
 

@@ -9,11 +9,13 @@
 <MudTable T="UserDto" @ref="table" ServerData="LoadServerData" Hover="true">
         <HeaderContent>
             <MudTh>Họ tên</MudTh>
+            <MudTh>Email</MudTh>
             <MudTh>External Id</MudTh>
             <MudTh>Vai trò</MudTh>
         </HeaderContent>
         <RowTemplate>
             <MudTd DataLabel="Họ tên">@context.FirstName @context.LastName</MudTd>
+            <MudTd DataLabel="Email">@context.Email</MudTd>
             <MudTd DataLabel="External Id">@context.ExternalId</MudTd>
             <MudTd DataLabel="Vai trò" Style="max-width: 220px;">
                 <MudSelect T="UserRole" Value="context.Role" ValueChanged="role => ChangeRoleAsync(context, role)">

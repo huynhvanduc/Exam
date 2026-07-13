@@ -30,10 +30,35 @@ else
                     {
                         <MudText Typo="Typo.body2"><b>Thời gian:</b> @exam.Duration.TotalMinutes phút</MudText>
                     }
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" FullWidth="true"
-                               OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
-                        Bắt đầu làm bài
-                    </MudButton>
+
+                    @{ var attempt = myAttempts.GetValueOrDefault(exam.Id); }
+                    @if (attempt == null)
+                    {
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" FullWidth="true"
+                                   OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
+                            Bắt đầu làm bài
+                        </MudButton>
+                    }
+                    else if (!attempt.Finished)
+                    {
+                        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3 mb-2">Bạn đang làm dở đề này.</MudAlert>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Href="@($"/exams/take/{attempt.Id}")">
+                            Tiếp tục làm bài
+                        </MudButton>
+                    }
+                    else
+                    {
+                        <MudAlert Severity="@(attempt.Passed == true ? Severity.Success : Severity.Warning)" Dense="true" Class="mt-3 mb-2">
+                            Đã làm — @attempt.TotalScore/@attempt.MaxPossibleScore điểm (@(attempt.Passed == true ? "Đạt" : "Không đạt"))
+                        </MudAlert>
+                        <MudStack Row="true" Spacing="2">
+                            <MudButton Variant="Variant.Outlined" FullWidth="true" Href="@($"/exams/result/{attempt.Id}")">Xem kết quả</MudButton>
+                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                       OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
+                                Làm lại
+                            </MudButton>
+                        </MudStack>
+                    }
                 </MudPaper>
             </MudItem>
         }

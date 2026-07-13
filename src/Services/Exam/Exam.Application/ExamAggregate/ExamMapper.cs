@@ -24,5 +24,7 @@ internal static class ExamMapper
             exam.AvailableTo,
             exam.NegativeMarkingRatio,
             exam.QuestionIds,
-            exam.NumberOfQuestions);
+            exam.NumberOfQuestions,
+            exam.AssignedClassIds,
+            exam.IsPublic);
 }

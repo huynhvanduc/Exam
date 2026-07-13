@@ -18,6 +18,13 @@ public class UserRepository : MongoRepositoryBase<User>, IUserRepository
         return Collection.Find(x => x.ExternalId == externalId).FirstOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<User>> GetByExternalIdsAsync(IEnumerable<string> externalIds, CancellationToken cancellationToken = default)
+    {
+        var idList = externalIds?.ToList() ?? new List<string>();
+        Logger.LogDebug("Getting Users by ExternalIds {ExternalIds}.", idList);
+        return await Collection.Find(x => idList.Contains(x.ExternalId)).ToListAsync(cancellationToken);
+    }
+
     public Task<bool> AnyAsync(CancellationToken cancellationToken = default)
     {
         return Collection.Find(FilterDefinition<User>.Empty).AnyAsync(cancellationToken);

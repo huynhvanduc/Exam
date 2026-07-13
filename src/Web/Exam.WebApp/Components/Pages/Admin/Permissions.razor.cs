@@ -28,6 +28,13 @@ public partial class Permissions : AdminPageBase
         new(Exam.Contracts.Permissions.Exam.Unpublish, "Chuyển đề thi về Nháp", "Đề thi"),
         new(Exam.Contracts.Permissions.Exam.Archive, "Lưu trữ đề thi", "Đề thi"),
         new(Exam.Contracts.Permissions.Exam.ViewResults, "Xem kết quả thi", "Đề thi"),
+        new(Exam.Contracts.Permissions.Exam.ManageClassAssignment, "Gán đề thi vào lớp", "Đề thi"),
+
+        new(Exam.Contracts.Permissions.Class.View, "Xem danh sách lớp", "Lớp học"),
+        new(Exam.Contracts.Permissions.Class.Create, "Tạo lớp học", "Lớp học"),
+        new(Exam.Contracts.Permissions.Class.Update, "Sửa lớp học", "Lớp học"),
+        new(Exam.Contracts.Permissions.Class.Delete, "Xoá lớp học", "Lớp học"),
+        new(Exam.Contracts.Permissions.Class.ManageMembers, "Quản lý thành viên lớp", "Lớp học"),
 
         new(Exam.Contracts.Permissions.User.PromoteRole, "Đổi vai trò người dùng", "Người dùng"),
     ];

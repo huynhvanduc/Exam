@@ -7,6 +7,7 @@ namespace Exam.Domain.AggregateModels.ExamAggregate;
 public class Exam : Entity, IAggregateRoot
 {
     private List<string> _questionIds = new();
+    private List<string> _assignedClassIds = new();
 
     public string Name { get; private set; }
 
@@ -49,6 +50,15 @@ public class Exam : Entity, IAggregateRoot
         get => _questionIds;
         private set => _questionIds = value?.ToList() ?? new List<string>();
     }
+
+    public IReadOnlyCollection<string> AssignedClassIds
+    {
+        get => _assignedClassIds;
+        private set => _assignedClassIds = value?.ToList() ?? new List<string>();
+    }
+
+    // Đề không giao cho lớp nào là đề công khai - mọi user đăng nhập đều thi được.
+    public bool IsPublic => _assignedClassIds.Count == 0;
 
     public int NumberOfQuestions => QuestionSelectionMode == QuestionSelectionMode.Pool
         ? PoolQuestionCount
@@ -215,6 +225,20 @@ public class Exam : Entity, IAggregateRoot
 
         Status = ExamStatus.Archived;
     }
+
+    public void AssignToClass(string classId)
+    {
+        if (string.IsNullOrWhiteSpace(classId))
+            throw new ExamDomainException("Class id is required.");
+
+        if (!_assignedClassIds.Contains(classId))
+            _assignedClassIds.Add(classId);
+    }
+
+    public void UnassignFromClass(string classId) => _assignedClassIds.Remove(classId);
+
+    public bool IsAssignedToAnyOf(IReadOnlyCollection<string> classIds) =>
+        IsPublic || _assignedClassIds.Any(classIds.Contains);
 
     private void EnsureEditable()
     {

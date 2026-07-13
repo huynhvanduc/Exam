@@ -1,4 +1,5 @@
 using Exam.Application.Exceptions;
+using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
@@ -16,16 +17,18 @@ public class StartExamCommandHandler : IRequestHandler<StartExamCommand, ExamAtt
     private readonly IExamResultRepository _examResultRepository;
     private readonly IQuestionRepository _questionRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IClassRoomRepository _classRoomRepository;
     private readonly ExamQuestionPoolService _examQuestionPoolService;
 
     public StartExamCommandHandler(IExamRepository examRepository, IExamResultRepository examResultRepository,
-        IQuestionRepository questionRepository, IUserRepository userRepository,
+        IQuestionRepository questionRepository, IUserRepository userRepository, IClassRoomRepository classRoomRepository,
         ExamQuestionPoolService examQuestionPoolService)
     {
         _examRepository = examRepository;
         _examResultRepository = examResultRepository;
         _questionRepository = questionRepository;
         _userRepository = userRepository;
+        _classRoomRepository = classRoomRepository;
         _examQuestionPoolService = examQuestionPoolService;
     }
 
@@ -44,6 +47,18 @@ public class StartExamCommandHandler : IRequestHandler<StartExamCommand, ExamAtt
         if (!exam.IsAvailable(DateTime.UtcNow))
             throw new ExamDomainException("This exam is not available right now.");
 
+        // Chặn ở tầng command (không chỉ ẩn nút trên UI) - đề gán lớp chỉ thành viên lớp đó mới thi được,
+        // tránh học viên gọi thẳng API để bypass giao diện.
+        if (!exam.IsPublic)
+        {
+            var userClassIds = (await _classRoomRepository.GetByMemberAsync(request.UserId, cancellationToken))
+                .Select(c => c.Id)
+                .ToList();
+
+            if (!exam.IsAssignedToAnyOf(userClassIds))
+                throw new ForbiddenException("You are not assigned to take this exam.");
+        }
+
         var questionIds = exam.QuestionSelectionMode == QuestionSelectionMode.Pool
             ? await _examQuestionPoolService.DrawQuestionIdsAsync(exam, cancellationToken)
             : exam.QuestionIds;
@@ -53,7 +68,7 @@ public class StartExamCommandHandler : IRequestHandler<StartExamCommand, ExamAtt
 
         var examResult = new ExamResult(request.UserId, request.ExamId, exam.NegativeMarkingRatio);
         examResult.SetExamTitle(exam.Name);
-        examResult.SetUserInfo(string.Empty, fullName);
+        examResult.SetUserInfo(user?.Email ?? string.Empty, fullName);
         examResult.AssignQuestions(questionIds);
         examResult.SetDuration(exam.IsTimeRestricted ? exam.Duration : null);
 

@@ -20,10 +20,11 @@ public class UserProvisioningMiddleware
 
         if (!string.IsNullOrWhiteSpace(userId))
         {
+            var email = context.User.FindFirst("email")?.Value ?? string.Empty;
             var firstName = context.User.FindFirst("given_name")?.Value ?? string.Empty;
             var lastName = context.User.FindFirst("family_name")?.Value ?? string.Empty;
 
-            var user = await mediator.Send(new EnsureUserProvisionedCommand(userId, firstName, lastName), context.RequestAborted);
+            var user = await mediator.Send(new EnsureUserProvisionedCommand(userId, email, firstName, lastName), context.RequestAborted);
 
             // Role sống trong Exam.Domain.User (không phải claim JWT do Identity Server phát hành),
             // nên gắn thêm vào ClaimsPrincipal ngay sau khi provision để [Authorize(Roles=...)] dùng được.

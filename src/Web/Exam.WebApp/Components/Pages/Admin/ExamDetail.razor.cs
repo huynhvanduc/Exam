@@ -11,11 +11,16 @@ public partial class ExamDetail : AdminPageBase
 
     private ExamDto? exam;
     private IReadOnlyCollection<QuestionDto>? categoryQuestions;
+    private IReadOnlyCollection<ClassRoomDto> allClasses = [];
     private DateTime? availableFrom;
     private DateTime? availableTo;
     private decimal negativeMarkingRatio;
     private int poolQuestionCount = 10;
+    private string? selectedClassId;
     private MudTable<ExamResultAdminListItemDto>? resultsTable;
+
+    private IReadOnlyCollection<ClassRoomDto> unassignedClasses =>
+        allClasses.Where(c => exam != null && !exam.AssignedClassIds.Contains(c.Id)).ToList();
 
     protected override async Task OnInitializedAsync()
     {
@@ -29,10 +34,25 @@ public partial class ExamDetail : AdminPageBase
         availableTo = exam.AvailableTo;
         negativeMarkingRatio = exam.NegativeMarkingRatio;
         poolQuestionCount = exam.PoolQuestionCount > 0 ? exam.PoolQuestionCount : 10;
+        allClasses = await Api.GetClassesAsync();
+        selectedClassId = null;
 
         if (exam.QuestionSelectionMode == QuestionSelectionMode.Fixed)
             categoryQuestions = await Api.GetQuestionsByCategoryAsync(exam.CategoryId);
     }, "Không tải được đề thi");
+
+    private string ClassName(string classId) => allClasses.FirstOrDefault(c => c.Id == classId)?.Name ?? "(Lớp không còn tồn tại)";
+
+    private Task AssignClassAsync() => ExecuteAsync(async () =>
+    {
+        exam = await Api.AssignExamToClassAsync(Id, selectedClassId!);
+        selectedClassId = null;
+    }, "Gán lớp thất bại", "Đã gán lớp.");
+
+    private Task UnassignClassAsync(string classId) => ExecuteAsync(async () =>
+    {
+        exam = await Api.UnassignExamFromClassAsync(Id, classId);
+    }, "Bỏ gán thất bại", "Đã bỏ gán lớp.");
 
     private Task ToggleQuestionAsync(string questionId, bool add) => ExecuteAsync(async () =>
     {

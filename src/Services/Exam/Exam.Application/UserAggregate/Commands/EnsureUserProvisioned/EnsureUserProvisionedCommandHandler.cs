@@ -27,7 +27,7 @@ public class EnsureUserProvisionedCommandHandler : IRequestHandler<EnsureUserPro
         var isFirstUser = !await _userRepository.AnyAsync(cancellationToken);
         var role = isFirstUser ? UserRole.Admin : UserRole.Student;
 
-        var user = User.CreateNewUser(request.ExternalId, firstName, lastName, role);
+        var user = User.CreateNewUser(request.ExternalId, request.Email ?? string.Empty, firstName, lastName, role);
 
         await _userRepository.InsertAsync(user, cancellationToken);
 

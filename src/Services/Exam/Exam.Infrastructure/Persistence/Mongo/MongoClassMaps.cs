@@ -1,5 +1,6 @@
 using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
+using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.RoleAggregate;
@@ -62,6 +63,11 @@ public static class MongoClassMaps
         if (!BsonClassMap.IsClassMapRegistered(typeof(Category)))
         {
             BsonClassMap.RegisterClassMap<Category>(cm => cm.AutoMap());
+        }
+
+        if (!BsonClassMap.IsClassMapRegistered(typeof(ClassRoom)))
+        {
+            BsonClassMap.RegisterClassMap<ClassRoom>(cm => cm.AutoMap());
         }
 
         if (!BsonClassMap.IsClassMapRegistered(typeof(Answer)))
@@ -133,7 +139,7 @@ public static class MongoClassMaps
             BsonClassMap.RegisterClassMap<User>(cm =>
             {
                 cm.AutoMap();
-                cm.MapCreator(u => new User(u.ExternalId, u.FirstName, u.LastName, u.Role));
+                cm.MapCreator(u => new User(u.ExternalId, u.Email, u.FirstName, u.LastName, u.Role));
             });
         }
 

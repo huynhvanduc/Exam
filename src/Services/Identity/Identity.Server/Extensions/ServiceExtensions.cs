@@ -1,5 +1,6 @@
 ﻿using Identity.Server.Persistence;
 using Identity.Server.Models;
+using Identity.Server.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -27,6 +28,8 @@ public static class ServiceExtensions
         })
         .AddEntityFrameworkStores<AppIdentityDbContext>()
         .AddDefaultTokenProviders();
+
+        services.AddScoped<IUserClaimsPrincipalFactory<ApplicationUser>, ApplicationUserClaimsPrincipalFactory>();
 
         services.ConfigureApplicationCookie(options =>
         {

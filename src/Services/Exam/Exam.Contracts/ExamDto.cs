@@ -21,4 +21,6 @@ public record ExamDto(
     DateTime? AvailableTo,
     decimal NegativeMarkingRatio,
     IReadOnlyCollection<string> QuestionIds,
-    int NumberOfQuestions);
+    int NumberOfQuestions,
+    IReadOnlyCollection<string> AssignedClassIds,
+    bool IsPublic);

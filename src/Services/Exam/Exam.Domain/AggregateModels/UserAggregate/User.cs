@@ -8,6 +8,8 @@ public class User : Entity, IAggregateRoot
 {
     public string ExternalId { get; private set; }
 
+    public string Email { get; private set; }
+
     public string FirstName { get; private set; }
 
     public string LastName { get; private set; }
@@ -18,7 +20,7 @@ public class User : Entity, IAggregateRoot
     {
     }
 
-    public User(string externalId, string firstName, string lastName, UserRole role = UserRole.Student)
+    public User(string externalId, string email, string firstName, string lastName, UserRole role = UserRole.Student)
     {
         if (string.IsNullOrWhiteSpace(externalId))
             throw new ExamDomainException("User external id is required.");
@@ -30,15 +32,16 @@ public class User : Entity, IAggregateRoot
             throw new ExamDomainException("User last name is required.");
 
         ExternalId = externalId;
+        Email = email ?? string.Empty;
         FirstName = firstName;
         LastName = lastName;
         Role = role;
     }
 
-    public static User CreateNewUser(string externalId, string firstName, string lastName, UserRole role = UserRole.Student) =>
-        new(externalId, firstName, lastName, role);
+    public static User CreateNewUser(string externalId, string email, string firstName, string lastName, UserRole role = UserRole.Student) =>
+        new(externalId, email, firstName, lastName, role);
 
-    public void UpdateProfile(string firstName, string lastName)
+    public void UpdateProfile(string email, string firstName, string lastName)
     {
         if (string.IsNullOrWhiteSpace(firstName))
             throw new ExamDomainException("User first name is required.");
@@ -46,6 +49,7 @@ public class User : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(lastName))
             throw new ExamDomainException("User last name is required.");
 
+        Email = email ?? string.Empty;
         FirstName = firstName;
         LastName = lastName;
     }

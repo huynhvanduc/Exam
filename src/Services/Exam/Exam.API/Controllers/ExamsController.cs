@@ -1,5 +1,6 @@
 using Exam.Application.ExamAggregate.Commands.AddQuestionToExam;
 using Exam.Application.ExamAggregate.Commands.ArchiveExam;
+using Exam.Application.ExamAggregate.Commands.AssignExamToClass;
 using Exam.Application.ExamAggregate.Commands.ConfigureNegativeMarking;
 using Exam.Application.ExamAggregate.Commands.ConfigureQuestionPool;
 using Exam.Application.ExamAggregate.Commands.CreateExam;
@@ -7,6 +8,7 @@ using Exam.Application.ExamAggregate.Commands.DeleteExam;
 using Exam.Application.ExamAggregate.Commands.PublishExam;
 using Exam.Application.ExamAggregate.Commands.RemoveQuestionFromExam;
 using Exam.Application.ExamAggregate.Commands.ScheduleExamAvailability;
+using Exam.Application.ExamAggregate.Commands.UnassignExamFromClass;
 using Exam.Application.ExamAggregate.Commands.UnpublishExam;
 using Exam.Application.ExamAggregate.Commands.UpdateExam;
 using Exam.API.Extensions;
@@ -62,7 +64,7 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> GetAvailable([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
     {
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
-        var query = new GetAvailableExamsQuery(normalizedPage, normalizedPageSize);
+        var query = new GetAvailableExamsQuery(User.GetUserId()!, normalizedPage, normalizedPageSize);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }
@@ -149,6 +151,22 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> Archive(string id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new ArchiveExamCommand(id, User.GetActor()), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/classes/{classId}")]
+    [Authorize(Policy = Permissions.Exam.ManageClassAssignment)]
+    public async Task<IActionResult> AssignToClass(string id, string classId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new AssignExamToClassCommand(id, classId, User.GetActor()), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpDelete("{id}/classes/{classId}")]
+    [Authorize(Policy = Permissions.Exam.ManageClassAssignment)]
+    public async Task<IActionResult> UnassignFromClass(string id, string classId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new UnassignExamFromClassCommand(id, classId, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 

@@ -120,6 +120,44 @@ else
                     </MudButton>
                 }
             </MudPaper>
+
+            <MudPaper Class="pa-4 mt-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Lớp được giao</MudText>
+                @if (exam.IsPublic)
+                {
+                    <MudAlert Severity="Severity.Info" Dense="true" Class="mb-3">Đề công khai - mọi học viên đăng nhập đều thi được.</MudAlert>
+                }
+                else
+                {
+                    <MudList T="string" Dense="true">
+                        @foreach (var classId in exam.AssignedClassIds)
+                        {
+                            <MudListItem T="string">
+                                <div class="d-flex align-center justify-space-between">
+                                    <MudText>@ClassName(classId)</MudText>
+                                    <MudIconButton Icon="@Icons.Material.Filled.Close" Size="Size.Small" Color="Color.Error"
+                                                   OnClick="() => UnassignClassAsync(classId)" />
+                                </div>
+                            </MudListItem>
+                        }
+                    </MudList>
+                }
+
+                @if (unassignedClasses.Count > 0)
+                {
+                    <MudDivider Class="my-3" />
+                    <MudSelect T="string" Label="Gán thêm lớp" @bind-Value="selectedClassId">
+                        @foreach (var c in unassignedClasses)
+                        {
+                            <MudSelectItem T="string" Value="@c.Id">@c.Name</MudSelectItem>
+                        }
+                    </MudSelect>
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-2"
+                               OnClick="AssignClassAsync" Disabled="string.IsNullOrEmpty(selectedClassId)">
+                        Gán lớp
+                    </MudButton>
+                }
+            </MudPaper>
         </MudItem>
     </MudGrid>
 

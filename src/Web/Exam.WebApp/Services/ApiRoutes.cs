@@ -50,6 +50,17 @@ public static class ApiRoutes
         public static string Archive(string examId) => $"{Base}/{examId}/archive";
         public static string Results(string examId, int page, int pageSize) => $"{Base}/{examId}/results?page={page}&pageSize={pageSize}";
         public static string Available(int page, int pageSize) => $"{Base}/available?page={page}&pageSize={pageSize}";
+        public static string Class(string examId, string classId) => $"{Base}/{examId}/classes/{classId}";
+    }
+
+    public static class Classes
+    {
+        public const string Base = "/api/classes";
+        public const string Mine = "/api/classes/mine";
+        public const string Join = "/api/classes/join";
+        public static string ById(string id) => $"{Base}/{id}";
+        public static string RegenerateCode(string id) => $"{Base}/{id}/regenerate-code";
+        public static string Member(string id, string userId) => $"{Base}/{id}/members/{userId}";
     }
 
     public static class ExamAttempts

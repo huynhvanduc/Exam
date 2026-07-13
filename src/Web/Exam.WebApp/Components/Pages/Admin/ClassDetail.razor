@@ -1,0 +1,56 @@
+@page "/admin/classes/{Id}"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inherits AdminPageBase
+@inject NavigationManager Navigation
+
+<PageTitle>Chi tiết lớp học</PageTitle>
+
+@if (classRoom == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4">
+        <MudIconButton Icon="@Icons.Material.Filled.ArrowBack" OnClick="@(() => Navigation.NavigateTo("/admin/classes"))" />
+        <MudText Typo="Typo.h4">@classRoom.Name</MudText>
+    </MudStack>
+
+    <MudGrid>
+        <MudItem xs="12" md="5">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Thông tin chung</MudText>
+                <MudTextField T="string" Label="Tên lớp" @bind-Value="name" Class="mb-3" />
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="RenameAsync">Lưu tên lớp</MudButton>
+
+                <MudDivider Class="my-4" />
+
+                <MudText Typo="Typo.body2">Mã lớp (học viên nhập mã này để tham gia):</MudText>
+                <MudText Typo="Typo.h4" Class="my-2">@classRoom.JoinCode</MudText>
+                <MudButton Variant="Variant.Outlined" OnClick="RegenerateCodeAsync">Tạo mã mới</MudButton>
+            </MudPaper>
+        </MudItem>
+
+        <MudItem xs="12" md="7">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Thành viên (@classRoom.Members.Count)</MudText>
+                <MudList T="string" Dense="true">
+                    @foreach (var member in classRoom.Members)
+                    {
+                        <MudListItem T="string">
+                            <div class="d-flex align-center justify-space-between">
+                                <MudText>@member.FullName (@member.Email)</MudText>
+                                <MudIconButton Icon="@Icons.Material.Filled.PersonRemove" Size="Size.Small" Color="Color.Error"
+                                               OnClick="() => RemoveMemberAsync(member)" />
+                            </div>
+                        </MudListItem>
+                    }
+                </MudList>
+                @if (classRoom.Members.Count == 0)
+                {
+                    <MudAlert Severity="Severity.Info">Chưa có học viên nào tham gia lớp này.</MudAlert>
+                }
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+}

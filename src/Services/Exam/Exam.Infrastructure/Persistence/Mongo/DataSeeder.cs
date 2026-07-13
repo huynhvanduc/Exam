@@ -1,6 +1,7 @@
 using Exam.Contracts;
 using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
+using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
@@ -19,6 +20,7 @@ public static class DataSeeder
     private const string Student1ExternalId = "33333333-3333-3333-3333-333333333333";
     private const string Student2ExternalId = "44444444-4444-4444-4444-444444444444";
     private const string Student3ExternalId = "55555555-5555-5555-5555-555555555555";
+    private const string Instructor2ExternalId = "66666666-6666-6666-6666-666666666666";
 
     private sealed record SeedAnswer(string Content, bool IsCorrect);
 
@@ -32,17 +34,32 @@ public static class DataSeeder
         IExamRepository examRepository,
         IUserRepository userRepository,
         IAuditLogRepository auditLogRepository,
+        IClassRoomRepository classRoomRepository,
         CancellationToken cancellationToken = default)
     {
         var existingCategories = await categoryRepository.GetAllAsync(cancellationToken);
         if (existingCategories.Count > 0)
             return;
 
-        var admin = await SeedUserAsync(userRepository, AdminExternalId, "Admin", "1", UserRole.Admin, cancellationToken);
-        var instructor = await SeedUserAsync(userRepository, InstructorExternalId, "Minh", "Trần", UserRole.Instructor, cancellationToken);
-        await SeedUserAsync(userRepository, Student1ExternalId, "Lan", "Nguyễn", UserRole.Student, cancellationToken);
-        await SeedUserAsync(userRepository, Student2ExternalId, "Hùng", "Phạm", UserRole.Student, cancellationToken);
-        await SeedUserAsync(userRepository, Student3ExternalId, "Hoa", "Lê", UserRole.Student, cancellationToken);
+        var admin = await SeedUserAsync(userRepository, AdminExternalId, "admin@.com.vn", "Admin", "1", UserRole.Admin, cancellationToken);
+        var instructor = await SeedUserAsync(userRepository, InstructorExternalId, "minh.tran@exam-platform.vn", "Minh", "Trần", UserRole.Instructor, cancellationToken);
+        var student1 = await SeedUserAsync(userRepository, Student1ExternalId, "lan.nguyen@exam-platform.vn", "Lan", "Nguyễn", UserRole.Student, cancellationToken);
+        var student2 = await SeedUserAsync(userRepository, Student2ExternalId, "hung.pham@exam-platform.vn", "Hùng", "Phạm", UserRole.Student, cancellationToken);
+        await SeedUserAsync(userRepository, Student3ExternalId, "hoa.le@exam-platform.vn", "Hoa", "Lê", UserRole.Student, cancellationToken);
+        var instructor2 = await SeedUserAsync(userRepository, Instructor2ExternalId, "tuan.le@exam-platform.vn", "Tuấn", "Lê", UserRole.Instructor, cancellationToken);
+
+        // Lớp demo: minh hoạ đề thi giao riêng cho lớp cụ thể (chỉ thành viên mới thi được), song song với
+        // các đề công khai khác được seed bên dưới - để phân biệt rõ 2 chế độ trên UI.
+        var demoClass = ClassRoom.Create("Lớp Demo K1", instructor.ExternalId);
+        demoClass.AddMember(student1.ExternalId);
+        demoClass.AddMember(student2.ExternalId);
+        await classRoomRepository.InsertAsync(demoClass, cancellationToken);
+
+        // Lớp thứ 2 do giáo viên khác quản lý - dùng để kiểm chứng Instructor A không thấy được lớp của Instructor B.
+        var otherInstructorClass = ClassRoom.Create("Lớp của Tuấn Lê", instructor2.ExternalId);
+        await classRoomRepository.InsertAsync(otherInstructorClass, cancellationToken);
+
+        ExamEntity? firstPublishedExam = null;
 
         foreach (var seedCategory in GetSeedCategories())
         {
@@ -82,6 +99,11 @@ public static class DataSeeder
             publishedExam.ConfigureNegativeMarking(0.25m);
             publishedExam.ScheduleAvailability(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(30));
             publishedExam.Publish();
+
+            firstPublishedExam ??= publishedExam;
+            if (ReferenceEquals(firstPublishedExam, publishedExam))
+                publishedExam.AssignToClass(demoClass.Id);
+
             await examRepository.InsertAsync(publishedExam, cancellationToken);
             await auditLogRepository.InsertAsync(
                 new AuditLogEntry(instructor.ExternalId, "Exam.Publish", publishedExam.Id,
@@ -99,14 +121,14 @@ public static class DataSeeder
         }
     }
 
-    private static async Task<User> SeedUserAsync(IUserRepository userRepository, string externalId,
+    private static async Task<User> SeedUserAsync(IUserRepository userRepository, string externalId, string email,
         string firstName, string lastName, UserRole role, CancellationToken cancellationToken)
     {
         var existing = await userRepository.GetByExternalIdAsync(externalId, cancellationToken);
         if (existing != null)
             return existing;
 
-        var user = User.CreateNewUser(externalId, firstName, lastName, role);
+        var user = User.CreateNewUser(externalId, email, firstName, lastName, role);
         await userRepository.InsertAsync(user, cancellationToken);
         return user;
     }

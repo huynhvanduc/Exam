@@ -9,9 +9,10 @@ public interface IExamRepository : IRepositoryBase<Exam>
 
     Task<long> CountByCategoryAsync(string categoryId, CancellationToken cancellationToken = default);
 
-    Task<IReadOnlyCollection<Exam>> GetAvailableAsync(DateTime at, int skip, int take, CancellationToken cancellationToken = default);
+    // classIds = các lớp mà user hiện tại là thành viên - đề công khai (không gán lớp nào) luôn được tính là khả dụng.
+    Task<IReadOnlyCollection<Exam>> GetAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, int skip, int take, CancellationToken cancellationToken = default);
 
-    Task<long> CountAvailableAsync(DateTime at, CancellationToken cancellationToken = default);
+    Task<long> CountAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default);
 

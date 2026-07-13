@@ -1,4 +1,5 @@
 using Exam.Domain.AggregateModels.CategoryAggregate;
+using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.RoleAggregate;
@@ -43,5 +44,12 @@ public static class MongoIndexInitializer
             Builders<ExamResult>.IndexKeys.Ascending(x => x.ExamId));
 
         await examResults.Indexes.CreateOneAsync(examResultExamIdIndex, cancellationToken: cancellationToken);
+
+        var classes = context.GetCollection<ClassRoom>("classes");
+        var classJoinCodeIndex = new CreateIndexModel<ClassRoom>(
+            Builders<ClassRoom>.IndexKeys.Ascending(x => x.JoinCode),
+            new CreateIndexOptions { Unique = true });
+
+        await classes.Indexes.CreateOneAsync(classJoinCodeIndex, cancellationToken: cancellationToken);
     }
 }

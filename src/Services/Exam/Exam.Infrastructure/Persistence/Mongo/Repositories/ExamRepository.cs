@@ -22,16 +22,17 @@ public class ExamRepository : MongoRepositoryBase<ExamEntity>, IExamRepository
     public Task<long> CountByCategoryAsync(string categoryId, CancellationToken cancellationToken = default) =>
         CountFilteredAsync(Builders<ExamEntity>.Filter.Eq(x => x.CategoryId, categoryId), cancellationToken);
 
-    public Task<IReadOnlyCollection<ExamEntity>> GetAvailableAsync(DateTime at, int skip, int take, CancellationToken cancellationToken = default) =>
-        FindPagedAsync(AvailableFilter(at), ByDateCreatedDesc, skip, take, cancellationToken);
+    public Task<IReadOnlyCollection<ExamEntity>> GetAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(AvailableForUserFilter(at, classIds), ByDateCreatedDesc, skip, take, cancellationToken);
 
-    public Task<long> CountAvailableAsync(DateTime at, CancellationToken cancellationToken = default) =>
-        CountFilteredAsync(AvailableFilter(at), cancellationToken);
+    public Task<long> CountAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(AvailableForUserFilter(at, classIds), cancellationToken);
 
-    private static FilterDefinition<ExamEntity> AvailableFilter(DateTime at) =>
+    private static FilterDefinition<ExamEntity> AvailableForUserFilter(DateTime at, IReadOnlyCollection<string> classIds) =>
         Builders<ExamEntity>.Filter.Eq(x => x.Status, ExamStatus.Published) &
         (Builders<ExamEntity>.Filter.Eq(x => x.AvailableFrom, null) | Builders<ExamEntity>.Filter.Lte(x => x.AvailableFrom, at)) &
-        (Builders<ExamEntity>.Filter.Eq(x => x.AvailableTo, null) | Builders<ExamEntity>.Filter.Gte(x => x.AvailableTo, at));
+        (Builders<ExamEntity>.Filter.Eq(x => x.AvailableTo, null) | Builders<ExamEntity>.Filter.Gte(x => x.AvailableTo, at)) &
+        (Builders<ExamEntity>.Filter.Size(x => x.AssignedClassIds, 0) | Builders<ExamEntity>.Filter.AnyIn(x => x.AssignedClassIds, classIds));
 
     public async Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default)
     {

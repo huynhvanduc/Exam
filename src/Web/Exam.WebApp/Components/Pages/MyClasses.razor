@@ -1,0 +1,40 @@
+@page "/my-classes"
+@attribute [Authorize]
+@inherits PageBase
+
+<PageTitle>Lớp của tôi</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Lớp của tôi</MudText>
+
+<MudPaper Class="pa-4 mb-4" Elevation="1" Style="max-width: 500px;">
+    <MudText Typo="Typo.h6" GutterBottom="true">Tham gia lớp mới</MudText>
+    <MudStack Row="true" Spacing="2">
+        <MudTextField T="string" Label="Mã lớp" @bind-Value="joinCode" Immediate="true" />
+        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="JoinAsync" Disabled="string.IsNullOrWhiteSpace(joinCode)">
+            Tham gia
+        </MudButton>
+    </MudStack>
+</MudPaper>
+
+@if (classes == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (classes.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">Bạn chưa tham gia lớp nào. Nhập mã lớp do giáo viên cung cấp để bắt đầu.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var classRoom in classes)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudText Typo="Typo.h6">@classRoom.Name</MudText>
+                    <MudText Typo="Typo.body2">@classRoom.MemberCount thành viên</MudText>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}

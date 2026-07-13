@@ -1,0 +1,41 @@
+@page "/admin/classes"
+@attribute [Authorize(Roles = "Instructor,Admin")]
+@inherits AdminPageBase
+@inject NavigationManager Navigation
+
+<PageTitle>Quản lý lớp học</PageTitle>
+
+<AdminPageHeader Title="Quản lý lớp học">
+    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
+               Class="mb-4" OnClick="OpenCreateDialog">
+        Thêm lớp
+    </MudButton>
+</AdminPageHeader>
+
+@if (classes == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudTable Items="classes" Hover="true">
+        <HeaderContent>
+            <MudTh>Tên lớp</MudTh>
+            <MudTh>Mã lớp</MudTh>
+            <MudTh>Số thành viên</MudTh>
+            <MudTh>Hành động</MudTh>
+        </HeaderContent>
+        <RowTemplate>
+            <MudTd DataLabel="Tên lớp">@context.Name</MudTd>
+            <MudTd DataLabel="Mã lớp"><MudChip T="string" Size="Size.Small">@context.JoinCode</MudChip></MudTd>
+            <MudTd DataLabel="Số thành viên">@context.MemberCount</MudTd>
+            <MudTd DataLabel="Hành động">
+                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="() => NavigateToDetail(context.Id)" />
+                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
+            </MudTd>
+        </RowTemplate>
+        <NoRecordsContent>
+            <MudText>Chưa có lớp học nào.</MudText>
+        </NoRecordsContent>
+    </MudTable>
+}

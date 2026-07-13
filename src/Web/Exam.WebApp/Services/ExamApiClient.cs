@@ -127,6 +127,39 @@ public class ExamApiClient
     public Task<PagedResult<ExamResultSummaryDto>> GetMyExamHistoryAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<ExamResultSummaryDto>>(HttpMethod.Get, ApiRoutes.ExamAttempts.History(page, pageSize), cancellationToken: cancellationToken);
 
+    public Task<IReadOnlyCollection<ClassRoomDto>> GetClassesAsync(CancellationToken cancellationToken = default) =>
+        SendForCollectionAsync<ClassRoomDto>(HttpMethod.Get, ApiRoutes.Classes.Base, cancellationToken: cancellationToken);
+
+    public Task<IReadOnlyCollection<ClassRoomDto>> GetMyClassesAsync(CancellationToken cancellationToken = default) =>
+        SendForCollectionAsync<ClassRoomDto>(HttpMethod.Get, ApiRoutes.Classes.Mine, cancellationToken: cancellationToken);
+
+    public Task<ClassRoomDetailDto> GetClassByIdAsync(string id, CancellationToken cancellationToken = default) =>
+        SendAsync<ClassRoomDetailDto>(HttpMethod.Get, ApiRoutes.Classes.ById(id), cancellationToken: cancellationToken);
+
+    public Task<ClassRoomDto> CreateClassAsync(CreateClassRoomRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync<ClassRoomDto>(HttpMethod.Post, ApiRoutes.Classes.Base, body, cancellationToken);
+
+    public Task<ClassRoomDto> RenameClassAsync(string id, RenameClassRoomRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync<ClassRoomDto>(HttpMethod.Put, ApiRoutes.Classes.ById(id), body, cancellationToken);
+
+    public Task DeleteClassAsync(string id, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Delete, ApiRoutes.Classes.ById(id), cancellationToken: cancellationToken);
+
+    public Task<ClassRoomDto> RegenerateJoinCodeAsync(string id, CancellationToken cancellationToken = default) =>
+        SendAsync<ClassRoomDto>(HttpMethod.Post, ApiRoutes.Classes.RegenerateCode(id), cancellationToken: cancellationToken);
+
+    public Task<ClassRoomDetailDto> RemoveClassMemberAsync(string id, string userId, CancellationToken cancellationToken = default) =>
+        SendAsync<ClassRoomDetailDto>(HttpMethod.Delete, ApiRoutes.Classes.Member(id, userId), cancellationToken: cancellationToken);
+
+    public Task<ClassRoomDto> JoinClassAsync(string joinCode, CancellationToken cancellationToken = default) =>
+        SendAsync<ClassRoomDto>(HttpMethod.Post, ApiRoutes.Classes.Join, new JoinClassRequest(joinCode), cancellationToken);
+
+    public Task<ExamDto> AssignExamToClassAsync(string examId, string classId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamDto>(HttpMethod.Post, ApiRoutes.Exams.Class(examId, classId), cancellationToken: cancellationToken);
+
+    public Task<ExamDto> UnassignExamFromClassAsync(string examId, string classId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamDto>(HttpMethod.Delete, ApiRoutes.Exams.Class(examId, classId), cancellationToken: cancellationToken);
+
     private async Task<TResponse> SendAsync<TResponse>(HttpMethod method, string url, object? body = null, CancellationToken cancellationToken = default)
     {
         var response = await SendCoreAsync(method, url, body, cancellationToken);

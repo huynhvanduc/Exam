@@ -9,6 +9,7 @@ public static class Config
         return [
             new IdentityResources.OpenId(),
             new IdentityResources.Profile(),
+            new IdentityResources.Email(),
         ];
     }
 
@@ -21,7 +22,10 @@ public static class Config
     {
         return settings.ApiResources.Select(r => new ApiResource(r.Name, r.DisplayName)
         {
-            Scopes = r.Scopes
+            Scopes = r.Scopes,
+            // Access token (không phải id_token) chỉ chứa các claim được khai báo ở đây -
+            // cần khai rõ để Exam.API đọc được given_name/family_name/email từ Bearer token.
+            UserClaims = { "given_name", "family_name", "email" }
         });
     }
 

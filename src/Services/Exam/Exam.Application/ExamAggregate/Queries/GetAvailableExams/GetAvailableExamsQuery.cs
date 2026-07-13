@@ -3,4 +3,4 @@ using MediatR;
 
 namespace Exam.Application.ExamAggregate.Queries.GetAvailableExams;
 
-public record GetAvailableExamsQuery(int Page = 1, int PageSize = 20) : IRequest<PagedResult<ExamDto>>;
+public record GetAvailableExamsQuery(string UserId, int Page = 1, int PageSize = 20) : IRequest<PagedResult<ExamDto>>;
