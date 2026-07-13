@@ -1,0 +1,29 @@
+@* Route bắt-tất-cả (catch-all) - đảm bảo LUÔN có một endpoint khớp cho URL bất kỳ.
+   MapRazorComponents chỉ đăng ký endpoint cho từng @page cụ thể được phát hiện, không tự
+   có fallback cho path không khớp @page nào -> nếu thiếu route này, ASP.NET Core routing
+   trả thẳng response 404 trống rỗng của Kestrel, không bao giờ chạy tới <Router NotFound>. *@
+@page "/{*pathInfo}"
+@using Exam.WebApp.Extensions
+
+<PageTitle>Không tìm thấy trang</PageTitle>
+
+<InfoMessagePage Icon="@Icons.Material.Filled.SearchOff" IconColor="Color.Default"
+                 Title="Không tìm thấy trang"
+                 Message="Đường dẫn bạn truy cập không tồn tại hoặc đã bị thay đổi.">
+    <AuthorizeView>
+        <Authorized>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
+                Về trang của tôi
+            </MudButton>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">
+                Về trang chủ
+            </MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
+</InfoMessagePage>
+
+@code {
+    [Parameter] public string? PathInfo { get; set; }
+}

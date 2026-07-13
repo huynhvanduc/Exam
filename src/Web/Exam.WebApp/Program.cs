@@ -41,7 +41,14 @@ builder.Services.AddAuthentication(options =>
     options.DefaultChallengeScheme = OpenIdConnectDefaults.AuthenticationScheme;
     options.DefaultSignOutScheme = OpenIdConnectDefaults.AuthenticationScheme;
 })
-.AddCookie()
+.AddCookie(options =>
+{
+    // Mặc định ASP.NET Core trả về response trắng (403/404 rỗng) khi ForbidAsync/ChallengeAsync
+    // được gọi mà không cấu hình đường dẫn - xảy ra ở lần load trang tĩnh đầu tiên (gõ thẳng URL),
+    // trước khi Blazor Router kịp render NotAuthorized. Set 2 path này để luôn có redirect rõ ràng.
+    options.AccessDeniedPath = "/access-denied";
+    options.LoginPath = "/account/login";
+})
 .AddOpenIdConnect(options =>
 {
     options.Authority = identityAuthority;
@@ -54,6 +61,7 @@ builder.Services.AddAuthentication(options =>
     options.Scope.Clear();
     options.Scope.Add("openid");
     options.Scope.Add("profile");
+    options.Scope.Add("email");
     options.Scope.Add("exam_api.read");
     options.Scope.Add("exam_api.write");
 
@@ -127,6 +135,13 @@ if (!app.Environment.IsDevelopment())
 }
 
 app.UseStaticFiles();
+
+// Bắt buộc UseRouting tường minh và đặt SAU UseStaticFiles: nếu không có UseRouting tường minh,
+// ASP.NET Core tự chèn routing lên NGAY ĐẦU pipeline (trước UseStaticFiles) để phục vụ UseAuthorization/
+// UseAntiforgery bên dưới - khi đó route catch-all "/{*pathInfo}" sẽ khớp và "chiếm" luôn các request
+// file tĩnh (app.css, _content/MudBlazor/...) trước khi StaticFileMiddleware kịp phục vụ, vì middleware
+// này bỏ qua request đã có endpoint được gán. Đặt UseRouting ở đây đảm bảo static files luôn được ưu tiên.
+app.UseRouting();
 
 app.UseAuthentication();
 app.UseAuthorization();

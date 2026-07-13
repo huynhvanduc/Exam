@@ -1,14 +1,38 @@
+@using Exam.WebApp.Extensions
+
 <Router AppAssembly="typeof(Program).Assembly">
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <MudContainer Class="mt-8">
-                    <MudAlert Severity="MudBlazor.Severity.Warning">
-                        Bạn không có quyền truy cập trang này.
-                    </MudAlert>
-                </MudContainer>
+                <InfoMessagePage Icon="@Icons.Material.Filled.Lock" IconColor="Color.Warning"
+                                 Title="Bạn không có quyền truy cập trang này"
+                                 Message="Tài khoản của bạn không đủ quyền để xem nội dung này. Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên.">
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
+                        Về trang của tôi
+                    </MudButton>
+                </InfoMessagePage>
             </NotAuthorized>
         </AuthorizeRouteView>
         <FocusOnNavigate RouteData="routeData" Selector="h1" />
     </Found>
+    <NotFound>
+        <LayoutView Layout="typeof(Layout.MainLayout)">
+            <InfoMessagePage Icon="@Icons.Material.Filled.SearchOff" IconColor="Color.Default"
+                             Title="Không tìm thấy trang"
+                             Message="Đường dẫn bạn truy cập không tồn tại hoặc đã bị thay đổi.">
+                <AuthorizeView>
+                    <Authorized>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
+                            Về trang của tôi
+                        </MudButton>
+                    </Authorized>
+                    <NotAuthorized>
+                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">
+                            Về trang chủ
+                        </MudButton>
+                    </NotAuthorized>
+                </AuthorizeView>
+            </InfoMessagePage>
+        </LayoutView>
+    </NotFound>
 </Router>

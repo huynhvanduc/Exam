@@ -1,0 +1,26 @@
+@page "/access-denied"
+@using Exam.WebApp.Extensions
+@inject NavigationManager Navigation
+
+<PageTitle>Không có quyền truy cập</PageTitle>
+
+<InfoMessagePage Icon="@Icons.Material.Filled.Lock" IconColor="Color.Warning"
+                 Title="Bạn không có quyền truy cập trang này"
+                 Message="Tài khoản của bạn không đủ quyền để xem nội dung này. Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên.">
+    <AuthorizeView>
+        <Authorized>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
+                Về trang của tôi
+            </MudButton>
+        </Authorized>
+        <NotAuthorized>
+            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GoToLogin">
+                Đăng nhập
+            </MudButton>
+        </NotAuthorized>
+    </AuthorizeView>
+</InfoMessagePage>
+
+@code {
+    private void GoToLogin() => Navigation.GoToLogin();
+}
