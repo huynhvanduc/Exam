@@ -49,6 +49,18 @@ public static class ApiRoutes
         public static string Unpublish(string examId) => $"{Base}/{examId}/unpublish";
         public static string Archive(string examId) => $"{Base}/{examId}/archive";
         public static string Results(string examId, int page, int pageSize) => $"{Base}/{examId}/results?page={page}&pageSize={pageSize}";
+        public static string Available(int page, int pageSize) => $"{Base}/available?page={page}&pageSize={pageSize}";
+    }
+
+    public static class ExamAttempts
+    {
+        public const string Base = "/api/exam-attempts";
+        public const string Start = "/api/exam-attempts/start";
+        public static string ById(string id) => $"{Base}/{id}";
+        public static string Answers(string id) => $"{Base}/{id}/answers";
+        public static string Finish(string id) => $"{Base}/{id}/finish";
+        public static string Result(string id) => $"{Base}/{id}/result";
+        public static string History(int page, int pageSize) => $"{Base}/history?page={page}&pageSize={pageSize}";
     }
 
     public static class Dashboard

@@ -5,6 +5,7 @@ using Exam.Application.ExamResultAggregate.Commands.StartExam;
 using Exam.Application.ExamResultAggregate.Queries.GetExamAttempt;
 using Exam.Application.ExamResultAggregate.Queries.GetExamResultById;
 using Exam.Application.ExamResultAggregate.Queries.GetMyExamHistory;
+using Exam.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -66,7 +67,3 @@ public class ExamAttemptsController : ControllerBase
         return Ok(result);
     }
 }
-
-public record StartExamRequest(string ExamId);
-
-public record RecordAnswerRequest(string QuestionId, IReadOnlyCollection<string> SelectedAnswerIds);

@@ -1,0 +1,41 @@
+@page "/exams"
+@attribute [Authorize]
+@inherits PageBase
+@inject NavigationManager Navigation
+
+<PageTitle>Đề thi</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Đề thi khả dụng</MudText>
+
+@if (exams == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else if (exams.Count == 0)
+{
+    <MudAlert Severity="Severity.Info">Hiện chưa có đề thi nào khả dụng.</MudAlert>
+}
+else
+{
+    <MudGrid>
+        @foreach (var exam in exams)
+        {
+            <MudItem xs="12" sm="6" md="4">
+                <MudPaper Class="pa-4" Elevation="1">
+                    <MudText Typo="Typo.h6">@exam.Name</MudText>
+                    <MudText Typo="Typo.body2" Class="mb-2">@exam.ShortDesc</MudText>
+                    <MudText Typo="Typo.body2"><b>Số câu hỏi:</b> @exam.NumberOfQuestions</MudText>
+                    <MudText Typo="Typo.body2"><b>Điểm đạt:</b> @exam.MinimumPassingScore</MudText>
+                    @if (exam.IsTimeRestricted)
+                    {
+                        <MudText Typo="Typo.body2"><b>Thời gian:</b> @exam.Duration.TotalMinutes phút</MudText>
+                    }
+                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" FullWidth="true"
+                               OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
+                        Bắt đầu làm bài
+                    </MudButton>
+                </MudPaper>
+            </MudItem>
+        }
+    </MudGrid>
+}

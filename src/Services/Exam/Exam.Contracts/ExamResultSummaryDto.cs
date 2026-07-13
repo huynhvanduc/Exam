@@ -1,4 +1,4 @@
-namespace Exam.Application.ExamResultAggregate;
+namespace Exam.Contracts;
 
 public record ExamResultSummaryDto(
     string Id,

@@ -1,0 +1,52 @@
+@page "/exams/result/{AttemptId}"
+@attribute [Authorize]
+@inherits PageBase
+
+<PageTitle>Kết quả thi</PageTitle>
+
+@if (result == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudPaper Class="pa-4 mb-4" Elevation="1">
+        <MudText Typo="Typo.h5">@result.ExamTitle</MudText>
+        <MudText Typo="Typo.h3" Class="mt-2">@result.TotalScore/@result.MaxPossibleScore điểm</MudText>
+        @if (result.Passed.HasValue)
+        {
+            <MudChip T="string" Color="@(result.Passed.Value ? Color.Success : Color.Error)" Size="Size.Large">
+                @(result.Passed.Value ? "Đạt" : "Không đạt")
+            </MudChip>
+        }
+        <MudText Typo="Typo.body2" Class="mt-2">Số câu đúng: @result.CorrectQuestionCount/@result.QuestionResults.Count</MudText>
+    </MudPaper>
+
+    @foreach (var (question, index) in result.QuestionResults.Select((q, i) => (q, i)))
+    {
+        <MudPaper Class="pa-4 mb-3" Elevation="1">
+            <MudStack Row="true" AlignItems="AlignItems.Center">
+                <MudText Typo="Typo.subtitle1"><b>Câu @(index + 1).</b> @question.Content</MudText>
+                <MudSpacer />
+                <MudIcon Icon="@(question.Result ? Icons.Material.Filled.CheckCircle : Icons.Material.Filled.Cancel)"
+                         Color="@(question.Result ? Color.Success : Color.Error)" />
+            </MudStack>
+            <MudList T="string" Dense="true">
+                @foreach (var answer in question.Answers)
+                {
+                    <MudListItem T="string">
+                        <MudText Color="@AnswerColor(answer)">
+                            @(answer.UserChosen == true ? "☑" : "☐") @answer.Content@(answer.IsCorrect ? " (đáp án đúng)" : "")
+                        </MudText>
+                    </MudListItem>
+                }
+            </MudList>
+            @if (!string.IsNullOrWhiteSpace(question.Explain))
+            {
+                <MudAlert Severity="Severity.Info" Class="mt-2">@question.Explain</MudAlert>
+            }
+        </MudPaper>
+    }
+
+    <MudButton Variant="Variant.Outlined" Href="/my-history" Class="mt-2">Xem lịch sử làm bài</MudButton>
+}

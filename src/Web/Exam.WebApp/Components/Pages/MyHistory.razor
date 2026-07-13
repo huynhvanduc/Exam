@@ -1,0 +1,52 @@
+@page "/my-history"
+@attribute [Authorize]
+@inherits PageBase
+
+<PageTitle>Lịch sử làm bài</PageTitle>
+
+<MudText Typo="Typo.h4" GutterBottom="true">Lịch sử làm bài</MudText>
+
+<MudTable T="ExamResultSummaryDto" @ref="table" ServerData="LoadServerData" Hover="true">
+    <HeaderContent>
+        <MudTh>Đề thi</MudTh>
+        <MudTh>Điểm</MudTh>
+        <MudTh>Kết quả</MudTh>
+        <MudTh>Bắt đầu</MudTh>
+        <MudTh>Trạng thái</MudTh>
+        <MudTh></MudTh>
+    </HeaderContent>
+    <RowTemplate>
+        <MudTd DataLabel="Đề thi">@context.ExamTitle</MudTd>
+        <MudTd DataLabel="Điểm">@context.TotalScore/@context.MaxPossibleScore</MudTd>
+        <MudTd DataLabel="Kết quả">
+            @if (context.Passed.HasValue)
+            {
+                <MudChip T="string" Color="@(context.Passed.Value ? Color.Success : Color.Error)" Size="Size.Small">
+                    @(context.Passed.Value ? "Đạt" : "Không đạt")
+                </MudChip>
+            }
+            else
+            {
+                <MudText Typo="Typo.body2">—</MudText>
+            }
+        </MudTd>
+        <MudTd DataLabel="Bắt đầu">@context.ExamStartDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudTd>
+        <MudTd DataLabel="Trạng thái">@(context.Finished ? "Đã nộp" : "Đang làm")</MudTd>
+        <MudTd>
+            @if (context.Finished)
+            {
+                <MudButton Size="Size.Small" Href="@($"/exams/result/{context.Id}")">Xem</MudButton>
+            }
+            else
+            {
+                <MudButton Size="Size.Small" Href="@($"/exams/take/{context.Id}")">Tiếp tục</MudButton>
+            }
+        </MudTd>
+    </RowTemplate>
+    <NoRecordsContent>
+        <MudText>Bạn chưa làm bài thi nào.</MudText>
+    </NoRecordsContent>
+    <PagerContent>
+        <MudTablePager />
+    </PagerContent>
+</MudTable>

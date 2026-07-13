@@ -1,0 +1,52 @@
+@page "/exams/take/{AttemptId}"
+@attribute [Authorize]
+@inherits PageBase
+
+<PageTitle>Làm bài thi</PageTitle>
+
+@if (attempt == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudStack Row="true" AlignItems="AlignItems.Center" Class="mb-4" Style="position: sticky; top: 0; background: var(--mud-palette-background); z-index: 10; padding: 8px 0;">
+        <MudText Typo="Typo.h5">@attempt.ExamTitle</MudText>
+        <MudSpacer />
+        <MudText Typo="Typo.body2">Đã trả lời: @AnsweredCount/@attempt.Questions.Count</MudText>
+        @if (remaining.HasValue)
+        {
+            <MudChip T="string" Color="@(remaining.Value.TotalMinutes < 5 ? Color.Error : Color.Primary)">
+                Còn lại: @FormatRemaining(remaining.Value)
+            </MudChip>
+        }
+        <MudButton Variant="Variant.Filled" Color="Color.Success" OnClick="SubmitAsync">Nộp bài</MudButton>
+    </MudStack>
+
+    @foreach (var (question, index) in attempt.Questions.Select((q, i) => (q, i)))
+    {
+        <MudPaper Class="pa-4 mb-3" Elevation="1">
+            <MudText Typo="Typo.subtitle1" GutterBottom="true"><b>Câu @(index + 1).</b> @question.Content <i>(@question.Points điểm)</i></MudText>
+
+            @if (question.QuestionType == QuestionType.SingleSelection)
+            {
+                <MudRadioGroup T="string" Value="@SingleSelected(question.Id)" ValueChanged="v => OnSingleAnswerChanged(question.Id, v!)">
+                    @foreach (var answer in question.Answers)
+                    {
+                        <MudRadio T="string" Value="@answer.Id">@answer.Content</MudRadio>
+                    }
+                </MudRadioGroup>
+            }
+            else
+            {
+                @foreach (var answer in question.Answers)
+                {
+                    <MudCheckBox T="bool" Value="IsSelected(question.Id, answer.Id)"
+                                 ValueChanged="v => OnMultiAnswerChanged(question.Id, answer.Id, v)">@answer.Content</MudCheckBox>
+                }
+            }
+        </MudPaper>
+    }
+
+    <MudButton Variant="Variant.Filled" Color="Color.Success" FullWidth="true" OnClick="SubmitAsync" Class="mt-2 mb-4">Nộp bài</MudButton>
+}

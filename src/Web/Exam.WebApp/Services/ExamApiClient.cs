@@ -106,6 +106,27 @@ public class ExamApiClient
     public Task<PagedResult<AuditLogEntryDto>> GetAuditLogAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<AuditLogEntryDto>>(HttpMethod.Get, ApiRoutes.AuditLog.Paged(page, pageSize), cancellationToken: cancellationToken);
 
+    public Task<PagedResult<ExamDto>> GetAvailableExamsAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
+        SendAsync<PagedResult<ExamDto>>(HttpMethod.Get, ApiRoutes.Exams.Available(page, pageSize), cancellationToken: cancellationToken);
+
+    public Task<ExamAttemptDto> StartExamAsync(string examId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamAttemptDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.Start, new StartExamRequest(examId), cancellationToken);
+
+    public Task<ExamAttemptStatusDto> GetExamAttemptStatusAsync(string attemptId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamAttemptStatusDto>(HttpMethod.Get, ApiRoutes.ExamAttempts.ById(attemptId), cancellationToken: cancellationToken);
+
+    public Task<RecordAnswerResultDto> RecordAnswerAsync(string attemptId, string questionId, IReadOnlyCollection<string> selectedAnswerIds, CancellationToken cancellationToken = default) =>
+        SendAsync<RecordAnswerResultDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.Answers(attemptId), new RecordAnswerRequest(questionId, selectedAnswerIds), cancellationToken);
+
+    public Task<ExamResultDto> FinishExamAsync(string attemptId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamResultDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.Finish(attemptId), cancellationToken: cancellationToken);
+
+    public Task<ExamResultDto> GetExamResultAsync(string attemptId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamResultDto>(HttpMethod.Get, ApiRoutes.ExamAttempts.Result(attemptId), cancellationToken: cancellationToken);
+
+    public Task<PagedResult<ExamResultSummaryDto>> GetMyExamHistoryAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
+        SendAsync<PagedResult<ExamResultSummaryDto>>(HttpMethod.Get, ApiRoutes.ExamAttempts.History(page, pageSize), cancellationToken: cancellationToken);
+
     private async Task<TResponse> SendAsync<TResponse>(HttpMethod method, string url, object? body = null, CancellationToken cancellationToken = default)
     {
         var response = await SendCoreAsync(method, url, body, cancellationToken);

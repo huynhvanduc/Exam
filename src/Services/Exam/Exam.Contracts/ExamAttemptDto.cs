@@ -1,6 +1,4 @@
-using Exam.Contracts;
-
-namespace Exam.Application.ExamResultAggregate;
+namespace Exam.Contracts;
 
 public record ExamAttemptDto(
     string Id,
@@ -22,3 +20,5 @@ public record ExamAttemptQuestionDto(
 public record ExamAttemptAnswerOptionDto(string Id, string Content);
 
 public record ExamAttemptAnswerSelectionDto(string QuestionId, IReadOnlyCollection<string> SelectedAnswerIds);
+
+public record ExamAttemptStatusDto(bool Finished, ExamAttemptDto? Attempt, ExamResultDto? Result);
