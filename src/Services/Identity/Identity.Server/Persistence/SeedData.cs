@@ -35,6 +35,10 @@ namespace Identity.Server.Persistence
 
             var admin = new ApplicationUser
             {
+                // Id cố định để khớp với ExternalId của user Admin được DataSeeder tạo sẵn bên Exam
+                // service - tránh việc lần đăng nhập đầu tiên của admin bị coi là "first user" và
+                // chỉ được cấp role Student do Users collection bên Exam không còn rỗng.
+                Id = "528ac9b1-20ff-4d42-bd6d-e85300acde89",
                 UserName = "admin",
                 Email = "admin@.com.vn",
                 EmailConfirmed = true,

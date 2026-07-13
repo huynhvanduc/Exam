@@ -65,8 +65,6 @@
 
     private async Task LoginUser()
     {
-        // Chỉ chấp nhận ReturnUrl là 1 yêu cầu authorize hợp lệ do chính IdentityServer sinh ra,
-        // tránh open-redirect nếu ReturnUrl bị chỉnh sửa thủ công.
         if (!string.IsNullOrEmpty(ReturnUrl) && await Interaction.GetAuthorizationContextAsync(ReturnUrl) is null)
         {
             errorMessage = "Yêu cầu đăng nhập không hợp lệ hoặc đã hết hạn.";

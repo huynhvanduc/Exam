@@ -2,7 +2,12 @@ using Exam.API.Authorization;
 using Exam.API.Middleware;
 using Exam.Application;
 using Exam.Contracts;
+using Exam.Domain.AggregateModels.AuditAggregate;
+using Exam.Domain.AggregateModels.CategoryAggregate;
+using Exam.Domain.AggregateModels.ExamAggregate;
+using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.RoleAggregate;
+using Exam.Domain.AggregateModels.UserAggregate;
 using Exam.Infrastructure;
 using Exam.Infrastructure.Persistence.Mongo;
 using HealthChecks.UI.Client;
@@ -60,6 +65,16 @@ using (var scope = app.Services.CreateScope())
 {
     await MongoIndexInitializer.EnsureIndexesAsync(scope.ServiceProvider.GetRequiredService<MongoDbContext>());
     await RolePermissionSeeder.EnsureDefaultsAsync(scope.ServiceProvider.GetRequiredService<IRolePermissionRepository>());
+
+    if (app.Environment.IsDevelopment())
+    {
+        await DataSeeder.EnsureSampleDataAsync(
+            scope.ServiceProvider.GetRequiredService<ICategoryRepository>(),
+            scope.ServiceProvider.GetRequiredService<IQuestionRepository>(),
+            scope.ServiceProvider.GetRequiredService<IExamRepository>(),
+            scope.ServiceProvider.GetRequiredService<IUserRepository>(),
+            scope.ServiceProvider.GetRequiredService<IAuditLogRepository>());
+    }
 }
 
 app.UseExceptionHandler();

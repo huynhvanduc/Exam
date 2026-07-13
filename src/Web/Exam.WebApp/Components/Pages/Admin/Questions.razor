@@ -5,7 +5,7 @@
 <PageTitle>Ngân hàng câu hỏi</PageTitle>
 
 <AdminPageHeader Title="Ngân hàng câu hỏi">
-    <CategorySelector Categories="categories" Value="selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
+    <CategorySelector Categories="categories" Value="@selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
 
     <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
                Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
