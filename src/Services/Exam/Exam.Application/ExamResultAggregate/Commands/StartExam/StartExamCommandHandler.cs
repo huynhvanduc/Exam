@@ -47,6 +47,13 @@ public class StartExamCommandHandler : IRequestHandler<StartExamCommand, ExamAtt
         if (!exam.IsAvailable(DateTime.UtcNow))
             throw new ExamDomainException("This exam is not available right now.");
 
+        if (exam.MaxAttempts.HasValue)
+        {
+            var attemptCount = await _examResultRepository.CountByUserIdAndExamIdAsync(request.UserId, request.ExamId, cancellationToken);
+            if (attemptCount >= exam.MaxAttempts.Value)
+                throw new ExamDomainException($"You have reached the maximum number of attempts ({exam.MaxAttempts.Value}) for this exam.");
+        }
+
         // Chặn ở tầng command (không chỉ ẩn nút trên UI) - đề gán lớp chỉ thành viên lớp đó mới thi được,
         // tránh học viên gọi thẳng API để bypass giao diện.
         if (!exam.IsPublic)

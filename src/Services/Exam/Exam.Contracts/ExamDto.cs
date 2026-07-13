@@ -23,4 +23,5 @@ public record ExamDto(
     IReadOnlyCollection<string> QuestionIds,
     int NumberOfQuestions,
     IReadOnlyCollection<string> AssignedClassIds,
-    bool IsPublic);
+    bool IsPublic,
+    int? MaxAttempts);

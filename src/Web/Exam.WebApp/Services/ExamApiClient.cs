@@ -43,14 +43,14 @@ public class ExamApiClient
     public Task DeleteQuestionAsync(string id, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Delete, ApiRoutes.Questions.ById(id), cancellationToken: cancellationToken);
 
-    public async Task<ImportQuestionsResultDto> ImportQuestionsAsync(Stream fileStream, string fileName, CancellationToken cancellationToken = default)
+    public async Task<ImportQuestionsResultDto> ImportQuestionsAsync(Stream fileStream, string fileName, bool dryRun, CancellationToken cancellationToken = default)
     {
         using var content = new MultipartFormDataContent();
         using var streamContent = new StreamContent(fileStream);
         streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
         content.Add(streamContent, "file", fileName);
 
-        var request = new HttpRequestMessage(HttpMethod.Post, ApiRoutes.Questions.Import) { Content = content };
+        var request = new HttpRequestMessage(HttpMethod.Post, ApiRoutes.Questions.Import(dryRun)) { Content = content };
         request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
 
         var response = await _httpClient.SendAsync(request, cancellationToken);
@@ -97,6 +97,9 @@ public class ExamApiClient
 
     public Task<ExamDto> ConfigureNegativeMarkingAsync(string examId, ConfigureNegativeMarkingRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.NegativeMarking(examId), body, cancellationToken);
+
+    public Task<ExamDto> ConfigureMaxAttemptsAsync(string examId, ConfigureMaxAttemptsRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.MaxAttempts(examId), body, cancellationToken);
 
     public Task<ExamDto> PublishExamAsync(string examId, CancellationToken cancellationToken = default) =>
         SendAsync<ExamDto>(HttpMethod.Post, ApiRoutes.Exams.Publish(examId), cancellationToken: cancellationToken);

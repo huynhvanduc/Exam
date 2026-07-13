@@ -26,5 +26,6 @@ internal static class ExamMapper
             exam.QuestionIds,
             exam.NumberOfQuestions,
             exam.AssignedClassIds,
-            exam.IsPublic);
+            exam.IsPublic,
+            exam.MaxAttempts);
 }

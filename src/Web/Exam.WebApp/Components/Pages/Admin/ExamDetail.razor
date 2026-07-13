@@ -65,6 +65,21 @@ else
                     Lưu
                 </MudButton>
             </MudPaper>
+
+            <MudPaper Class="pa-4 mt-4" Elevation="1">
+                <MudText Typo="Typo.h6" GutterBottom="true">Giới hạn số lần thi lại</MudText>
+                <MudSwitch T="bool" @bind-Value="limitMaxAttempts" Color="Color.Primary" Label="Giới hạn số lần thi"
+                           Disabled="exam.Status != ExamStatus.Draft" />
+                @if (limitMaxAttempts)
+                {
+                    <MudNumericField T="int" Label="Số lần thi tối đa" @bind-Value="maxAttempts" Min="1"
+                                     Disabled="exam.Status != ExamStatus.Draft" />
+                }
+                <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" OnClick="SaveMaxAttemptsAsync"
+                           Disabled="exam.Status != ExamStatus.Draft">
+                    Lưu
+                </MudButton>
+            </MudPaper>
         </MudItem>
 
         <MudItem xs="12" md="6">

@@ -26,6 +26,7 @@ public static class Permissions
         public const string ManagePool = "Exam.ManagePool";
         public const string ManageAvailability = "Exam.ManageAvailability";
         public const string ManageNegativeMarking = "Exam.ManageNegativeMarking";
+        public const string ManageMaxAttempts = "Exam.ManageMaxAttempts";
         public const string Publish = "Exam.Publish";
         public const string Unpublish = "Exam.Unpublish";
         public const string Archive = "Exam.Archive";
@@ -59,7 +60,7 @@ public static class Permissions
         Category.Create, Category.Update, Category.Delete,
         Question.View, Question.Create, Question.Update, Question.Delete,
         Exam.Create, Exam.Update, Exam.Delete, Exam.ManageQuestions, Exam.ManagePool,
-        Exam.ManageAvailability, Exam.ManageNegativeMarking, Exam.Publish, Exam.Unpublish, Exam.Archive,
+        Exam.ManageAvailability, Exam.ManageNegativeMarking, Exam.ManageMaxAttempts, Exam.Publish, Exam.Unpublish, Exam.Archive,
         Exam.ViewResults, Exam.ManageClassAssignment,
         Class.View, Class.Create, Class.Update, Class.Delete, Class.ManageMembers,
         User.View, User.PromoteRole, User.ToggleActive,

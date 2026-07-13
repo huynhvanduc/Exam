@@ -51,12 +51,21 @@ else
                         <MudAlert Severity="@(attempt.Passed == true ? Severity.Success : Severity.Warning)" Dense="true" Class="mt-3 mb-2">
                             Đã làm — @attempt.TotalScore/@attempt.MaxPossibleScore điểm (@(attempt.Passed == true ? "Đạt" : "Không đạt"))
                         </MudAlert>
-                        <MudStack Row="true" Spacing="2">
+                        @if (exam.MaxAttempts.HasValue)
+                        {
+                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                                Đã dùng @myAttemptCounts.GetValueOrDefault(exam.Id)/@exam.MaxAttempts lượt thi.
+                            </MudText>
+                        }
+                        <MudStack Row="true" Spacing="2" Class="mt-1">
                             <MudButton Variant="Variant.Outlined" FullWidth="true" Href="@($"/exams/result/{attempt.Id}")">Xem kết quả</MudButton>
-                            <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
-                                       OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
-                                Làm lại
-                            </MudButton>
+                            @if (!HasReachedAttemptLimit(exam))
+                            {
+                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                           OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
+                                    Làm lại
+                                </MudButton>
+                            }
                         </MudStack>
                     }
                 </MudPaper>

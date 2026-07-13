@@ -1,6 +1,7 @@
 using Exam.Application.ExamAggregate.Commands.AddQuestionToExam;
 using Exam.Application.ExamAggregate.Commands.ArchiveExam;
 using Exam.Application.ExamAggregate.Commands.AssignExamToClass;
+using Exam.Application.ExamAggregate.Commands.ConfigureMaxAttempts;
 using Exam.Application.ExamAggregate.Commands.ConfigureNegativeMarking;
 using Exam.Application.ExamAggregate.Commands.ConfigureQuestionPool;
 using Exam.Application.ExamAggregate.Commands.CreateExam;
@@ -126,6 +127,15 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> ConfigureNegativeMarking(string id, [FromBody] ConfigureNegativeMarkingRequest request, CancellationToken cancellationToken)
     {
         var command = new ConfigureNegativeMarkingCommand(id, request.Ratio, User.GetActor());
+        var result = await _mediator.Send(command, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPut("{id}/max-attempts")]
+    [Authorize(Policy = Permissions.Exam.ManageMaxAttempts)]
+    public async Task<IActionResult> ConfigureMaxAttempts(string id, [FromBody] ConfigureMaxAttemptsRequest request, CancellationToken cancellationToken)
+    {
+        var command = new ConfigureMaxAttemptsCommand(id, request.MaxAttempts, User.GetActor());
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }

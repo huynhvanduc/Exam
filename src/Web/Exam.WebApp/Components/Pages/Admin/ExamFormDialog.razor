@@ -63,6 +63,13 @@
                             Đề thi đã có câu hỏi cố định - vào Chi tiết đề thi nếu muốn chuyển sang chế độ pool.
                         </MudText>
                     }
+
+                    <MudSwitch T="bool" @bind-Value="enableMaxAttempts" Color="Color.Primary"
+                               Label="Giới hạn số lần thi lại" Class="mt-4" Disabled="isLocked" />
+                    @if (enableMaxAttempts)
+                    {
+                        <MudNumericField T="int" Label="Số lần thi tối đa" @bind-Value="maxAttempts" Min="1" Disabled="isLocked" />
+                    }
                 </MudExpansionPanel>
             </MudExpansionPanels>
         </MudForm>

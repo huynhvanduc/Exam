@@ -20,7 +20,7 @@ public static class ApiRoutes
     public static class Questions
     {
         public const string Base = "/api/questions";
-        public const string Import = "/api/questions/import";
+        public static string Import(bool dryRun) => $"/api/questions/import?dryRun={dryRun}";
         public static string ById(string id) => $"{Base}/{id}";
         public static string ByCategory(string categoryId) => $"{Base}/by-category/{categoryId}";
         public static string Export(string categoryId) => $"{Base}/export?categoryId={Uri.EscapeDataString(categoryId)}";
@@ -48,6 +48,7 @@ public static class ApiRoutes
         public static string QuestionPool(string examId) => $"{Base}/{examId}/question-pool";
         public static string Availability(string examId) => $"{Base}/{examId}/availability";
         public static string NegativeMarking(string examId) => $"{Base}/{examId}/negative-marking";
+        public static string MaxAttempts(string examId) => $"{Base}/{examId}/max-attempts";
         public static string Publish(string examId) => $"{Base}/{examId}/publish";
         public static string Unpublish(string examId) => $"{Base}/{examId}/unpublish";
         public static string Archive(string examId) => $"{Base}/{examId}/archive";

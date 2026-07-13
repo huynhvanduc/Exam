@@ -45,6 +45,9 @@ public class Exam : Entity, IAggregateRoot
 
     public decimal NegativeMarkingRatio { get; private set; }
 
+    // null = không giới hạn số lần thi lại.
+    public int? MaxAttempts { get; private set; }
+
     public IReadOnlyCollection<string> QuestionIds
     {
         get => _questionIds;
@@ -194,6 +197,16 @@ public class Exam : Entity, IAggregateRoot
             throw new ExamDomainException("Negative marking ratio must be between 0 and 1.");
 
         NegativeMarkingRatio = ratio;
+    }
+
+    public void ConfigureMaxAttempts(int? maxAttempts)
+    {
+        EnsureEditable();
+
+        if (maxAttempts.HasValue && maxAttempts.Value <= 0)
+            throw new ExamDomainException("Max attempts must be greater than zero.");
+
+        MaxAttempts = maxAttempts;
     }
 
     public void Publish()

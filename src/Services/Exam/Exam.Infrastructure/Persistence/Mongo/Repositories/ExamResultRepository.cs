@@ -30,4 +30,9 @@ public class ExamResultRepository : MongoRepositoryBase<ExamResult>, IExamResult
 
     public Task<long> CountByExamIdAsync(string examId, CancellationToken cancellationToken = default) =>
         CountFilteredAsync(Builders<ExamResult>.Filter.Eq(x => x.ExamId, examId), cancellationToken);
+
+    public Task<long> CountByUserIdAndExamIdAsync(string userId, string examId, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(
+            Builders<ExamResult>.Filter.Eq(x => x.UserId, userId) & Builders<ExamResult>.Filter.Eq(x => x.ExamId, examId),
+            cancellationToken);
 }

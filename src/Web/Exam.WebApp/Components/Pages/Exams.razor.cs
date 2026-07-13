@@ -4,6 +4,7 @@ public partial class Exams : PageBase
 {
     private IReadOnlyCollection<ExamDto>? exams;
     private Dictionary<string, ExamResultSummaryDto> myAttempts = new();
+    private Dictionary<string, int> myAttemptCounts = new();
     private string? startingExamId;
 
     protected override async Task OnInitializedAsync() =>
@@ -14,10 +15,13 @@ public partial class Exams : PageBase
             await Task.WhenAll(examsTask, historyTask);
 
             exams = examsTask.Result.Items;
-            myAttempts = historyTask.Result.Items
-                .GroupBy(a => a.ExamId)
-                .ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.ExamStartDate).First());
+            var groups = historyTask.Result.Items.GroupBy(a => a.ExamId).ToList();
+            myAttempts = groups.ToDictionary(g => g.Key, g => g.OrderByDescending(a => a.ExamStartDate).First());
+            myAttemptCounts = groups.ToDictionary(g => g.Key, g => g.Count());
         }, "Không tải được danh sách đề thi");
+
+    private bool HasReachedAttemptLimit(ExamDto exam) =>
+        exam.MaxAttempts.HasValue && myAttemptCounts.GetValueOrDefault(exam.Id) >= exam.MaxAttempts.Value;
 
     private async Task StartAsync(string examId)
     {

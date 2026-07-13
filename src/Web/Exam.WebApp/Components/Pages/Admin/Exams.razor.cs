@@ -82,6 +82,8 @@ public partial class Exams : AdminPageBase
             await Api.ConfigureNegativeMarkingAsync(examId, data.NegativeMarking);
         if (data.Pool != null)
             await Api.ConfigureQuestionPoolAsync(examId, data.Pool);
+        if (data.MaxAttempts != null)
+            await Api.ConfigureMaxAttemptsAsync(examId, data.MaxAttempts);
     }
 
     private Task DeleteAsync(ExamDto exam) => ConfirmAndExecuteAsync(

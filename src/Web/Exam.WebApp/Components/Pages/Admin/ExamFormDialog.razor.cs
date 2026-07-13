@@ -30,6 +30,9 @@ public partial class ExamFormDialog : FormDialogBase
     private bool enablePool;
     private int poolQuestionCount = 10;
 
+    private bool enableMaxAttempts;
+    private int maxAttempts = 1;
+
     // Chỉ liên quan khi sửa đề thi đã tồn tại (Model != null) - đề mới tạo luôn Draft, chưa có câu hỏi.
     private bool isLocked => Model != null && Model.Status != ExamStatus.Draft;
     private bool isArchived => Model != null && Model.Status == ExamStatus.Archived;
@@ -59,6 +62,10 @@ public partial class ExamFormDialog : FormDialogBase
             enablePool = Model.QuestionSelectionMode == QuestionSelectionMode.Pool;
             if (Model.PoolQuestionCount > 0)
                 poolQuestionCount = Model.PoolQuestionCount;
+
+            enableMaxAttempts = Model.MaxAttempts.HasValue;
+            if (Model.MaxAttempts.HasValue)
+                maxAttempts = Model.MaxAttempts.Value;
         }
     }
 
@@ -82,7 +89,8 @@ public partial class ExamFormDialog : FormDialogBase
         var availability = enableAvailability ? new ScheduleExamAvailabilityRequest(availableFrom, availableTo) : null;
         var negativeMarking = enableNegativeMarking ? new ConfigureNegativeMarkingRequest(negativeMarkingRatio) : null;
         var pool = enablePool && !hasFixedQuestions ? new ConfigureQuestionPoolRequest(CategoryId, poolQuestionCount) : null;
+        var maxAttemptsRequest = enableMaxAttempts ? new ConfigureMaxAttemptsRequest(maxAttempts) : null;
 
-        MudDialog.Close(DialogResult.Ok(new ExamFormResult(request, availability, negativeMarking, pool)));
+        MudDialog.Close(DialogResult.Ok(new ExamFormResult(request, availability, negativeMarking, pool, maxAttemptsRequest)));
     }
 }

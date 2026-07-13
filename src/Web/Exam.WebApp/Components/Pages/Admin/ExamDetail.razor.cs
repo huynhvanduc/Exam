@@ -16,6 +16,8 @@ public partial class ExamDetail : AdminPageBase
     private DateTime? availableTo;
     private decimal negativeMarkingRatio;
     private int poolQuestionCount = 10;
+    private bool limitMaxAttempts;
+    private int maxAttempts = 1;
     private string? selectedClassId;
     private MudTable<ExamResultAdminListItemDto>? resultsTable;
 
@@ -34,6 +36,8 @@ public partial class ExamDetail : AdminPageBase
         availableTo = exam.AvailableTo;
         negativeMarkingRatio = exam.NegativeMarkingRatio;
         poolQuestionCount = exam.PoolQuestionCount > 0 ? exam.PoolQuestionCount : 10;
+        limitMaxAttempts = exam.MaxAttempts.HasValue;
+        maxAttempts = exam.MaxAttempts ?? 1;
         allClasses = await Api.GetClassesAsync();
         selectedClassId = null;
 
@@ -74,6 +78,11 @@ public partial class ExamDetail : AdminPageBase
     private Task SaveNegativeMarkingAsync() => ExecuteAsync(async () =>
     {
         exam = await Api.ConfigureNegativeMarkingAsync(Id, new ConfigureNegativeMarkingRequest(negativeMarkingRatio));
+    }, "Lưu thất bại", "Đã lưu.");
+
+    private Task SaveMaxAttemptsAsync() => ExecuteAsync(async () =>
+    {
+        exam = await Api.ConfigureMaxAttemptsAsync(Id, new ConfigureMaxAttemptsRequest(limitMaxAttempts ? maxAttempts : null));
     }, "Lưu thất bại", "Đã lưu.");
 
     private Task PublishAsync() => ExecuteAsync(async () =>
