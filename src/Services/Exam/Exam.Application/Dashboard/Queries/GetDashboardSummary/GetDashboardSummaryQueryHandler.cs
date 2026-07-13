@@ -1,5 +1,6 @@
 using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
+using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
@@ -13,15 +14,18 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
     private readonly IQuestionRepository _questionRepository;
     private readonly IExamRepository _examRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IClassRoomRepository _classRoomRepository;
     private readonly IAuditLogRepository _auditLogRepository;
 
     public GetDashboardSummaryQueryHandler(ICategoryRepository categoryRepository, IQuestionRepository questionRepository,
-        IExamRepository examRepository, IUserRepository userRepository, IAuditLogRepository auditLogRepository)
+        IExamRepository examRepository, IUserRepository userRepository, IClassRoomRepository classRoomRepository,
+        IAuditLogRepository auditLogRepository)
     {
         _categoryRepository = categoryRepository;
         _questionRepository = questionRepository;
         _examRepository = examRepository;
         _userRepository = userRepository;
+        _classRoomRepository = classRoomRepository;
         _auditLogRepository = auditLogRepository;
     }
 
@@ -32,9 +36,11 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
         var examCountTask = _examRepository.CountAsync(cancellationToken);
         var publishedExamCountTask = _examRepository.CountByStatusAsync(ExamStatus.Published, cancellationToken);
         var userCountTask = _userRepository.CountAsync(cancellationToken);
+        var classesTask = _classRoomRepository.GetAllAsync(cancellationToken);
         var recentActivityTask = _auditLogRepository.GetPagedAsync(0, 5, cancellationToken);
 
-        await Task.WhenAll(categoriesTask, questionCountTask, examCountTask, publishedExamCountTask, userCountTask, recentActivityTask);
+        await Task.WhenAll(categoriesTask, questionCountTask, examCountTask, publishedExamCountTask, userCountTask,
+            classesTask, recentActivityTask);
 
         var recentActivity = (await recentActivityTask)
             .Select(e => new AuditLogEntryDto(e.Id, e.Timestamp, e.ActorUserId, e.Action, e.TargetId, e.Description))
@@ -46,6 +52,7 @@ public class GetDashboardSummaryQueryHandler : IRequestHandler<GetDashboardSumma
             (int)await examCountTask,
             (int)await publishedExamCountTask,
             (int)await userCountTask,
+            (await classesTask).Count,
             recentActivity);
     }
 }

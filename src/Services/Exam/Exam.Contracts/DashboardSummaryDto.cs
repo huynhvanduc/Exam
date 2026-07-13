@@ -6,4 +6,5 @@ public record DashboardSummaryDto(
     int TotalExams,
     int PublishedExams,
     int TotalUsers,
+    int TotalClasses,
     IReadOnlyCollection<AuditLogEntryDto> RecentActivity);

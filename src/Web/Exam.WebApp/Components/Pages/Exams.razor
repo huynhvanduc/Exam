@@ -30,6 +30,10 @@ else
                     {
                         <MudText Typo="Typo.body2"><b>Thời gian:</b> @exam.Duration.TotalMinutes phút</MudText>
                     }
+                    @if (exam.MaxAttempts.HasValue)
+                    {
+                        <MudText Typo="Typo.body2"><b>Số lần thi tối đa:</b> @exam.MaxAttempts lần</MudText>
+                    }
 
                     @{ var attempt = myAttempts.GetValueOrDefault(exam.Id); }
                     @if (attempt == null)

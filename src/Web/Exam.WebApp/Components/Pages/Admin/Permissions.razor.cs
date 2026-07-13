@@ -6,38 +6,54 @@ public partial class Permissions : AdminPageBase
 {
     private record PermissionRow(string Key, string Label, string GroupName);
 
-    private static readonly IReadOnlyList<PermissionRow> AllRows =
-    [
-        new(Exam.Contracts.Permissions.Category.Create, "Tạo môn học", "Môn học"),
-        new(Exam.Contracts.Permissions.Category.Update, "Sửa môn học", "Môn học"),
-        new(Exam.Contracts.Permissions.Category.Delete, "Xoá môn học", "Môn học"),
+    // Nhãn hiển thị tiếng Việt cho từng quyền - CHỈ ảnh hưởng cách hiển thị, KHÔNG quyết định quyền nào
+    // xuất hiện trong bảng. Danh sách quyền thực tế lấy từ Permissions.All (xem AllRows bên dưới) để
+    // không bao giờ thiếu dòng khi thêm permission mới - trước đây danh sách bị hard-code riêng, thiếu
+    // Exam.ManageMaxAttempts và User.ToggleActive, khiến 2 quyền này bị XOÁ MẤT mỗi khi admin bấm Lưu ở
+    // trang này (SaveAsync ghi đè toàn bộ permission set bằng đúng những gì tick được trên UI).
+    private static readonly Dictionary<string, (string Label, string GroupName)> Labels = new()
+    {
+        [Exam.Contracts.Permissions.Category.Create] = ("Tạo môn học", "Môn học"),
+        [Exam.Contracts.Permissions.Category.Update] = ("Sửa môn học", "Môn học"),
+        [Exam.Contracts.Permissions.Category.Delete] = ("Xoá môn học", "Môn học"),
 
-        new(Exam.Contracts.Permissions.Question.View, "Xem ngân hàng câu hỏi", "Câu hỏi"),
-        new(Exam.Contracts.Permissions.Question.Create, "Tạo câu hỏi", "Câu hỏi"),
-        new(Exam.Contracts.Permissions.Question.Update, "Sửa câu hỏi", "Câu hỏi"),
-        new(Exam.Contracts.Permissions.Question.Delete, "Xoá câu hỏi", "Câu hỏi"),
+        [Exam.Contracts.Permissions.Question.View] = ("Xem ngân hàng câu hỏi", "Câu hỏi"),
+        [Exam.Contracts.Permissions.Question.Create] = ("Tạo câu hỏi", "Câu hỏi"),
+        [Exam.Contracts.Permissions.Question.Update] = ("Sửa câu hỏi", "Câu hỏi"),
+        [Exam.Contracts.Permissions.Question.Delete] = ("Xoá câu hỏi", "Câu hỏi"),
 
-        new(Exam.Contracts.Permissions.Exam.Create, "Tạo đề thi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.Update, "Sửa đề thi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.Delete, "Xoá đề thi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.ManageQuestions, "Quản lý câu hỏi trong đề", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.ManagePool, "Cấu hình pool câu hỏi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.ManageAvailability, "Cấu hình lịch phát hành", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.ManageNegativeMarking, "Cấu hình trừ điểm", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.Publish, "Xuất bản đề thi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.Unpublish, "Chuyển đề thi về Nháp", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.Archive, "Lưu trữ đề thi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.ViewResults, "Xem kết quả thi", "Đề thi"),
-        new(Exam.Contracts.Permissions.Exam.ManageClassAssignment, "Gán đề thi vào lớp", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.Create] = ("Tạo đề thi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.Update] = ("Sửa đề thi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.Delete] = ("Xoá đề thi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ManageQuestions] = ("Quản lý câu hỏi trong đề", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ManagePool] = ("Cấu hình pool câu hỏi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ManageAvailability] = ("Cấu hình lịch phát hành", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ManageNegativeMarking] = ("Cấu hình trừ điểm", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ManageMaxAttempts] = ("Giới hạn số lần thi lại", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.Publish] = ("Xuất bản đề thi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.Unpublish] = ("Chuyển đề thi về Nháp", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.Archive] = ("Lưu trữ đề thi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ViewResults] = ("Xem kết quả thi", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ManageClassAssignment] = ("Gán đề thi vào lớp", "Đề thi"),
 
-        new(Exam.Contracts.Permissions.Class.View, "Xem danh sách lớp", "Lớp học"),
-        new(Exam.Contracts.Permissions.Class.Create, "Tạo lớp học", "Lớp học"),
-        new(Exam.Contracts.Permissions.Class.Update, "Sửa lớp học", "Lớp học"),
-        new(Exam.Contracts.Permissions.Class.Delete, "Xoá lớp học", "Lớp học"),
-        new(Exam.Contracts.Permissions.Class.ManageMembers, "Quản lý thành viên lớp", "Lớp học"),
+        [Exam.Contracts.Permissions.Class.View] = ("Xem danh sách lớp", "Lớp học"),
+        [Exam.Contracts.Permissions.Class.Create] = ("Tạo lớp học", "Lớp học"),
+        [Exam.Contracts.Permissions.Class.Update] = ("Sửa lớp học", "Lớp học"),
+        [Exam.Contracts.Permissions.Class.Delete] = ("Xoá lớp học", "Lớp học"),
+        [Exam.Contracts.Permissions.Class.ManageMembers] = ("Quản lý thành viên lớp", "Lớp học"),
 
-        new(Exam.Contracts.Permissions.User.PromoteRole, "Đổi vai trò người dùng", "Người dùng"),
-    ];
+        [Exam.Contracts.Permissions.User.View] = ("Xem danh sách người dùng", "Người dùng"),
+        [Exam.Contracts.Permissions.User.PromoteRole] = ("Đổi vai trò người dùng", "Người dùng"),
+        [Exam.Contracts.Permissions.User.ToggleActive] = ("Khoá/mở khoá tài khoản", "Người dùng"),
+
+        [Exam.Contracts.Permissions.Dashboard.View] = ("Xem trang Tổng quan", "Khác"),
+    };
+
+    private static readonly IReadOnlyList<PermissionRow> AllRows = Exam.Contracts.Permissions.All
+        .Select(p => Labels.TryGetValue(p, out var info)
+            ? new PermissionRow(p, info.Label, info.GroupName)
+            : new PermissionRow(p, p, "Khác"))
+        .ToList();
 
     private IReadOnlyList<PermissionRow>? rows;
     private Dictionary<string, bool> studentChecks = new();
