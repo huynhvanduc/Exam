@@ -1,6 +1,5 @@
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Forms;
 using Microsoft.JSInterop;
 using MudBlazor;
 
@@ -93,29 +92,25 @@ public partial class Questions : AdminPageBase
 
     private async Task OpenImportDialogAsync()
     {
-        var file = await ShowFormDialogAsync<ImportQuestionsDialog, IBrowserFile>("Nhập câu hỏi từ Excel",
+        // Dialog tự lo bước Xem trước (dry-run) + Xác nhận nhập bên trong nó, chỉ đóng lại và trả về
+        // kết quả cuối cùng SAU KHI admin đã xác nhận (Cancel nếu admin bỏ ngang ở bất kỳ bước nào).
+        var result = await ShowFormDialogAsync<ImportQuestionsDialog, ImportQuestionsResultDto>("Nhập câu hỏi từ Excel",
             new DialogParameters<ImportQuestionsDialog>(), new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
-        if (file == null)
+        if (result == null)
             return;
 
-        ImportQuestionsResultDto? result = null;
-        await ExecuteAsync(async () =>
-        {
-            await using var stream = file.OpenReadStream(maxAllowedSize: 10 * 1024 * 1024);
-            result = await Api.ImportQuestionsAsync(stream, file.Name);
-        }, "Nhập câu hỏi thất bại");
+        // Chỉ rõ câu hỏi vừa nhập vào (những) môn học nào - import đọc category theo TỪNG DÒNG trong file,
+        // không theo môn học đang chọn trên trang, nên dễ nhầm nếu chỉ báo mỗi số lượng (đã xảy ra thực tế:
+        // admin tưởng nhập vào môn "test" nhưng file lại ghi "Mạng máy tính" ở cột Môn học).
+        var categorySummary = string.Join(", ", result.ValidRows
+            .GroupBy(r => r.CategoryName)
+            .Select(g => $"{g.Key} ({g.Count()})"));
 
-        if (result != null)
-        {
-            Snackbar.Add($"Đã nhập {result.SuccessCount}/{result.TotalRows} câu hỏi.",
-                result.Errors.Count == 0 ? Severity.Success : Severity.Warning);
+        var message = result.SuccessCount > 0
+            ? $"Đã nhập {result.SuccessCount}/{result.TotalRows} câu hỏi vào: {categorySummary}."
+            : $"Không có câu hỏi nào được nhập ({result.TotalRows} dòng, {result.Errors.Count} lỗi).";
 
-            if (result.Errors.Count > 0)
-            {
-                var message = string.Join("\n", result.Errors.Select(e => $"Dòng {e.RowNumber}: {e.Message}"));
-                await DialogService.ShowMessageBoxAsync("Chi tiết lỗi import", message, yesText: "Đóng");
-            }
-        }
+        Snackbar.Add(message, result.Errors.Count == 0 ? Severity.Success : Severity.Warning);
 
         if (table != null)
             await table.ReloadServerData();

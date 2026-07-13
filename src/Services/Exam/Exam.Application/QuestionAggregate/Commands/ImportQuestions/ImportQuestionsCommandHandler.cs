@@ -32,6 +32,7 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
 
         var errors = new List<ImportQuestionRowError>();
         var questionsToInsert = new List<Question>();
+        var validRows = new List<ImportQuestionPreviewRow>();
         var totalRows = 0;
 
         for (var rowNumber = HeaderRowNumber + 1; rowNumber <= lastRowNumber; rowNumber++)
@@ -104,7 +105,7 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
 
             if (rowErrors.Count > 0)
             {
-                errors.Add(new ImportQuestionRowError(rowNumber, string.Join(" ", rowErrors)));
+                errors.Add(new ImportQuestionRowError(rowNumber, string.Join(" ", rowErrors), content));
                 continue;
             }
 
@@ -114,12 +115,16 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
 
             questionsToInsert.Add(new Question(null!, content, questionType!.Value, level!.Value, category!.Id,
                 answers, explain, points, request.OwnerUserId, category.Name));
+            validRows.Add(new ImportQuestionPreviewRow(rowNumber, category.Name, content, questionTypeText, levelText, points));
         }
 
-        foreach (var question in questionsToInsert)
-            await _questionRepository.InsertAsync(question, cancellationToken);
+        if (!request.DryRun)
+        {
+            foreach (var question in questionsToInsert)
+                await _questionRepository.InsertAsync(question, cancellationToken);
+        }
 
-        return new ImportQuestionsResultDto(totalRows, questionsToInsert.Count, errors);
+        return new ImportQuestionsResultDto(totalRows, questionsToInsert.Count, errors, validRows);
     }
 
     private static Level? ParseLevel(string text) => text switch

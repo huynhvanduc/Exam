@@ -8,7 +8,7 @@
             Dùng nút "Export Excel" ở trang danh sách để lấy file mẫu đúng định dạng.
         </MudText>
 
-        <MudFileUpload T="IBrowserFile" @bind-Files="selectedFile" Accept=".xlsx">
+        <MudFileUpload T="IBrowserFile" Files="selectedFile" FilesChanged="OnFileSelectedAsync" Accept=".xlsx">
             <CustomContent Context="fileUpload">
                 <MudButton HtmlTag="label" Variant="Variant.Outlined" Color="Color.Primary"
                            StartIcon="@Icons.Material.Filled.CloudUpload" OnClick="@(() => fileUpload.OpenFilePickerAsync())">
@@ -17,15 +17,83 @@
             </CustomContent>
         </MudFileUpload>
 
-        @if (selectedFile != null)
+        @if (isBusy && previewResult == null)
         {
-            <MudText Typo="Typo.body2" Class="mt-2">Đã chọn: @selectedFile.Name</MudText>
+            <MudProgressCircular Indeterminate="true" Size="Size.Small" Class="mt-3" />
+        }
+
+        @if (previewResult != null)
+        {
+            <MudDivider Class="my-3" />
+            <MudText Typo="Typo.body2" Class="mb-2">
+                Tổng số dòng: <b>@previewResult.TotalRows</b> — Hợp lệ: <b>@previewResult.SuccessCount</b> — Lỗi: <b>@previewResult.Errors.Count</b>
+            </MudText>
+
+            @if (previewResult.ValidRows.Count > 0)
+            {
+                <MudText Typo="Typo.subtitle2">Câu hỏi sẽ được thêm:</MudText>
+                <MudSimpleTable Dense="true" Style="max-height: 260px; overflow-y: auto;">
+                    <thead>
+                        <tr><th>Dòng</th><th>Môn học</th><th>Nội dung</th><th>Loại</th><th>Điểm</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in previewResult.ValidRows.Take(MaxPreviewRows))
+                        {
+                            <tr>
+                                <td>@row.RowNumber</td>
+                                <td>@row.CategoryName</td>
+                                <td>@Truncate(row.Content)</td>
+                                <td>@row.QuestionType</td>
+                                <td>@row.Points</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+                @if (previewResult.ValidRows.Count > MaxPreviewRows)
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        … và @(previewResult.ValidRows.Count - MaxPreviewRows) dòng hợp lệ khác.
+                    </MudText>
+                }
+            }
+
+            @if (previewResult.Errors.Count > 0)
+            {
+                <MudAlert Severity="Severity.Warning" Dense="true" Class="mt-3 mb-2">
+                    @previewResult.Errors.Count dòng lỗi sẽ bị BỎ QUA khi xác nhận nhập, các dòng còn lại vẫn được thêm bình thường.
+                </MudAlert>
+                <MudSimpleTable Dense="true" Style="max-height: 200px; overflow-y: auto;">
+                    <thead>
+                        <tr><th>Dòng</th><th>Nội dung</th><th>Lỗi</th></tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var error in previewResult.Errors.Take(MaxPreviewRows))
+                        {
+                            <tr>
+                                <td>@error.RowNumber</td>
+                                <td>@Truncate(error.ContentExcerpt)</td>
+                                <td>@error.Message</td>
+                            </tr>
+                        }
+                    </tbody>
+                </MudSimpleTable>
+                @if (previewResult.Errors.Count > MaxPreviewRows)
+                {
+                    <MudText Typo="Typo.caption" Class="mud-text-secondary">
+                        … và @(previewResult.Errors.Count - MaxPreviewRows) lỗi khác.
+                    </MudText>
+                }
+            }
         }
     </DialogContent>
     <DialogActions>
         <MudButton OnClick="Cancel">Huỷ</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit" Disabled="selectedFile == null">
-            Nhập câu hỏi
-        </MudButton>
+        @if (previewResult != null)
+        {
+            <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="ConfirmAsync"
+                       Disabled="previewResult.SuccessCount == 0 || isBusy">
+                Xác nhận nhập (@previewResult.SuccessCount câu)
+            </MudButton>
+        }
     </DialogActions>
 </MudDialog>

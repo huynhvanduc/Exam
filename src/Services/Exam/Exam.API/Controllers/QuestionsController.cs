@@ -83,7 +83,7 @@ public class QuestionsController : ControllerBase
     [HttpPost("import")]
     [Authorize(Policy = Permissions.Question.Create)]
     [RequestSizeLimit(10_000_000)]
-    public async Task<IActionResult> Import(IFormFile file, CancellationToken cancellationToken)
+    public async Task<IActionResult> Import(IFormFile file, [FromQuery] bool dryRun, CancellationToken cancellationToken)
     {
         if (file.Length == 0)
             return BadRequest("File is required.");
@@ -91,7 +91,7 @@ public class QuestionsController : ControllerBase
         using var stream = new MemoryStream();
         await file.CopyToAsync(stream, cancellationToken);
 
-        var result = await _mediator.Send(new ImportQuestionsCommand(stream.ToArray(), User.GetUserId()!), cancellationToken);
+        var result = await _mediator.Send(new ImportQuestionsCommand(stream.ToArray(), User.GetUserId()!, dryRun), cancellationToken);
         return Ok(result);
     }
 
