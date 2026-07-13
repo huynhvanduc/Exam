@@ -13,6 +13,7 @@ using Exam.API.Extensions;
 using Exam.Application.ExamAggregate.Queries.GetAvailableExams;
 using Exam.Application.ExamAggregate.Queries.GetExamById;
 using Exam.Application.ExamAggregate.Queries.GetExamsByCategory;
+using Exam.Application.ExamResultAggregate.Queries.GetExamResultsByExam;
 using Exam.Contracts;
 using MediatR;
 using Microsoft.AspNetCore.Authorization;
@@ -148,6 +149,15 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> Archive(string id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new ArchiveExamCommand(id, User.GetActor()), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/results")]
+    [Authorize(Policy = Permissions.Exam.ViewResults)]
+    public async Task<IActionResult> GetResults(string id, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    {
+        var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
+        var result = await _mediator.Send(new GetExamResultsByExamQuery(id, normalizedPage, normalizedPageSize), cancellationToken);
         return Ok(result);
     }
 }

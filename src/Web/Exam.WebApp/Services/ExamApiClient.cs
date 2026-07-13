@@ -30,8 +30,9 @@ public class ExamApiClient
     public Task<IReadOnlyCollection<QuestionDto>> GetQuestionsByCategoryAsync(string categoryId, CancellationToken cancellationToken = default) =>
         SendForCollectionAsync<QuestionDto>(HttpMethod.Get, ApiRoutes.Questions.ByCategory(categoryId), cancellationToken: cancellationToken);
 
-    public Task<PagedResult<QuestionDto>> GetQuestionsByCategoryPagedAsync(string categoryId, int page, int pageSize, CancellationToken cancellationToken = default) =>
-        SendAsync<PagedResult<QuestionDto>>(HttpMethod.Get, ApiRoutes.Questions.ByCategoryPaged(categoryId, page, pageSize), cancellationToken: cancellationToken);
+    public Task<PagedResult<QuestionDto>> GetQuestionsByCategoryPagedAsync(string categoryId, int page, int pageSize,
+        Level? level = null, QuestionType? questionType = null, string? keyword = null, CancellationToken cancellationToken = default) =>
+        SendAsync<PagedResult<QuestionDto>>(HttpMethod.Get, ApiRoutes.Questions.ByCategoryPaged(categoryId, page, pageSize, level, questionType, keyword), cancellationToken: cancellationToken);
 
     public Task<QuestionDto> CreateQuestionAsync(QuestionRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<QuestionDto>(HttpMethod.Post, ApiRoutes.Questions.Base, body, cancellationToken);
@@ -80,6 +81,12 @@ public class ExamApiClient
 
     public Task<ExamDto> ArchiveExamAsync(string examId, CancellationToken cancellationToken = default) =>
         SendAsync<ExamDto>(HttpMethod.Post, ApiRoutes.Exams.Archive(examId), cancellationToken: cancellationToken);
+
+    public Task<PagedResult<ExamResultAdminListItemDto>> GetExamResultsByExamAsync(string examId, int page, int pageSize, CancellationToken cancellationToken = default) =>
+        SendAsync<PagedResult<ExamResultAdminListItemDto>>(HttpMethod.Get, ApiRoutes.Exams.Results(examId, page, pageSize), cancellationToken: cancellationToken);
+
+    public Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default) =>
+        SendAsync<DashboardSummaryDto>(HttpMethod.Get, ApiRoutes.Dashboard.Summary, cancellationToken: cancellationToken);
 
     public Task<QuestionDto> GetQuestionByIdAsync(string id, CancellationToken cancellationToken = default) =>
         SendAsync<QuestionDto>(HttpMethod.Get, ApiRoutes.Questions.ById(id), cancellationToken: cancellationToken);

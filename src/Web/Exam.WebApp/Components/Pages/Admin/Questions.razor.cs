@@ -8,6 +8,9 @@ public partial class Questions : AdminPageBase
     private IReadOnlyCollection<CategoryDto>? categories;
     private MudTable<QuestionDto>? table;
     private string? selectedCategoryId;
+    private string? keyword;
+    private Level? levelFilter;
+    private QuestionType? questionTypeFilter;
 
     protected override async Task OnInitializedAsync() =>
         await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách môn học");
@@ -19,6 +22,27 @@ public partial class Questions : AdminPageBase
             await table.ReloadServerData();
     }
 
+    private async Task OnKeywordChangedAsync(string value)
+    {
+        keyword = value;
+        if (table != null)
+            await table.ReloadServerData();
+    }
+
+    private async Task OnLevelChangedAsync(Level? value)
+    {
+        levelFilter = value;
+        if (table != null)
+            await table.ReloadServerData();
+    }
+
+    private async Task OnQuestionTypeChangedAsync(QuestionType? value)
+    {
+        questionTypeFilter = value;
+        if (table != null)
+            await table.ReloadServerData();
+    }
+
     private Task<TableData<QuestionDto>> LoadServerData(TableState state, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(selectedCategoryId))
@@ -26,7 +50,8 @@ public partial class Questions : AdminPageBase
 
         return LoadTableDataAsync(async () =>
         {
-            var result = await Api.GetQuestionsByCategoryPagedAsync(selectedCategoryId, state.Page + 1, state.PageSize, cancellationToken);
+            var result = await Api.GetQuestionsByCategoryPagedAsync(selectedCategoryId, state.Page + 1, state.PageSize,
+                levelFilter, questionTypeFilter, keyword, cancellationToken);
             return new TableData<QuestionDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
         }, "Không tải được danh sách câu hỏi");
     }

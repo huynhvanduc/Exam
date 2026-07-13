@@ -24,4 +24,10 @@ public class ExamResultRepository : MongoRepositoryBase<ExamResult>, IExamResult
 
     public Task<long> CountByUserIdAsync(string userId, CancellationToken cancellationToken = default) =>
         CountFilteredAsync(Builders<ExamResult>.Filter.Eq(x => x.UserId, userId), cancellationToken);
+
+    public Task<IReadOnlyCollection<ExamResult>> GetByExamIdAsync(string examId, int skip, int take, CancellationToken cancellationToken = default) =>
+        FindPagedAsync(Builders<ExamResult>.Filter.Eq(x => x.ExamId, examId), Builders<ExamResult>.Sort.Descending(x => x.ExamStartDate), skip, take, cancellationToken);
+
+    public Task<long> CountByExamIdAsync(string examId, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(Builders<ExamResult>.Filter.Eq(x => x.ExamId, examId), cancellationToken);
 }

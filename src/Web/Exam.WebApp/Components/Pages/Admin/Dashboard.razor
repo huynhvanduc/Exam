@@ -1,0 +1,63 @@
+@page "/admin/dashboard"
+@attribute [Authorize(Roles = "Admin")]
+@inherits AdminPageBase
+
+<PageTitle>Tổng quan</PageTitle>
+
+<AdminPageHeader Title="Tổng quan" />
+
+@if (summary == null)
+{
+    <MudProgressCircular Indeterminate="true" />
+}
+else
+{
+    <MudGrid Class="mb-4">
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.body2">Môn học</MudText>
+                <MudText Typo="Typo.h4">@summary.TotalCategories</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.body2">Câu hỏi</MudText>
+                <MudText Typo="Typo.h4">@summary.TotalQuestions</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.body2">Đề thi</MudText>
+                <MudText Typo="Typo.h4">@summary.TotalExams</MudText>
+                <MudText Typo="Typo.caption">@summary.PublishedExams đã xuất bản</MudText>
+            </MudPaper>
+        </MudItem>
+        <MudItem xs="12" sm="6" md="3">
+            <MudPaper Class="pa-4" Elevation="1">
+                <MudText Typo="Typo.body2">Người dùng</MudText>
+                <MudText Typo="Typo.h4">@summary.TotalUsers</MudText>
+            </MudPaper>
+        </MudItem>
+    </MudGrid>
+
+    <MudPaper Class="pa-4" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Hoạt động gần đây</MudText>
+        @if (summary.RecentActivity.Count == 0)
+        {
+            <MudText Typo="Typo.body2">Chưa có hoạt động nào được ghi nhận.</MudText>
+        }
+        else
+        {
+            <MudList T="string" Dense="true">
+                @foreach (var entry in summary.RecentActivity)
+                {
+                    <MudListItem T="string">
+                        <MudText Typo="Typo.body2">
+                            <b>@entry.Timestamp.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</b> — @ActionLabel(entry.Action): @entry.Description
+                        </MudText>
+                    </MudListItem>
+                }
+            </MudList>
+        }
+    </MudPaper>
+}

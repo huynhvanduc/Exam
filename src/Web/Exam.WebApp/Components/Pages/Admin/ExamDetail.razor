@@ -122,4 +122,43 @@ else
             </MudPaper>
         </MudItem>
     </MudGrid>
+
+    <MudPaper Class="pa-4 mt-4" Elevation="1">
+        <MudText Typo="Typo.h6" GutterBottom="true">Kết quả thi</MudText>
+        <MudTable T="ExamResultAdminListItemDto" @ref="resultsTable" ServerData="LoadResultsServerData" Hover="true" Dense="true">
+            <HeaderContent>
+                <MudTh>Thí sinh</MudTh>
+                <MudTh>Điểm</MudTh>
+                <MudTh>Kết quả</MudTh>
+                <MudTh>Bắt đầu</MudTh>
+                <MudTh>Nộp bài</MudTh>
+                <MudTh>Trạng thái</MudTh>
+            </HeaderContent>
+            <RowTemplate>
+                <MudTd DataLabel="Thí sinh">@context.FullName (@context.Email)</MudTd>
+                <MudTd DataLabel="Điểm">@context.TotalScore/@context.MaxPossibleScore</MudTd>
+                <MudTd DataLabel="Kết quả">
+                    @if (context.Passed.HasValue)
+                    {
+                        <MudChip T="string" Color="@(context.Passed.Value ? Color.Success : Color.Error)" Size="Size.Small">
+                            @(context.Passed.Value ? "Đạt" : "Không đạt")
+                        </MudChip>
+                    }
+                    else
+                    {
+                        <MudText Typo="Typo.body2">—</MudText>
+                    }
+                </MudTd>
+                <MudTd DataLabel="Bắt đầu">@context.ExamStartDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudTd>
+                <MudTd DataLabel="Nộp bài">@(context.ExamFinishDate.HasValue ? context.ExamFinishDate.Value.ToLocalTime().ToString("dd/MM/yyyy HH:mm") : "—")</MudTd>
+                <MudTd DataLabel="Trạng thái">@(context.Finished ? "Đã nộp" : "Đang làm")</MudTd>
+            </RowTemplate>
+            <NoRecordsContent>
+                <MudText>Chưa có thí sinh nào làm đề thi này.</MudText>
+            </NoRecordsContent>
+            <PagerContent>
+                <MudTablePager />
+            </PagerContent>
+        </MudTable>
+    </MudPaper>
 }

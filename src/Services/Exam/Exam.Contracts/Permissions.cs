@@ -29,6 +29,12 @@ public static class Permissions
         public const string Publish = "Exam.Publish";
         public const string Unpublish = "Exam.Unpublish";
         public const string Archive = "Exam.Archive";
+        public const string ViewResults = "Exam.ViewResults";
+    }
+
+    public static class Dashboard
+    {
+        public const string View = "Dashboard.View";
     }
 
     public static class User
@@ -43,6 +49,8 @@ public static class Permissions
         Question.View, Question.Create, Question.Update, Question.Delete,
         Exam.Create, Exam.Update, Exam.Delete, Exam.ManageQuestions, Exam.ManagePool,
         Exam.ManageAvailability, Exam.ManageNegativeMarking, Exam.Publish, Exam.Unpublish, Exam.Archive,
-        User.View, User.PromoteRole
+        Exam.ViewResults,
+        User.View, User.PromoteRole,
+        Dashboard.View
     ];
 }

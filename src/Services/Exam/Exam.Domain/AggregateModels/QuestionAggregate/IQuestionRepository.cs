@@ -1,3 +1,4 @@
+using Exam.Contracts;
 using Exam.Domain.SeedWork;
 
 namespace Exam.Domain.AggregateModels.QuestionAggregate;
@@ -10,7 +11,15 @@ public interface IQuestionRepository : IRepositoryBase<Question>
 
     Task<long> CountByCategoryAsync(string categoryId, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyCollection<Question>> GetByCategoryAsync(string categoryId, int skip, int take,
+        Level? level, QuestionType? questionType, string? keyword, CancellationToken cancellationToken = default);
+
+    Task<long> CountByCategoryAsync(string categoryId, Level? level, QuestionType? questionType, string? keyword,
+        CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<Question>> GetByIdsAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default);
+
+    Task<long> CountAsync(CancellationToken cancellationToken = default);
 }

@@ -16,7 +16,8 @@ public static class RolePermissionSeeder
         // đổi role) trước đây CHỈ dành cho Admin nên không đưa vào mặc định của Instructor.
         var instructorDefaults = new RolePermissionSet(
             UserRole.Instructor,
-            Permissions.All.Where(p => p != Permissions.User.View && p != Permissions.User.PromoteRole).ToList());
+            Permissions.All.Where(p => p != Permissions.User.View && p != Permissions.User.PromoteRole
+                && p != Permissions.Dashboard.View).ToList());
         await repository.InsertAsync(instructorDefaults, cancellationToken);
     }
 }

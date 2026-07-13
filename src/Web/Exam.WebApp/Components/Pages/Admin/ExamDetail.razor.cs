@@ -15,6 +15,7 @@ public partial class ExamDetail : AdminPageBase
     private DateTime? availableTo;
     private decimal negativeMarkingRatio;
     private int poolQuestionCount = 10;
+    private MudTable<ExamResultAdminListItemDto>? resultsTable;
 
     protected override async Task OnInitializedAsync()
     {
@@ -69,6 +70,13 @@ public partial class ExamDetail : AdminPageBase
         "Xác nhận lưu trữ", $"Lưu trữ đề thi '{exam!.Name}'? Không thể hoàn tác.",
         async () => exam = await Api.ArchiveExamAsync(Id),
         "Lưu trữ thất bại", "Đã lưu trữ.", yesText: "Lưu trữ");
+
+    private Task<TableData<ExamResultAdminListItemDto>> LoadResultsServerData(TableState state, CancellationToken cancellationToken) =>
+        LoadTableDataAsync(async () =>
+        {
+            var result = await Api.GetExamResultsByExamAsync(Id, state.Page + 1, state.PageSize, cancellationToken);
+            return new TableData<ExamResultAdminListItemDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+        }, "Không tải được kết quả thi");
 
     private static string Truncate(string content) => content.Length <= 100 ? content : content[..100] + "…";
 }

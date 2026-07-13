@@ -27,6 +27,7 @@ public partial class Permissions : AdminPageBase
         new(Exam.Contracts.Permissions.Exam.Publish, "Xuất bản đề thi", "Đề thi"),
         new(Exam.Contracts.Permissions.Exam.Unpublish, "Chuyển đề thi về Nháp", "Đề thi"),
         new(Exam.Contracts.Permissions.Exam.Archive, "Lưu trữ đề thi", "Đề thi"),
+        new(Exam.Contracts.Permissions.Exam.ViewResults, "Xem kết quả thi", "Đề thi"),
 
         new(Exam.Contracts.Permissions.User.PromoteRole, "Đổi vai trò người dùng", "Người dùng"),
     ];

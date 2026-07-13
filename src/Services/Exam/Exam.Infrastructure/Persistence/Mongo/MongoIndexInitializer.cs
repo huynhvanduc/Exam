@@ -1,4 +1,5 @@
 using Exam.Domain.AggregateModels.CategoryAggregate;
+using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
@@ -36,5 +37,11 @@ public static class MongoIndexInitializer
             new CreateIndexOptions { Unique = true });
 
         await rolePermissions.Indexes.CreateOneAsync(rolePermissionRoleIndex, cancellationToken: cancellationToken);
+
+        var examResults = context.GetCollection<ExamResult>("examResults");
+        var examResultExamIdIndex = new CreateIndexModel<ExamResult>(
+            Builders<ExamResult>.IndexKeys.Ascending(x => x.ExamId));
+
+        await examResults.Indexes.CreateOneAsync(examResultExamIdIndex, cancellationToken: cancellationToken);
     }
 }

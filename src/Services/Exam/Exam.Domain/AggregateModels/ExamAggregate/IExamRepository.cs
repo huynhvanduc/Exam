@@ -1,3 +1,4 @@
+using Exam.Contracts;
 using Exam.Domain.SeedWork;
 
 namespace Exam.Domain.AggregateModels.ExamAggregate;
@@ -13,4 +14,8 @@ public interface IExamRepository : IRepositoryBase<Exam>
     Task<long> CountAvailableAsync(DateTime at, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default);
+
+    Task<long> CountAsync(CancellationToken cancellationToken = default);
+
+    Task<long> CountByStatusAsync(ExamStatus status, CancellationToken cancellationToken = default);
 }

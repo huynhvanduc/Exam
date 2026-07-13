@@ -21,7 +21,19 @@ public static class ApiRoutes
         public const string Base = "/api/questions";
         public static string ById(string id) => $"{Base}/{id}";
         public static string ByCategory(string categoryId) => $"{Base}/by-category/{categoryId}";
-        public static string ByCategoryPaged(string categoryId, int page, int pageSize) => $"{Base}/by-category/{categoryId}/page?page={page}&pageSize={pageSize}";
+
+        public static string ByCategoryPaged(string categoryId, int page, int pageSize, Level? level = null,
+            QuestionType? questionType = null, string? keyword = null)
+        {
+            var url = $"{Base}/by-category/{categoryId}/page?page={page}&pageSize={pageSize}";
+            if (level.HasValue)
+                url += $"&level={level.Value}";
+            if (questionType.HasValue)
+                url += $"&questionType={questionType.Value}";
+            if (!string.IsNullOrWhiteSpace(keyword))
+                url += $"&keyword={Uri.EscapeDataString(keyword)}";
+            return url;
+        }
     }
 
     public static class Exams
@@ -36,6 +48,12 @@ public static class ApiRoutes
         public static string Publish(string examId) => $"{Base}/{examId}/publish";
         public static string Unpublish(string examId) => $"{Base}/{examId}/unpublish";
         public static string Archive(string examId) => $"{Base}/{examId}/archive";
+        public static string Results(string examId, int page, int pageSize) => $"{Base}/{examId}/results?page={page}&pageSize={pageSize}";
+    }
+
+    public static class Dashboard
+    {
+        public const string Summary = "/api/dashboard/summary";
     }
 
     public static class RolePermissions

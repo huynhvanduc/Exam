@@ -51,10 +51,11 @@ public class QuestionsController : ControllerBase
 
     [HttpGet("by-category/{categoryId}/page")]
     [Authorize(Policy = Permissions.Question.View)]
-    public async Task<IActionResult> GetByCategoryPaged(string categoryId, [FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetByCategoryPaged(string categoryId, [FromQuery] int page, [FromQuery] int pageSize,
+        [FromQuery] Level? level, [FromQuery] QuestionType? questionType, [FromQuery] string? keyword, CancellationToken cancellationToken)
     {
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
-        var query = new GetQuestionsByCategoryPagedQuery(categoryId, normalizedPage, normalizedPageSize);
+        var query = new GetQuestionsByCategoryPagedQuery(categoryId, normalizedPage, normalizedPageSize, level, questionType, keyword);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

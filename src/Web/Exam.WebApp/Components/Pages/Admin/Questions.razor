@@ -23,6 +23,20 @@ else if (string.IsNullOrEmpty(selectedCategoryId))
 }
 else
 {
+    <MudStack Row="true" Spacing="4" Class="mb-4" Style="max-width: 900px;">
+        <MudTextField T="string" Label="Tìm theo nội dung" Value="keyword" ValueChanged="OnKeywordChangedAsync"
+                      Immediate="true" DebounceInterval="400" Clearable="true" />
+        <MudSelect T="Level?" Label="Mức độ" Value="levelFilter" ValueChanged="OnLevelChangedAsync" Clearable="true">
+            <MudSelectItem T="Level?" Value="Level.Easy">Dễ</MudSelectItem>
+            <MudSelectItem T="Level?" Value="Level.Medium">Trung bình</MudSelectItem>
+            <MudSelectItem T="Level?" Value="Level.Difficult">Khó</MudSelectItem>
+        </MudSelect>
+        <MudSelect T="QuestionType?" Label="Loại câu hỏi" Value="questionTypeFilter" ValueChanged="OnQuestionTypeChangedAsync" Clearable="true">
+            <MudSelectItem T="QuestionType?" Value="QuestionType.SingleSelection">Một đáp án đúng</MudSelectItem>
+            <MudSelectItem T="QuestionType?" Value="QuestionType.MultipleSelection">Nhiều đáp án đúng</MudSelectItem>
+        </MudSelect>
+    </MudStack>
+
     <MudTable T="QuestionDto" @ref="table" ServerData="LoadServerData" Hover="true">
         <HeaderContent>
             <MudTh>Nội dung</MudTh>

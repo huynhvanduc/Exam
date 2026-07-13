@@ -18,6 +18,9 @@ public partial class AuditLog : AdminPageBase
     {
         "User.RoleChanged" => "Đổi role người dùng",
         "Role.PermissionsChanged" => "Đổi quyền theo Role",
+        "Category.Create" => "Tạo môn học",
+        "Question.Create" => "Thêm câu hỏi",
+        "Exam.Publish" => "Xuất bản đề thi",
         _ => action
     };
 }

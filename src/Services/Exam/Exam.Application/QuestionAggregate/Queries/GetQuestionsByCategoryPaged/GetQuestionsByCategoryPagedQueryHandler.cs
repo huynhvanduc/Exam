@@ -14,6 +14,7 @@ public class GetQuestionsByCategoryPagedQueryHandler : IRequestHandler<GetQuesti
 
     public Task<PagedResult<QuestionDto>> Handle(GetQuestionsByCategoryPagedQuery request, CancellationToken cancellationToken) =>
         PagedResultFactory.CreateAsync<QuestionDto>(request.Page, request.PageSize,
-            async (skip, take) => (await _questionRepository.GetByCategoryAsync(request.CategoryId, skip, take, cancellationToken)).Select(QuestionMapper.ToDto).ToList(),
-            () => _questionRepository.CountByCategoryAsync(request.CategoryId, cancellationToken));
+            async (skip, take) => (await _questionRepository.GetByCategoryAsync(request.CategoryId, skip, take,
+                request.Level, request.QuestionType, request.Keyword, cancellationToken)).Select(QuestionMapper.ToDto).ToList(),
+            () => _questionRepository.CountByCategoryAsync(request.CategoryId, request.Level, request.QuestionType, request.Keyword, cancellationToken));
 }
