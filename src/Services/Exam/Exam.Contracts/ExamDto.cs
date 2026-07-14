@@ -9,7 +9,7 @@ public record ExamDto(
     Level Level,
     DateTime DateCreated,
     string OwnerUserId,
-    int MinimumPassingScore,
+    decimal MinimumPassingScore,
     bool IsTimeRestricted,
     string CategoryId,
     string CategoryName,

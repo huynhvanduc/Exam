@@ -8,7 +8,7 @@ public record ExamRequest(
     Level Level,
     string CategoryId,
     bool IsTimeRestricted,
-    int MinimumPassingScore);
+    decimal MinimumPassingScore);
 
 public record ConfigureQuestionPoolRequest(string PoolCategoryId, int PoolQuestionCount);
 

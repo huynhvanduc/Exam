@@ -138,7 +138,7 @@ public class ExamResult : Entity, IAggregateRoot
         _questionResults.Add(questionResult);
     }
 
-    public void Finish(int minimumPassingScore)
+    public void Finish(decimal minimumPassingScore)
     {
         if (Finished)
             throw new ExamDomainException("Exam result is already finished.");

@@ -42,6 +42,6 @@ public class ExamResultGradingService
                 question.Level, answerResults, question.Explain, question.Points));
         }
 
-        examResult.Finish(exam?.MinimumPassingScore ?? 0);
+        examResult.Finish(exam?.MinimumPassingScore ?? 0m);
     }
 }

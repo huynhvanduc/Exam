@@ -10,7 +10,7 @@ public class CreateExamCommandValidator : AbstractValidator<CreateExamCommand>
         RuleFor(x => x.ShortDesc).MaximumLength(500);
         RuleFor(x => x.CategoryId).NotEmpty();
         RuleFor(x => x.Duration).GreaterThan(TimeSpan.Zero);
-        RuleFor(x => x.MinimumPassingScore).GreaterThanOrEqualTo(0);
+        RuleFor(x => x.MinimumPassingScore).InclusiveBetween(0m, 10m);
         RuleFor(x => x.OwnerUserId).NotEmpty();
     }
 }

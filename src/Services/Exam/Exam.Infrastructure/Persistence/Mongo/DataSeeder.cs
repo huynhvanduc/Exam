@@ -93,7 +93,7 @@ public static class DataSeeder
                 $"Bài kiểm tra {seedCategory.Name}", $"Đề kiểm tra tổng hợp - {seedCategory.Name}",
                 $"Bài thi gồm {questionIds.Count} câu hỏi thuộc danh mục {seedCategory.Name}.",
                 TimeSpan.FromMinutes(45), Level.Medium, instructor.ExternalId, category.Id, category.Name,
-                isTimeRestricted: true, minimumPassingScore: (int)Math.Ceiling(questionIds.Count * 0.6));
+                isTimeRestricted: true, minimumPassingScore: 6.0m);
             foreach (var questionId in questionIds)
                 publishedExam.AddQuestion(questionId);
             publishedExam.ConfigureNegativeMarking(0.25m);
@@ -114,7 +114,7 @@ public static class DataSeeder
                 $"Đề nháp {seedCategory.Name}", $"Đề đang soạn - {seedCategory.Name}",
                 $"Bản nháp đề thi thuộc danh mục {seedCategory.Name}, chưa xuất bản.",
                 TimeSpan.FromMinutes(30), Level.Easy, instructor.ExternalId, category.Id, category.Name,
-                isTimeRestricted: false, minimumPassingScore: (int)Math.Ceiling(Math.Min(questionIds.Count, 2) * 0.6));
+                isTimeRestricted: false, minimumPassingScore: 6.0m);
             foreach (var questionId in questionIds.Take(2))
                 draftExam.AddQuestion(questionId);
             await examRepository.InsertAsync(draftExam, cancellationToken);

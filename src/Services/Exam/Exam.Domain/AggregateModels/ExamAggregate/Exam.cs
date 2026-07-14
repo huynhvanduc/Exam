@@ -23,7 +23,7 @@ public class Exam : Entity, IAggregateRoot
 
     public string OwnerUserId { get; private set; }
 
-    public int MinimumPassingScore { get; private set; }
+    public decimal MinimumPassingScore { get; private set; }
 
     public bool IsTimeRestricted { get; private set; }
 
@@ -72,7 +72,7 @@ public class Exam : Entity, IAggregateRoot
     }
 
     public Exam(string name, string shortDesc, string content, TimeSpan duration, Level level, string ownerUserId,
-        string categoryId, string categoryName, bool isTimeRestricted, int minimumPassingScore)
+        string categoryId, string categoryName, bool isTimeRestricted, decimal minimumPassingScore)
     {
         if (string.IsNullOrWhiteSpace(name))
             throw new ExamDomainException("Exam name is required.");
@@ -80,8 +80,8 @@ public class Exam : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(categoryId))
             throw new ExamDomainException("Exam category is required.");
 
-        if (minimumPassingScore < 0)
-            throw new ExamDomainException("Minimum passing score must not be negative.");
+        if (minimumPassingScore < 0 || minimumPassingScore > 10)
+            throw new ExamDomainException("Minimum passing score must be between 0 and 10.");
 
         Name = name;
         ShortDesc = shortDesc;
@@ -98,7 +98,7 @@ public class Exam : Entity, IAggregateRoot
     }
 
     public void UpdateDetails(string name, string shortDesc, string content, TimeSpan duration, Level level,
-        string categoryId, string categoryName, bool isTimeRestricted, int minimumPassingScore)
+        string categoryId, string categoryName, bool isTimeRestricted, decimal minimumPassingScore)
     {
         EnsureEditable();
 
@@ -108,8 +108,8 @@ public class Exam : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(categoryId))
             throw new ExamDomainException("Exam category is required.");
 
-        if (minimumPassingScore < 0)
-            throw new ExamDomainException("Minimum passing score must not be negative.");
+        if (minimumPassingScore < 0 || minimumPassingScore > 10)
+            throw new ExamDomainException("Minimum passing score must be between 0 and 10.");
 
         Name = name;
         ShortDesc = shortDesc;

@@ -11,5 +11,5 @@ public record CreateExamCommand(
     Level Level,
     string CategoryId,
     bool IsTimeRestricted,
-    int MinimumPassingScore,
+    decimal MinimumPassingScore,
     string OwnerUserId) : IRequest<ExamDto>;

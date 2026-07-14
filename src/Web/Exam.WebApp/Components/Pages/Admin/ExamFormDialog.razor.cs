@@ -16,7 +16,7 @@ public partial class ExamFormDialog : FormDialogBase
     private string content = "";
     private int durationMinutes = 30;
     private Level level = Level.Easy;
-    private int minimumPassingScore = 5;
+    private decimal minimumPassingScore = 5m;
     private bool isTimeRestricted = true;
 
     private bool enableAvailability;

@@ -15,7 +15,7 @@
     </div>
 
     <div class="field-row">
-        <AppNumericField TValue="int" Label="Điểm đạt tối thiểu" @bind-Value="minimumPassingScore" Min="0" Required="true" />
+        <AppNumericField TValue="decimal" Label="Điểm đạt tối thiểu (0–10)" @bind-Value="minimumPassingScore" Min="0" Max="10" Step="0.5" Required="true" />
         <div style="margin-top:22px;">
             <AppSwitch Value="isTimeRestricted" ValueChanged="v => isTimeRestricted = v">Giới hạn thời gian làm bài</AppSwitch>
         </div>
