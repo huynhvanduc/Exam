@@ -56,15 +56,19 @@ else
             </HeaderContent>
             <RowTemplate Context="question">
                 <tr class="@(IsSelected(question) ? "selected" : "")">
-                    <td><AppCb Value="IsSelected(question)" OnClick="() => ToggleSelect(question)" /></td>
+                    <td>
+                        <AppCb Value="IsSelected(question)" OnClick="() => ToggleSelect(question)"
+                               Disabled="!CanManage(currentUser, question.OwnerUserId)"
+                               Title="@(CanManage(currentUser, question.OwnerUserId) ? null : "Không phải câu hỏi của bạn")" />
+                    </td>
                     <td>@TextUtils.Truncate(question.Content, 80)</td>
                     <td>@QuestionTypeLabel(question.QuestionType)</td>
                     <td>@question.Level.ToLabel()</td>
                     <td>@question.Points</td>
                     <td>@question.Answers.Count(a => a.IsCorrect)/@question.Answers.Count đúng</td>
                     <td>
-                        <AppButton OnClick="() => OpenEditDialog(question)">✎</AppButton>
-                        <AppButton Variant="AppButtonVariant.Danger" OnClick="() => DeleteAsync(question)">🗑</AppButton>
+                        <AppButton Disabled="!CanManage(currentUser, question.OwnerUserId)" OnClick="() => OpenEditDialog(question)">✎</AppButton>
+                        <AppButton Variant="AppButtonVariant.Danger" Disabled="!CanManage(currentUser, question.OwnerUserId)" OnClick="() => DeleteAsync(question)">🗑</AppButton>
                     </td>
                 </tr>
             </RowTemplate>

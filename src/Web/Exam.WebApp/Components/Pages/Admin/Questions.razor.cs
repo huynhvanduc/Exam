@@ -10,6 +10,7 @@ public partial class Questions : AdminPageBase
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private IReadOnlyCollection<CategoryDto>? categories;
+    private UserDto? currentUser;
     private AppTable<QuestionDto>? table;
     private string? selectedCategoryId;
     private string? keyword;
@@ -20,7 +21,11 @@ public partial class Questions : AdminPageBase
     private string? moveTargetCategoryId;
 
     protected override async Task OnInitializedAsync() =>
-        await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách môn học");
+        await ExecuteAsync(async () =>
+        {
+            currentUser = await Api.GetMeAsync();
+            categories = await Api.GetCategoriesAsync();
+        }, "Không tải được danh sách môn học");
 
     private async Task OnCategoryChangedAsync(string categoryId)
     {
