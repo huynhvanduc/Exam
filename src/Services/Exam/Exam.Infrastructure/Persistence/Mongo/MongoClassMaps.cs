@@ -85,7 +85,7 @@ public static class MongoClassMaps
             {
                 cm.AutoMap();
                 cm.MapCreator(q => new Question(q.Id, q.Content, q.QuestionType, q.Level, q.CategoryId,
-                    q.Answers, q.Explain, q.Points, q.OwnerUserId, q.CategoryName));
+                    q.Answers, q.Explain, q.OwnerUserId, q.CategoryName));
             });
         }
 
@@ -104,7 +104,7 @@ public static class MongoClassMaps
             {
                 cm.AutoMap();
                 cm.MapCreator(q => new QuestionResult(q.Id, q.Content, q.QuestionType, q.Level,
-                    q.Answers, q.Explain, q.Points));
+                    q.Answers, q.Explain));
             });
         }
 
@@ -130,8 +130,7 @@ public static class MongoClassMaps
             BsonClassMap.RegisterClassMap<ExamResult>(cm =>
             {
                 cm.AutoMap();
-                cm.MapCreator(r => new ExamResult(r.UserId, r.ExamId, r.NegativeMarkingRatio));
-                cm.MapMember(r => r.NegativeMarkingRatio).SetSerializer(new DecimalSerializer(BsonType.Decimal128));
+                cm.MapCreator(r => new ExamResult(r.UserId, r.ExamId));
             });
         }
 

@@ -9,7 +9,6 @@ public record QuestionDto(
     string CategoryName,
     IReadOnlyCollection<AnswerDto> Answers,
     string Explain,
-    int Points,
     string OwnerUserId);
 
 public record AnswerDto(string Id, string Content, bool IsCorrect);

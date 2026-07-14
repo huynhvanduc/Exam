@@ -1,4 +1,4 @@
-﻿using Exam.Domain.Exceptions;
+using Exam.Domain.Exceptions;
 using Exam.Domain.SeedWork;
 
 namespace Exam.Domain.AggregateModels.ExamResultAggregate;
@@ -43,11 +43,14 @@ public class ExamResult : Entity, IAggregateRoot
 
     public int CorrectQuestionCount { get; private set; }
 
-    public decimal NegativeMarkingRatio { get; private set; }
+    // Thang điểm 10 chuẩn học vụ Việt Nam: (số câu đúng / tổng số câu) × 10, làm tròn 2 chữ số thập phân.
+    // Guard chia-cho-0 dù Publish() đã chặn đề rỗng - tránh ném DivideByZeroException khó hiểu.
+    public decimal TotalScore => _questionResults.Count == 0
+        ? 0m
+        : Math.Round((decimal)CorrectQuestionCount / _questionResults.Count * 10m, 2);
 
-    public decimal TotalScore => _questionResults.Sum(ScoreFor);
-
-    public int MaxPossibleScore => _questionResults.Sum(x => x.Points);
+    // Hằng số thang điểm - giữ làm property tiện lợi để binding "@TotalScore/@MaxPossibleScore điểm" không cần sửa.
+    public decimal MaxPossibleScore => 10m;
 
     public DateTime ExamStartDate { get; private set; }
 
@@ -61,7 +64,7 @@ public class ExamResult : Entity, IAggregateRoot
     {
     }
 
-    public ExamResult(string userId, string examId, decimal negativeMarkingRatio = 0m)
+    public ExamResult(string userId, string examId)
     {
         if (string.IsNullOrWhiteSpace(userId))
             throw new ExamDomainException("UserId is required.");
@@ -69,12 +72,8 @@ public class ExamResult : Entity, IAggregateRoot
         if (string.IsNullOrWhiteSpace(examId))
             throw new ExamDomainException("ExamId is required.");
 
-        if (negativeMarkingRatio < 0 || negativeMarkingRatio > 1)
-            throw new ExamDomainException("Negative marking ratio must be between 0 and 1.");
-
         UserId = userId;
         ExamId = examId;
-        NegativeMarkingRatio = negativeMarkingRatio;
         ExamStartDate = DateTime.UtcNow;
         Finished = false;
     }
@@ -147,16 +146,5 @@ public class ExamResult : Entity, IAggregateRoot
         Passed = TotalScore >= minimumPassingScore;
         ExamFinishDate = DateTime.UtcNow;
         Finished = true;
-    }
-
-    private decimal ScoreFor(QuestionResult questionResult)
-    {
-        if (questionResult.Result)
-            return questionResult.Points;
-
-        if (questionResult.IsAnswered)
-            return -(questionResult.Points * NegativeMarkingRatio);
-
-        return 0m;
     }
 }

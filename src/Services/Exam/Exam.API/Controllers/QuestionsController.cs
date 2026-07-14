@@ -31,7 +31,7 @@ public class QuestionsController : ControllerBase
     public async Task<IActionResult> Create([FromBody] QuestionRequest request, CancellationToken cancellationToken)
     {
         var command = new CreateQuestionCommand(request.Content, request.QuestionType, request.Level,
-            request.CategoryId, request.Answers, request.Explain, request.Points, User.GetUserId()!);
+            request.CategoryId, request.Answers, request.Explain, User.GetUserId()!);
         var result = await _mediator.Send(command, cancellationToken);
         return CreatedAtAction(nameof(GetById), new { id = result.Id }, result);
     }
@@ -68,7 +68,7 @@ public class QuestionsController : ControllerBase
     public async Task<IActionResult> Update(string id, [FromBody] QuestionRequest request, CancellationToken cancellationToken)
     {
         var command = new UpdateQuestionCommand(id, request.Content, request.QuestionType, request.Level,
-            request.CategoryId, request.Answers, request.Explain, request.Points, User.GetActor());
+            request.CategoryId, request.Answers, request.Explain, User.GetActor());
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }

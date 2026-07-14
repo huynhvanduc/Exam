@@ -10,7 +10,6 @@ public class CreateQuestionCommandValidator : AbstractValidator<CreateQuestionCo
         RuleFor(x => x.Content).NotEmpty().MaximumLength(2000);
         RuleFor(x => x.CategoryId).NotEmpty();
         RuleFor(x => x.Explain).MaximumLength(2000);
-        RuleFor(x => x.Points).GreaterThan(0);
 
         RuleFor(x => x.Answers).NotEmpty();
         RuleForEach(x => x.Answers).ChildRules(answer =>

@@ -77,7 +77,7 @@ public static class DataSeeder
                     .ToList();
 
                 var question = new Question(null, seedQuestion.Content, seedQuestion.Type, seedQuestion.Level,
-                    category.Id, answers, seedQuestion.Explain, points: 1, ownerUserId: instructor.ExternalId,
+                    category.Id, answers, seedQuestion.Explain, ownerUserId: instructor.ExternalId,
                     categoryName: category.Name);
 
                 await questionRepository.InsertAsync(question, cancellationToken);

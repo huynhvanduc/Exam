@@ -32,7 +32,7 @@ public class UpdateQuestionCommandHandler : IRequestHandler<UpdateQuestionComman
             .ToList();
 
         question.Update(request.Content, request.QuestionType, request.Level, category.Id, category.Name,
-            answers, request.Explain, request.Points);
+            answers, request.Explain);
 
         await _questionRepository.UpdateAsync(question, cancellationToken);
 

@@ -2,7 +2,7 @@
 @using Microsoft.AspNetCore.Components.Forms
 
 <p class="page-sub">
-    Chọn file Excel (.xlsx) theo mẫu: Môn học, Mức độ, Loại câu hỏi, Nội dung câu hỏi, Đáp án A-D, Đáp án đúng, Giải thích, Điểm.
+    Chọn file Excel (.xlsx) theo mẫu: Môn học, Mức độ, Loại câu hỏi, Nội dung câu hỏi, Đáp án A-D, Đáp án đúng, Giải thích.
     Dùng nút "Export Excel" ở trang danh sách để lấy file mẫu đúng định dạng.
 </p>
 
@@ -24,7 +24,7 @@
         <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Câu hỏi sẽ được thêm:</div>
         <div style="max-height:260px;overflow-y:auto;">
             <table class="data">
-                <thead><tr><th>Dòng</th><th>Môn học</th><th>Nội dung</th><th>Loại</th><th>Điểm</th></tr></thead>
+                <thead><tr><th>Dòng</th><th>Môn học</th><th>Nội dung</th><th>Loại</th></tr></thead>
                 <tbody>
                     @foreach (var row in previewResult.ValidRows.Take(MaxPreviewRows))
                     {
@@ -33,7 +33,6 @@
                             <td>@row.CategoryName</td>
                             <td>@TextUtils.Truncate(row.Content, 90)</td>
                             <td>@row.QuestionType</td>
-                            <td>@row.Points</td>
                         </tr>
                     }
                 </tbody>

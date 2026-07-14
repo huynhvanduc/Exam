@@ -12,5 +12,4 @@ public record UpdateQuestionCommand(
     string CategoryId,
     IReadOnlyCollection<AnswerInput> Answers,
     string Explain,
-    int Points,
     Actor Actor) : IRequest<QuestionDto>;

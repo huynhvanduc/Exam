@@ -27,7 +27,7 @@ public class CreateQuestionCommandHandler : IRequestHandler<CreateQuestionComman
             .ToList();
 
         var question = new Question(null, request.Content, request.QuestionType, request.Level, category.Id,
-            answers, request.Explain, request.Points, request.OwnerUserId, category.Name);
+            answers, request.Explain, request.OwnerUserId, category.Name);
 
         await _questionRepository.InsertAsync(question, cancellationToken);
 

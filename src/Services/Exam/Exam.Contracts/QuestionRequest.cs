@@ -6,7 +6,6 @@ public record QuestionRequest(
     Level Level,
     string CategoryId,
     IReadOnlyCollection<AnswerInput> Answers,
-    string Explain,
-    int Points);
+    string Explain);
 
 public record AnswerInput(string Content, bool IsCorrect);

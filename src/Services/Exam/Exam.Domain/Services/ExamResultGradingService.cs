@@ -39,7 +39,7 @@ public class ExamResultGradingService
                 .ToList();
 
             examResult.AddQuestionResult(new QuestionResult(question.Id, question.Content, question.QuestionType,
-                question.Level, answerResults, question.Explain, question.Points));
+                question.Level, answerResults, question.Explain));
         }
 
         examResult.Finish(exam?.MinimumPassingScore ?? 0m);

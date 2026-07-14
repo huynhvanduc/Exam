@@ -48,7 +48,6 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
             var answerD = row.Cell(8).GetString().Trim();
             var correctText = row.Cell(9).GetString().Trim();
             var explain = row.Cell(10).GetString().Trim();
-            var pointsText = row.Cell(11).GetString().Trim();
 
             // Bỏ qua dòng trống hoàn toàn (thường gặp ở cuối file).
             if (string.IsNullOrWhiteSpace(categoryName) && string.IsNullOrWhiteSpace(content))
@@ -99,10 +98,6 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
                     rowErrors.Add("Câu hỏi 'Một đáp án' chỉ được có đúng 1 đáp án đúng.");
             }
 
-            var points = 1;
-            if (!string.IsNullOrWhiteSpace(pointsText) && (!int.TryParse(pointsText, out points) || points <= 0))
-                rowErrors.Add("Điểm không hợp lệ (phải là số nguyên dương).");
-
             if (rowErrors.Count > 0)
             {
                 errors.Add(new ImportQuestionRowError(rowNumber, string.Join(" ", rowErrors), content));
@@ -114,8 +109,8 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
                 .ToList();
 
             questionsToInsert.Add(new Question(null!, content, questionType!.Value, level!.Value, category!.Id,
-                answers, explain, points, request.OwnerUserId, category.Name));
-            validRows.Add(new ImportQuestionPreviewRow(rowNumber, category.Name, content, questionTypeText, levelText, points));
+                answers, explain, request.OwnerUserId, category.Name));
+            validRows.Add(new ImportQuestionPreviewRow(rowNumber, category.Name, content, questionTypeText, levelText));
         }
 
         if (!request.DryRun)

@@ -14,8 +14,6 @@ public class QuestionResult : Entity
 
     public string Explain { get; private set; }
 
-    public int Points { get; private set; }
-
     public IReadOnlyCollection<AnswerResult> Answers { get; private set; }
 
     public bool Result { get; private set; }
@@ -27,7 +25,7 @@ public class QuestionResult : Entity
     }
 
     public QuestionResult(string id, string content, QuestionType questionType, Level level,
-        IReadOnlyCollection<AnswerResult> answers, string explain, int points)
+        IReadOnlyCollection<AnswerResult> answers, string explain)
     {
         if (string.IsNullOrWhiteSpace(content))
             throw new ExamDomainException("Question content is required.");
@@ -35,15 +33,11 @@ public class QuestionResult : Entity
         if (answers == null || answers.Count == 0)
             throw new ExamDomainException("Question result must have at least one answer.");
 
-        if (points <= 0)
-            throw new ExamDomainException("Question points must be greater than zero.");
-
         Id = id;
         Content = content;
         QuestionType = questionType;
         Level = level;
         Explain = explain;
-        Points = points;
         Answers = answers;
         Result = answers.All(a => a.IsCorrect == (a.UserChosen == true));
     }

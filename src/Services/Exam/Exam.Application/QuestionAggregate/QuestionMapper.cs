@@ -12,6 +12,5 @@ internal static class QuestionMapper
             question.CategoryName,
             question.Answers.Select(a => new AnswerDto(a.Id, a.Content, a.IsCorrect)).ToList(),
             question.Explain,
-            question.Points,
             question.OwnerUserId);
 }

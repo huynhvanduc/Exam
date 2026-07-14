@@ -9,5 +9,4 @@ public record CreateQuestionCommand(
     string CategoryId,
     IReadOnlyCollection<AnswerInput> Answers,
     string Explain,
-    int Points,
     string OwnerUserId) : IRequest<QuestionDto>;

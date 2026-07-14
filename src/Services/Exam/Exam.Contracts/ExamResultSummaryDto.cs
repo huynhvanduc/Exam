@@ -5,7 +5,7 @@ public record ExamResultSummaryDto(
     string ExamId,
     string ExamTitle,
     decimal TotalScore,
-    int MaxPossibleScore,
+    decimal MaxPossibleScore,
     bool? Passed,
     DateTime ExamStartDate,
     DateTime? ExamFinishDate,

@@ -8,4 +8,4 @@ public record ImportQuestionsResultDto(
 
 public record ImportQuestionRowError(int RowNumber, string Message, string ContentExcerpt);
 
-public record ImportQuestionPreviewRow(int RowNumber, string CategoryName, string Content, string QuestionType, string Level, int Points);
+public record ImportQuestionPreviewRow(int RowNumber, string CategoryName, string Content, string QuestionType, string Level);

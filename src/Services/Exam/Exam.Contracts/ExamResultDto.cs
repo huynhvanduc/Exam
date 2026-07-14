@@ -8,7 +8,7 @@ public record ExamResultDto(
     string Email,
     string FullName,
     decimal TotalScore,
-    int MaxPossibleScore,
+    decimal MaxPossibleScore,
     int CorrectQuestionCount,
     bool? Passed,
     DateTime ExamStartDate,
@@ -22,7 +22,6 @@ public record QuestionResultDto(
     QuestionType QuestionType,
     Level Level,
     string Explain,
-    int Points,
     bool Result,
     bool IsAnswered,
     IReadOnlyCollection<AnswerResultDto> Answers);

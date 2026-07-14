@@ -20,8 +20,6 @@ public class Question : Entity, IAggregateRoot
 
     public string Explain { get; private set; }
 
-    public int Points { get; private set; }
-
     public DateTime DateCreated { get; private set; }
 
     public string OwnerUserId { get; private set; }
@@ -31,9 +29,9 @@ public class Question : Entity, IAggregateRoot
     }
 
     public Question(string id, string content, QuestionType questionType, Level level, string categoryId,
-        IReadOnlyCollection<Answer> answers, string explain, int points = 1, string ownerUserId = null, string categoryName = null)
+        IReadOnlyCollection<Answer> answers, string explain, string ownerUserId = null, string categoryName = null)
     {
-        EnsureValid(content, categoryId, answers, questionType, points);
+        EnsureValid(content, categoryId, answers, questionType);
 
         Id = id;
         Content = content;
@@ -42,16 +40,15 @@ public class Question : Entity, IAggregateRoot
         CategoryId = categoryId;
         Answers = answers;
         Explain = explain;
-        Points = points;
         DateCreated = DateTime.UtcNow;
         OwnerUserId = ownerUserId;
         CategoryName = categoryName;
     }
 
     public void Update(string content, QuestionType questionType, Level level, string categoryId, string categoryName,
-        IReadOnlyCollection<Answer> answers, string explain, int points)
+        IReadOnlyCollection<Answer> answers, string explain)
     {
-        EnsureValid(content, categoryId, answers, questionType, points);
+        EnsureValid(content, categoryId, answers, questionType);
 
         Content = content;
         QuestionType = questionType;
@@ -60,15 +57,6 @@ public class Question : Entity, IAggregateRoot
         CategoryName = categoryName;
         Answers = answers;
         Explain = explain;
-        Points = points;
-    }
-
-    public void ChangePoints(int points)
-    {
-        if (points <= 0)
-            throw new ExamDomainException("Question points must be greater than zero.");
-
-        Points = points;
     }
 
     public void ChangeCategory(string categoryId, string categoryName)
@@ -81,7 +69,7 @@ public class Question : Entity, IAggregateRoot
     }
 
     private static void EnsureValid(string content, string categoryId, IReadOnlyCollection<Answer> answers,
-        QuestionType questionType, int points)
+        QuestionType questionType)
     {
         if (string.IsNullOrWhiteSpace(content))
             throw new ExamDomainException("Question content is required.");
@@ -94,8 +82,5 @@ public class Question : Entity, IAggregateRoot
 
         if (questionType == QuestionType.SingleSelection && answers.Count(x => x.IsCorrect) > 1)
             throw new ExamDomainException($"{nameof(answers)} is invalid: a single selection question can only have one correct answer.");
-
-        if (points <= 0)
-            throw new ExamDomainException("Question points must be greater than zero.");
     }
 }

@@ -14,7 +14,6 @@ public partial class QuestionFormDialog : FormDialogBase
     private string content = "";
     private QuestionType questionType = QuestionType.SingleSelection;
     private Level level = Level.Easy;
-    private int points = 1;
     private string explain = "";
     private List<AnswerRow> answers = [];
     private int singleCorrectIndex = -1;
@@ -27,7 +26,6 @@ public partial class QuestionFormDialog : FormDialogBase
             content = Model.Content;
             questionType = Model.QuestionType;
             level = Model.Level;
-            points = Model.Points;
             explain = Model.Explain;
             answers = Model.Answers.Select(a => new AnswerRow { Content = a.Content, IsCorrect = a.IsCorrect }).ToList();
             singleCorrectIndex = answers.FindIndex(a => a.IsCorrect);
@@ -87,8 +85,7 @@ public partial class QuestionFormDialog : FormDialogBase
             level,
             CategoryId,
             nonEmptyAnswers.Select(a => new AnswerInput(a.Content, a.IsCorrect)).ToList(),
-            explain,
-            points);
+            explain);
 
         Dialog.Close(AppDialogResult.Ok(request));
     }

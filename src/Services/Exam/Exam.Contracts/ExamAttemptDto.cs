@@ -14,7 +14,6 @@ public record ExamAttemptQuestionDto(
     string Content,
     QuestionType QuestionType,
     Level Level,
-    int Points,
     IReadOnlyCollection<ExamAttemptAnswerOptionDto> Answers);
 
 public record ExamAttemptAnswerOptionDto(string Id, string Content);

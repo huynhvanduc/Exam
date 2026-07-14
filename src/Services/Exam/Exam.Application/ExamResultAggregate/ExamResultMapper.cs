@@ -21,7 +21,6 @@ internal static class ExamResultMapper
                 q.Content,
                 q.QuestionType,
                 q.Level,
-                q.Points,
                 DeterministicShuffle(q.Answers, examResult.Id + q.Id)
                     .Select(a => new ExamAttemptAnswerOptionDto(a.Id, a.Content))
                     .ToList()))
@@ -56,7 +55,6 @@ internal static class ExamResultMapper
                 qr.QuestionType,
                 qr.Level,
                 qr.Explain,
-                qr.Points,
                 qr.Result,
                 qr.IsAnswered,
                 qr.Answers.Select(a => new AnswerResultDto(a.Id, a.Content, a.UserChosen, a.IsCorrect)).ToList())).ToList());

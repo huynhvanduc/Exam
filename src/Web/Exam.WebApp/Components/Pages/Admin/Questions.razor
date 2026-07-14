@@ -52,7 +52,7 @@ else
         <AppTable TItem="QuestionDto" @ref="table" ServerData="LoadServerData" ColumnCount="7"
                   EmptyText="Chưa có câu hỏi nào trong môn học này.">
             <HeaderContent>
-                <th style="width:32px;"></th><th>Nội dung</th><th>Loại</th><th>Mức độ</th><th>Điểm</th><th>Đáp án</th><th></th>
+                <th style="width:32px;"></th><th>Nội dung</th><th>Loại</th><th>Mức độ</th><th>Đáp án</th><th></th>
             </HeaderContent>
             <RowTemplate Context="question">
                 <tr class="@(IsSelected(question) ? "selected" : "")">
@@ -64,7 +64,6 @@ else
                     <td>@TextUtils.Truncate(question.Content, 80)</td>
                     <td>@QuestionTypeLabel(question.QuestionType)</td>
                     <td>@question.Level.ToLabel()</td>
-                    <td>@question.Points</td>
                     <td>@question.Answers.Count(a => a.IsCorrect)/@question.Answers.Count đúng</td>
                     <td>
                         <AppButton Disabled="!CanManage(currentUser, question.OwnerUserId)" OnClick="() => OpenEditDialog(question)">✎</AppButton>

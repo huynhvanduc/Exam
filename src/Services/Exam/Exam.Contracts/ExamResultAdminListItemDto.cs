@@ -6,7 +6,7 @@ public record ExamResultAdminListItemDto(
     string Email,
     string FullName,
     decimal TotalScore,
-    int MaxPossibleScore,
+    decimal MaxPossibleScore,
     bool? Passed,
     DateTime ExamStartDate,
     DateTime? ExamFinishDate,

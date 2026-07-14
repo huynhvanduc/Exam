@@ -73,7 +73,7 @@ public class StartExamCommandHandler : IRequestHandler<StartExamCommand, ExamAtt
         var user = await _userRepository.GetByExternalIdAsync(request.UserId, cancellationToken);
         var fullName = user == null ? string.Empty : $"{user.FirstName} {user.LastName}".Trim();
 
-        var examResult = new ExamResult(request.UserId, request.ExamId, exam.NegativeMarkingRatio);
+        var examResult = new ExamResult(request.UserId, request.ExamId);
         examResult.SetExamTitle(exam.Name);
         examResult.SetUserInfo(user?.Email ?? string.Empty, fullName);
         examResult.AssignQuestions(questionIds);

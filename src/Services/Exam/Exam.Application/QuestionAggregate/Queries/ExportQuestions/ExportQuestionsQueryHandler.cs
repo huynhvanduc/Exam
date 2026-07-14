@@ -9,7 +9,7 @@ public class ExportQuestionsQueryHandler : IRequestHandler<ExportQuestionsQuery,
     private static readonly string[] Headers =
     [
         "Môn học", "Mức độ", "Loại câu hỏi", "Nội dung câu hỏi",
-        "Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D", "Đáp án đúng", "Giải thích", "Điểm"
+        "Đáp án A", "Đáp án B", "Đáp án C", "Đáp án D", "Đáp án đúng", "Giải thích"
     ];
 
     private readonly IQuestionRepository _questionRepository;
@@ -51,7 +51,6 @@ public class ExportQuestionsQueryHandler : IRequestHandler<ExportQuestionsQuery,
             worksheet.Cell(rowNumber, 9).Value = string.Join(",", correctLetters);
 
             worksheet.Cell(rowNumber, 10).Value = question.Explain;
-            worksheet.Cell(rowNumber, 11).Value = question.Points;
             rowNumber++;
         }
 
