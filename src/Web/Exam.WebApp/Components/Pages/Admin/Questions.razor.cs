@@ -137,7 +137,7 @@ public partial class Questions : AdminPageBase
     }, "Xuất Excel thất bại");
 
     private Task DeleteAsync(QuestionDto question) => ConfirmAndExecuteAsync(
-        "Xác nhận xoá", $"Xoá câu hỏi '{Truncate(question.Content)}'?",
+        "Xác nhận xoá", $"Xoá câu hỏi '{TextUtils.Truncate(question.Content, 80)}'?",
         async () =>
         {
             await Api.DeleteQuestionAsync(question.Id);
@@ -182,8 +182,6 @@ public partial class Questions : AdminPageBase
                 await table.ReloadServerData();
         }, "Chuyển câu hỏi thất bại", $"Đã chuyển {ids.Count} câu hỏi sang {destName}");
     }
-
-    private static string Truncate(string content) => content.Length <= 80 ? content : content[..80] + "…";
 
     private static string QuestionTypeLabel(QuestionType type) => type switch
     {

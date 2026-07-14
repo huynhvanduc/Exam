@@ -270,7 +270,5 @@ public partial class Exams : AdminPageBase
         async () => selected = await Api.ArchiveExamAsync(selected.Id),
         "Lưu trữ thất bại", "Đã lưu trữ.", yesText: "Lưu trữ");
 
-    private static string Truncate(string content) => content.Length <= 100 ? content : content[..100] + "…";
-
     private static AppStatusPillVariant StatusVariant(ExamStatus status) => status.ToPillVariant();
 }

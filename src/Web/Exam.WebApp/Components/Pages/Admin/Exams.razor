@@ -142,7 +142,7 @@
                                     var inExam = selected.QuestionIds.Contains(question.Id);
                                     <div class="class-row">
                                         <AppCheckbox Value="inExam" ValueChanged="v => ToggleQuestionAsync(question.Id, v)" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft">
-                                            @Truncate(question.Content)
+                                            @TextUtils.Truncate(question.Content, 100)
                                         </AppCheckbox>
                                     </div>
                                 }

@@ -57,7 +57,7 @@ else
             <RowTemplate Context="question">
                 <tr class="@(IsSelected(question) ? "selected" : "")">
                     <td><AppCb Value="IsSelected(question)" OnClick="() => ToggleSelect(question)" /></td>
-                    <td>@Truncate(question.Content)</td>
+                    <td>@TextUtils.Truncate(question.Content, 80)</td>
                     <td>@QuestionTypeLabel(question.QuestionType)</td>
                     <td>@question.Level.ToLabel()</td>
                     <td>@question.Points</td>

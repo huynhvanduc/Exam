@@ -31,7 +31,7 @@
                         <tr>
                             <td>@row.RowNumber</td>
                             <td>@row.CategoryName</td>
-                            <td>@Truncate(row.Content)</td>
+                            <td>@TextUtils.Truncate(row.Content, 90)</td>
                             <td>@row.QuestionType</td>
                             <td>@row.Points</td>
                         </tr>
@@ -58,7 +58,7 @@
                     {
                         <tr>
                             <td>@error.RowNumber</td>
-                            <td>@Truncate(error.ContentExcerpt)</td>
+                            <td>@TextUtils.Truncate(error.ContentExcerpt, 90)</td>
                             <td>@error.Message</td>
                         </tr>
                     }

@@ -76,6 +76,4 @@ public partial class ImportQuestionsDialog : FormDialogBase
             isBusy = false;
         }
     }
-
-    private static string Truncate(string content) => content.Length <= 90 ? content : content[..90] + "…";
 }
