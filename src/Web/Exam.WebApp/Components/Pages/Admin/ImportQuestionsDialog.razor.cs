@@ -9,7 +9,6 @@ public partial class ImportQuestionsDialog : FormDialogBase
     private const int MaxPreviewRows = 50;
 
     [Inject] private ExamApiClient Api { get; set; } = null!;
-    [Inject] private IAppToastService Toast { get; set; } = null!;
 
     private IBrowserFile? selectedFile;
     private byte[]? fileBytes;
@@ -34,7 +33,7 @@ public partial class ImportQuestionsDialog : FormDialogBase
             return;
 
         isBusy = true;
-        try
+        await ExecuteAsync(async () =>
         {
             // IBrowserFile.OpenReadStream() chỉ đáng tin cậy khi đọc 1 LẦN DUY NHẤT trong Blazor Server -
             // gọi lại lần 2 (cho bước Xác nhận) làm rớt circuit SignalR ("Cannot send data if the connection
@@ -45,15 +44,8 @@ public partial class ImportQuestionsDialog : FormDialogBase
             fileBytes = memoryStream.ToArray();
 
             previewResult = await Api.ImportQuestionsAsync(new MemoryStream(fileBytes), selectedFile.Name, dryRun: true);
-        }
-        catch (ExamApiException ex)
-        {
-            Toast.Add($"Xem trước thất bại: {ex.Message}", AppSeverity.Error);
-        }
-        finally
-        {
-            isBusy = false;
-        }
+        }, "Xem trước thất bại");
+        isBusy = false;
     }
 
     private async Task ConfirmAsync()
@@ -62,18 +54,11 @@ public partial class ImportQuestionsDialog : FormDialogBase
             return;
 
         isBusy = true;
-        try
+        await ExecuteAsync(async () =>
         {
             var result = await Api.ImportQuestionsAsync(new MemoryStream(fileBytes), selectedFile.Name, dryRun: false);
             Dialog.Close(AppDialogResult.Ok(result));
-        }
-        catch (ExamApiException ex)
-        {
-            Toast.Add($"Nhập câu hỏi thất bại: {ex.Message}", AppSeverity.Error);
-        }
-        finally
-        {
-            isBusy = false;
-        }
+        }, "Nhập câu hỏi thất bại");
+        isBusy = false;
     }
 }
