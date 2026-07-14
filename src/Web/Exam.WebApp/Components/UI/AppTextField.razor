@@ -32,6 +32,9 @@
 
     [CascadingParameter] private AppForm? Form { get; set; }
 
+    // Value là kiểu string - Razor coi giá trị gán trực tiếp (Value="field") là literal string,
+    // KHÔNG tự parse thành biến C#. Luôn bind bằng "@field" (vd: Value="@keyword"), không phải "field".
+    // Đã xảy ra thật 3 lần (AuditLog.razor, Questions.razor, Users.razor) khi thiếu dấu @.
     [Parameter] public string? Value { get; set; }
     [Parameter] public EventCallback<string?> ValueChanged { get; set; }
     [Parameter] public string? Label { get; set; }

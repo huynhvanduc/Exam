@@ -26,6 +26,9 @@
 
     [CascadingParameter] private AppForm? Form { get; set; }
 
+    // Value ở đây là kiểu generic (TValue), không phải string, nên Razor luôn parse giá trị gán là
+    // biểu thức C# dù có hay không có dấu "@" - khác với AppTextField.Value (string?), nơi thiếu "@"
+    // sẽ bị hiểu nhầm thành literal string. Xem AppTextField.razor để biết chi tiết.
     [Parameter] public TValue? Value { get; set; }
     [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
     [Parameter] public RenderFragment? ChildContent { get; set; }
