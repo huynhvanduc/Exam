@@ -1,62 +1,304 @@
 @page "/admin/exams"
+@page "/admin/exams/{Id}"
 @attribute [Authorize(Roles = "Instructor,Admin")]
 @inherits AdminPageBase
 @inject NavigationManager Navigation
 
 <PageTitle>Quản lý đề thi</PageTitle>
 
-<AdminPageHeader Title="Quản lý đề thi">
-    <CategorySelector Categories="categories" Value="@selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
+<div class="page-header-row"><h1 class="page-title" style="margin:0;">Quản lý đề thi</h1></div>
+<p class="page-sub">Chọn 1 đề thi bên trái để xem/chỉnh sửa chi tiết — không cần chuyển trang.</p>
 
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-               Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
-        Thêm đề thi
-    </MudButton>
-</AdminPageHeader>
+<div class="master-detail">
+    <aside class="md-list">
+        <div class="md-list-header">
+            <CategorySelector Categories="categories" Value="@selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
+        </div>
+        <div class="md-list-items">
+            @if (categories == null)
+            {
+                <AppSpinner />
+            }
+            else if (string.IsNullOrEmpty(selectedCategoryId))
+            {
+                <div class="empty-state">Chọn môn học để xem danh sách đề thi.</div>
+            }
+            else if (exams == null)
+            {
+                <AppSpinner />
+            }
+            else if (exams.Count == 0)
+            {
+                <div class="empty-state">Chưa có đề thi nào trong môn học này.</div>
+            }
+            else
+            {
+                @foreach (var exam in exams)
+                {
+                    <div class="md-item @(exam.Id == selected?.Id ? "active" : "")" @onclick="() => SelectExam(exam.Id)">
+                        <div class="t">@exam.Name</div>
+                        <div class="m"><AppStatusPill Variant="StatusVariant(exam.Status)">@exam.Status.ToLabel()</AppStatusPill>@exam.NumberOfQuestions câu · @exam.Duration.TotalMinutes phút</div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="md-list-footer">
+            <AppButton Variant="AppButtonVariant.Primary" FullWidth="true" Disabled="string.IsNullOrEmpty(selectedCategoryId)" OnClick="OpenCreateDialog">+ Thêm đề thi</AppButton>
+        </div>
+    </aside>
+    <section class="md-detail">
+        @if (selected == null)
+        {
+            <div class="md-empty"><div class="big">📄</div>Chọn một đề thi bên trái để xem chi tiết</div>
+        }
+        else
+        {
+            <div class="exam-header">
+                <h2>@selected.Name</h2>
+                <AppStatusPill Variant="StatusVariant(selected.Status)">@selected.Status.ToLabel()</AppStatusPill>
+                <span class="spacer"></span>
+                <AppButton OnClick="() => OpenEditDialog(selected)" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" title="Chỉ sửa được khi đang Nháp">✎ Sửa</AppButton>
+                @if (selected.Status != ExamStatus.Archived)
+                {
+                    <AppButton Disabled="!CanManageSelected" OnClick="TogglePublishAsync">@(selected.Status == ExamStatus.Published ? "Chuyển về Nháp" : "Xuất bản")</AppButton>
+                    <AppButton Variant="AppButtonVariant.Danger" Disabled="!CanManageSelected" OnClick="ArchiveAsync">Lưu trữ</AppButton>
+                }
+                <AppButton Variant="AppButtonVariant.Danger" Disabled="!CanManageSelected" OnClick="() => DeleteAsync(selected)">Xoá</AppButton>
+            </div>
 
-@if (categories == null)
+            @if (!CanManageSelected)
+            {
+                <AppAlert Severity="AppAlertSeverity.Warning">Bạn không phải người tạo đề thi này nên chỉ có thể xem, không thể chỉnh sửa hoặc xem kết quả thi.</AppAlert>
+            }
+            else if (selected.Status != ExamStatus.Draft)
+            {
+                <AppAlert Severity="AppAlertSeverity.Info">Chỉ có thể sửa câu hỏi / pool / trừ điểm khi đề thi ở trạng thái Nháp.</AppAlert>
+            }
+
+            <div class="exam-grid2">
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <AppCard>
+                        <h3>Thông tin chung</h3>
+                        <div class="info-row"><span>Mô tả</span><b>@selected.ShortDesc</b></div>
+                        <div class="info-row"><span>Thời lượng</span><b>@selected.Duration.TotalMinutes phút</b></div>
+                        <div class="info-row"><span>Mức độ</span><b>@selected.Level.ToLabel()</b></div>
+                        <div class="info-row"><span>Điểm đạt</span><b>@selected.MinimumPassingScore</b></div>
+                        <div class="info-row"><span>Số câu hỏi</span><b>@selected.NumberOfQuestions</b></div>
+                        <div class="info-row"><span>Số lần thi tối đa</span><b>@(selected.MaxAttempts.HasValue ? $"{selected.MaxAttempts} lần" : "Không giới hạn")</b></div>
+                    </AppCard>
+
+                    <AppCard>
+                        <h3>Lịch phát hành</h3>
+                        <div class="field-row">
+                            <AppDateField Label="Mở từ ngày" @bind-Value="availableFrom" Disabled="!CanManageSelected || selected.Status == ExamStatus.Archived" />
+                            <AppDateField Label="Đóng vào ngày" @bind-Value="availableTo" Disabled="!CanManageSelected || selected.Status == ExamStatus.Archived" />
+                        </div>
+                        <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status == ExamStatus.Archived" OnClick="SaveAvailabilityAsync">Lưu lịch phát hành</AppButton>
+                    </AppCard>
+
+                    <AppCard>
+                        <h3>Trừ điểm khi chọn sai</h3>
+                        <AppNumericField TValue="decimal" Label="Tỉ lệ trừ điểm (0–1)" @bind-Value="negativeMarkingRatio" Min="0" Max="1" Step="0.05" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" />
+                        <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" OnClick="SaveNegativeMarkingAsync">Lưu</AppButton>
+                    </AppCard>
+
+                    <AppCard>
+                        <h3>Giới hạn số lần thi lại</h3>
+                        <AppSwitch Value="limitMaxAttempts" ValueChanged="v => limitMaxAttempts = v" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft">Giới hạn số lần thi</AppSwitch>
+                        @if (limitMaxAttempts)
+                        {
+                            <AppNumericField TValue="int" Label="Số lần thi tối đa" @bind-Value="maxAttempts" Min="1" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" />
+                        }
+                        <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" OnClick="SaveMaxAttemptsAsync">Lưu</AppButton>
+                    </AppCard>
+                </div>
+
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                    <AppCard>
+                        <h3>Câu hỏi</h3>
+                        <p class="page-sub">
+                            Chế độ hiện tại: <b>@(selected.QuestionSelectionMode == QuestionSelectionMode.Pool ? "Chọn ngẫu nhiên theo pool" : "Danh sách cố định")</b>
+                        </p>
+
+                        @if (selected.QuestionSelectionMode == QuestionSelectionMode.Pool)
+                        {
+                            <AppNumericField TValue="int" Label="Số câu hỏi lấy ngẫu nhiên" @bind-Value="poolQuestionCount" Min="1" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" />
+                            <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" OnClick="SavePoolAsync">Lưu cấu hình pool</AppButton>
+                        }
+                        else
+                        {
+                            @if (categoryQuestions == null)
+                            {
+                                <AppSpinner Size="AppSpinnerSize.Small" />
+                            }
+                            else if (categoryQuestions.Count == 0)
+                            {
+                                <AppAlert Severity="AppAlertSeverity.Info">Môn học này chưa có câu hỏi nào trong ngân hàng câu hỏi.</AppAlert>
+                            }
+                            else
+                            {
+                                @foreach (var question in categoryQuestions)
+                                {
+                                    var inExam = selected.QuestionIds.Contains(question.Id);
+                                    <div class="class-row">
+                                        <AppCheckbox Value="inExam" ValueChanged="v => ToggleQuestionAsync(question.Id, v)" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft">
+                                            @Truncate(question.Content)
+                                        </AppCheckbox>
+                                    </div>
+                                }
+                            }
+
+                            <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;" />
+                            <p class="page-sub">Hoặc chuyển sang chọn ngẫu nhiên theo pool (chỉ khi chưa thêm câu hỏi cố định):</p>
+                            <AppNumericField TValue="int" Label="Số câu hỏi lấy ngẫu nhiên" @bind-Value="poolQuestionCount" Min="1"
+                                             Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft || selected.QuestionIds.Count > 0" />
+                            <AppButton Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft || selected.QuestionIds.Count > 0" OnClick="SavePoolAsync">Chuyển sang pool</AppButton>
+                        }
+                    </AppCard>
+
+                    <AppCard>
+                        <h3>Lớp được giao</h3>
+                        @if (selected.IsPublic)
+                        {
+                            <AppAlert Severity="AppAlertSeverity.Info">Đề công khai - mọi học viên đăng nhập đều thi được.</AppAlert>
+                        }
+                        else
+                        {
+                            @foreach (var classId in selected.AssignedClassIds)
+                            {
+                                <div class="class-row">
+                                    <span>@ClassName(classId)</span>
+                                    <AppIconButton Danger="true" Disabled="!CanManageSelected" OnClick="() => UnassignClassAsync(classId)">✕</AppIconButton>
+                                </div>
+                            }
+                        }
+
+                        @if (unassignedClasses.Count > 0)
+                        {
+                            <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;" />
+                            <AppSelect TValue="string" Label="Gán thêm lớp" Disabled="!CanManageSelected" @bind-Value="selectedClassId">
+                                <option value="">— Chọn lớp —</option>
+                                @foreach (var c in unassignedClasses)
+                                {
+                                    <option value="@c.Id">@c.Name</option>
+                                }
+                            </AppSelect>
+                            <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || string.IsNullOrEmpty(selectedClassId)" OnClick="AssignClassAsync">Gán lớp</AppButton>
+                        }
+                    </AppCard>
+                </div>
+            </div>
+
+            <AppCard Class="results-card">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                    <h3 style="margin:0;">Kết quả thi</h3><span class="spacer"></span>
+                    @if (CanManageSelected)
+                    {
+                        <AppButton OnClick="LoadResultsAsync">↻ Làm mới</AppButton>
+                    }
+                </div>
+                @if (!CanManageSelected)
+                {
+                    <div class="empty-state">Chỉ người tạo đề thi hoặc Admin mới xem được kết quả thi.</div>
+                }
+                else if (results == null)
+                {
+                    <AppSpinner />
+                }
+                else
+                {
+                    <div class="tabs">
+                        <button class="tab @(resultsFilter == "all" ? "active" : "")" @onclick='() => SetResultsFilter("all")'>Tất cả (@results.Count)</button>
+                        <button class="tab @(resultsFilter == "doing" ? "active" : "")" @onclick='() => SetResultsFilter("doing")'><span class="live-dot"></span>Đang làm (@results.Count(r => !r.Finished))</button>
+                        <button class="tab @(resultsFilter == "done" ? "active" : "")" @onclick='() => SetResultsFilter("done")'>Đã nộp (@results.Count(r => r.Finished))</button>
+                    </div>
+                    <table class="data">
+                        <thead><tr><th>Thí sinh</th><th>Điểm</th><th>Kết quả</th><th>Bắt đầu</th><th>Nộp bài</th><th>Trạng thái</th></tr></thead>
+                        <tbody>
+                            @if (!FilteredResults().Any())
+                            {
+                                <tr><td colspan="6"><div class="empty-state">Chưa có thí sinh nào làm đề thi này.</div></td></tr>
+                            }
+                            else
+                            {
+                                @foreach (var result in FilteredResults())
+                                {
+                                    <tr class="row-clickable" @onclick="() => OpenDrawerAsync(result)">
+                                        <td>@result.FullName (@result.Email)</td>
+                                        <td>@(result.Finished ? $"{result.TotalScore}/{result.MaxPossibleScore}" : "—")</td>
+                                        <td>
+                                            @if (result.Passed.HasValue)
+                                            {
+                                                <AppStatusPill Variant="@(result.Passed.Value ? AppStatusPillVariant.Success : AppStatusPillVariant.Danger)">@(result.Passed.Value ? "Đạt" : "Không đạt")</AppStatusPill>
+                                            }
+                                            else
+                                            {
+                                                <span>—</span>
+                                            }
+                                        </td>
+                                        <td>@result.ExamStartDate.ToLocalTime().ToString("HH:mm dd/MM")</td>
+                                        <td>@(result.ExamFinishDate.HasValue ? result.ExamFinishDate.Value.ToLocalTime().ToString("HH:mm dd/MM") : "—")</td>
+                                        <td>
+                                            @if (result.Finished)
+                                            {
+                                                <AppStatusPill Variant="AppStatusPillVariant.Success">Đã nộp</AppStatusPill>
+                                            }
+                                            else
+                                            {
+                                                <AppStatusPill Variant="AppStatusPillVariant.Info"><span class="live-dot"></span>Đang làm</AppStatusPill>
+                                            }
+                                        </td>
+                                    </tr>
+                                }
+                            }
+                        </tbody>
+                    </table>
+                }
+            </AppCard>
+        }
+    </section>
+</div>
+
+@if (drawerResult != null)
 {
-    <MudProgressCircular Indeterminate="true" />
-}
-else if (string.IsNullOrEmpty(selectedCategoryId))
-{
-    <MudAlert Severity="Severity.Info">Chọn môn học để xem danh sách đề thi.</MudAlert>
-}
-else
-{
-    <MudTable T="ExamDto" @ref="table" ServerData="LoadServerData" Hover="true">
-        <HeaderContent>
-            <MudTh>Tên đề thi</MudTh>
-            <MudTh>Mức độ</MudTh>
-            <MudTh>Trạng thái</MudTh>
-            <MudTh>Số câu hỏi</MudTh>
-            <MudTh>Điểm đạt</MudTh>
-            <MudTh>Hành động</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Tên đề thi">@context.Name</MudTd>
-            <MudTd DataLabel="Mức độ">@context.Level.ToLabel()</MudTd>
-            <MudTd DataLabel="Trạng thái">
-                <MudChip T="string" Size="Size.Small" Color="@context.Status.ToColor()">@context.Status.ToLabel()</MudChip>
-            </MudTd>
-            <MudTd DataLabel="Số câu hỏi">@context.NumberOfQuestions</MudTd>
-            <MudTd DataLabel="Điểm đạt">@context.MinimumPassingScore</MudTd>
-            <MudTd DataLabel="Hành động">
-                <MudTooltip Text="Cấu hình chi tiết">
-                    <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="() => NavigateToDetail(context.Id)" />
-                </MudTooltip>
-                <MudTooltip Text="Chỉ sửa được khi đang Nháp">
-                    <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)"
-                                   Disabled="context.Status != ExamStatus.Draft" />
-                </MudTooltip>
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>Chưa có đề thi nào trong môn học này.</MudText>
-        </NoRecordsContent>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
+    <div class="drawer-overlay open" @onclick="CloseDrawer">
+        <div class="drawer" @onclick:stopPropagation="true">
+            <button class="close" @onclick="CloseDrawer">✕</button>
+            <h3>@drawerResult.FullName</h3>
+            <p class="sub">@drawerResult.Email</p>
+            @if (drawerStatus == null)
+            {
+                <AppSpinner />
+            }
+            else
+            {
+                <div class="drawer-meta">
+                    @if (drawerStatus.Finished)
+                    {
+                        <div class="row"><span>Điểm</span><b>@drawerStatus.Result!.TotalScore/@drawerStatus.Result.MaxPossibleScore</b></div>
+                        <div class="row"><span>Kết quả</span><b>@(drawerStatus.Result.Passed == true ? "Đạt" : "Không đạt")</b></div>
+                        <div class="row"><span>Trạng thái</span><b>Đã nộp bài</b></div>
+                    }
+                    else
+                    {
+                        <div class="row"><span>Đã trả lời</span><b>@drawerStatus.Attempt!.SelectedAnswers.Count(a => a.SelectedAnswerIds.Count > 0)/@drawerStatus.Attempt.Questions.Count</b></div>
+                        <div class="row"><span>Trạng thái</span><b>Đang làm bài</b></div>
+                    }
+                </div>
+                @if (!drawerStatus.Finished)
+                {
+                    <div style="font-size:12px;font-weight:700;color:var(--ink-soft);text-transform:uppercase;margin-bottom:6px;">Tiến độ từng câu</div>
+                    <div class="qgrid">
+                        @for (var i = 0; i < drawerStatus.Attempt!.Questions.Count; i++)
+                        {
+                            var index = i;
+                            var answered = IsAnswered(drawerStatus.Attempt.Questions.ElementAt(index).Id);
+                            <div class="qcell @(answered ? "answered" : "")">@(index + 1)</div>
+                        }
+                    </div>
+                    <AppButton Variant="AppButtonVariant.Danger" FullWidth="true" OnClick="ForceSubmitAsync">Buộc nộp bài</AppButton>
+                }
+            }
+        </div>
+    </div>
 }

@@ -6,8 +6,6 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authentication.OpenIdConnect;
 using Microsoft.AspNetCore.DataProtection;
 using Microsoft.Extensions.Http.Resilience;
-using MudBlazor;
-using MudBlazor.Services;
 using Polly;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
@@ -18,11 +16,8 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
-// Snackbar ở góc dưới-phải để không đè lên các nút hành động (Xuất bản/Lưu trữ...) đặt ở góc trên-phải các trang admin.
-builder.Services.AddMudServices(config =>
-{
-    config.SnackbarConfiguration.PositionClass = Defaults.Classes.Position.BottomRight;
-});
+builder.Services.AddScoped<IAppToastService, AppToastService>();
+builder.Services.AddScoped<IAppDialogService, AppDialogService>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHealthChecks();
@@ -57,6 +52,11 @@ builder.Services.AddAuthentication(options =>
     options.UsePkce = true;
     options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveTokens = true;
+
+    // IdentityServer4 chỉ trả về id_token tối giản (sub/sid/auth_time...) cho response_type=code -
+    // name/given_name/family_name/email nằm ở /connect/userinfo, không tự động có trong HttpContext.User
+    // nếu không bật cờ này (mặc định false).
+    options.GetClaimsFromUserInfoEndpoint = true;
 
     options.Scope.Clear();
     options.Scope.Add("openid");
@@ -139,7 +139,7 @@ app.UseStaticFiles();
 // Bắt buộc UseRouting tường minh và đặt SAU UseStaticFiles: nếu không có UseRouting tường minh,
 // ASP.NET Core tự chèn routing lên NGAY ĐẦU pipeline (trước UseStaticFiles) để phục vụ UseAuthorization/
 // UseAntiforgery bên dưới - khi đó route catch-all "/{*pathInfo}" sẽ khớp và "chiếm" luôn các request
-// file tĩnh (app.css, _content/MudBlazor/...) trước khi StaticFileMiddleware kịp phục vụ, vì middleware
+// file tĩnh (app.css, css/app-ui.css, js/shell.js...) trước khi StaticFileMiddleware kịp phục vụ, vì middleware
 // này bỏ qua request đã có endpoint được gán. Đặt UseRouting ở đây đảm bảo static files luôn được ưu tiên.
 app.UseRouting();
 

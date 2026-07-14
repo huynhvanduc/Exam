@@ -30,10 +30,11 @@ public class UsersController : ControllerBase
 
     [HttpGet]
     [Authorize(Policy = Permissions.User.View)]
-    public async Task<IActionResult> GetAll([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetAll([FromQuery] int page, [FromQuery] int pageSize,
+        [FromQuery] string? search, [FromQuery] UserRole? role, [FromQuery] bool? isActive, CancellationToken cancellationToken)
     {
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
-        var query = new GetUsersQuery(normalizedPage, normalizedPageSize);
+        var query = new GetUsersQuery(normalizedPage, normalizedPageSize, search, role, isActive);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

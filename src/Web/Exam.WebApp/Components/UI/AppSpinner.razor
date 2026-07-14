@@ -1,0 +1,13 @@
+@if (Size == AppSpinnerSize.Small)
+{
+    <span class="spinner @Class"></span>
+}
+else
+{
+    <span class="progress-circular @Class"></span>
+}
+
+@code {
+    [Parameter] public AppSpinnerSize Size { get; set; } = AppSpinnerSize.Medium;
+    [Parameter] public string? Class { get; set; }
+}

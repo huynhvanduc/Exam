@@ -1,6 +1,5 @@
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
@@ -23,6 +22,6 @@ public partial class CategoryFormDialog : FormDialogBase
         if (!await ValidateAsync())
             return;
 
-        MudDialog.Close(DialogResult.Ok(new CategoryRequest(name, urlPath)));
+        Dialog.Close(AppDialogResult.Ok(new CategoryRequest(name, urlPath)));
     }
 }

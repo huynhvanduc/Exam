@@ -1,0 +1,86 @@
+@typeparam TItem
+
+<table class="data @Class">
+    <thead>
+        <tr>@HeaderContent</tr>
+    </thead>
+    <tbody>
+        @if (isLoading)
+        {
+            @for (var i = 0; i < 4; i++)
+            {
+                <tr class="skeleton-row">
+                    <td colspan="@ColumnCount"><div class="skeleton-bar" style="width:@(50 + i * 8)%;"></div></td>
+                </tr>
+            }
+        }
+        else if (items.Count == 0)
+        {
+            <tr><td colspan="@ColumnCount"><div class="empty-state">@(EmptyText ?? "Không có dữ liệu.")</div></td></tr>
+        }
+        else
+        {
+            @foreach (var item in items)
+            {
+                @RowTemplate?.Invoke(item)
+            }
+        }
+    </tbody>
+</table>
+<AppTablePager Page="state.Page" PageSize="state.PageSize" TotalItems="totalItems"
+               PageChanged="OnPageChanged" PageSizeChanged="OnPageSizeChanged" />
+
+@code {
+    [Parameter] public RenderFragment? HeaderContent { get; set; }
+    [Parameter] public RenderFragment<TItem>? RowTemplate { get; set; }
+    [Parameter] public Func<AppTableState, CancellationToken, Task<AppTableData<TItem>>>? ServerData { get; set; }
+    [Parameter] public string? Class { get; set; }
+    [Parameter] public string? EmptyText { get; set; }
+    [Parameter] public int InitialPageSize { get; set; } = 10;
+    [Parameter] public int ColumnCount { get; set; } = 1;
+
+    private readonly AppTableState state = new();
+    private List<TItem> items = [];
+    private int totalItems;
+    private bool isLoading;
+
+    protected override async Task OnInitializedAsync()
+    {
+        state.PageSize = InitialPageSize;
+        await ReloadServerData();
+    }
+
+    public Task ResetAndReloadAsync()
+    {
+        state.Page = 0;
+        return ReloadServerData();
+    }
+
+    public async Task ReloadServerData()
+    {
+        if (ServerData == null)
+            return;
+
+        isLoading = true;
+        StateHasChanged();
+
+        var result = await ServerData(state, CancellationToken.None);
+        items = result.Items.ToList();
+        totalItems = result.TotalItems;
+        isLoading = false;
+        StateHasChanged();
+    }
+
+    private Task OnPageChanged(int page)
+    {
+        state.Page = page;
+        return ReloadServerData();
+    }
+
+    private Task OnPageSizeChanged(int pageSize)
+    {
+        state.PageSize = pageSize;
+        state.Page = 0;
+        return ReloadServerData();
+    }
+}

@@ -1,13 +1,9 @@
 @inherits FormDialogBase
 
-<MudDialog>
-    <DialogContent>
-        <MudForm @ref="form">
-            <MudTextField T="string" Label="Tên lớp" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên lớp." />
-        </MudForm>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Huỷ</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Lưu</MudButton>
-    </DialogActions>
-</MudDialog>
+<AppForm @ref="form">
+    <AppTextField Label="Tên lớp" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên lớp." />
+</AppForm>
+<div class="modal-actions">
+    <AppButton OnClick="Cancel">Huỷ</AppButton>
+    <AppButton Variant="AppButtonVariant.Primary" OnClick="Submit">Lưu</AppButton>
+</div>

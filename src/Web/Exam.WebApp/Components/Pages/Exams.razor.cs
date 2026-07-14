@@ -23,6 +23,10 @@ public partial class Exams : PageBase
     private bool HasReachedAttemptLimit(ExamDto exam) =>
         exam.MaxAttempts.HasValue && myAttemptCounts.GetValueOrDefault(exam.Id) >= exam.MaxAttempts.Value;
 
+    private void GoToTake(string attemptId) => Navigation.NavigateTo($"/exams/take/{attemptId}");
+
+    private void GoToResult(string attemptId) => Navigation.NavigateTo($"/exams/result/{attemptId}");
+
     private async Task StartAsync(string examId)
     {
         startingExamId = examId;

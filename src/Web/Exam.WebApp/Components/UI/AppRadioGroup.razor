@@ -1,0 +1,21 @@
+@typeparam TValue
+
+<CascadingValue Value="this" IsFixed="true">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public EventCallback<TValue?> ValueChanged { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    internal readonly string GroupName = $"g{Guid.NewGuid():N}";
+
+    internal bool IsSelected(TValue? candidate) => EqualityComparer<TValue?>.Default.Equals(Value, candidate);
+
+    internal async Task SelectAsync(TValue? candidate)
+    {
+        Value = candidate;
+        await ValueChanged.InvokeAsync(Value);
+    }
+}

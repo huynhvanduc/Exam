@@ -1,9 +1,13 @@
 using Exam.WebApp.Services;
+using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class Permissions : AdminPageBase
 {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
     private record PermissionRow(string Key, string Label, string GroupName);
 
     // Nhãn hiển thị tiếng Việt cho từng quyền - CHỈ ảnh hưởng cách hiển thị, KHÔNG quyết định quyền nào
@@ -35,6 +39,7 @@ public partial class Permissions : AdminPageBase
         [Exam.Contracts.Permissions.Exam.Archive] = ("Lưu trữ đề thi", "Đề thi"),
         [Exam.Contracts.Permissions.Exam.ViewResults] = ("Xem kết quả thi", "Đề thi"),
         [Exam.Contracts.Permissions.Exam.ManageClassAssignment] = ("Gán đề thi vào lớp", "Đề thi"),
+        [Exam.Contracts.Permissions.Exam.ForceFinishAttempt] = ("Buộc nộp bài hộ thí sinh", "Đề thi"),
 
         [Exam.Contracts.Permissions.Class.View] = ("Xem danh sách lớp", "Lớp học"),
         [Exam.Contracts.Permissions.Class.Create] = ("Tạo lớp học", "Lớp học"),
@@ -58,6 +63,8 @@ public partial class Permissions : AdminPageBase
     private IReadOnlyList<PermissionRow>? rows;
     private Dictionary<string, bool> studentChecks = new();
     private Dictionary<string, bool> instructorChecks = new();
+    private Dictionary<string, bool> savedStudentChecks = new();
+    private Dictionary<string, bool> savedInstructorChecks = new();
 
     protected override async Task OnInitializedAsync() =>
         await ExecuteAsync(async () =>
@@ -68,18 +75,60 @@ public partial class Permissions : AdminPageBase
 
             studentChecks = AllRows.ToDictionary(r => r.Key, r => studentPermissions.Contains(r.Key));
             instructorChecks = AllRows.ToDictionary(r => r.Key, r => instructorPermissions.Contains(r.Key));
+            savedStudentChecks = new Dictionary<string, bool>(studentChecks);
+            savedInstructorChecks = new Dictionary<string, bool>(instructorChecks);
             rows = AllRows;
         }, "Không tải được danh sách quyền");
 
-    private Task SaveAsync()
+    private IReadOnlyList<string> DirtyKeys() =>
+        AllRows.Select(r => r.Key).Where(IsRowChanged).ToList();
+
+    private bool IsRowChanged(string key) =>
+        studentChecks[key] != savedStudentChecks[key] || instructorChecks[key] != savedInstructorChecks[key];
+
+    private async Task ToggleStudentAsync(string key)
     {
+        studentChecks[key] = !studentChecks[key];
+        await SyncDirtyGuardAsync();
+    }
+
+    private async Task ToggleInstructorAsync(string key)
+    {
+        instructorChecks[key] = !instructorChecks[key];
+        await SyncDirtyGuardAsync();
+    }
+
+    private async Task SyncDirtyGuardAsync() =>
+        await JS.InvokeVoidAsync("appShell.setDirtyGuard", DirtyKeys().Count > 0);
+
+    private async Task RevertAsync()
+    {
+        studentChecks = new Dictionary<string, bool>(savedStudentChecks);
+        instructorChecks = new Dictionary<string, bool>(savedInstructorChecks);
+        Toast.Add("Đã huỷ các thay đổi chưa lưu");
+        await SyncDirtyGuardAsync();
+    }
+
+    private async Task SaveAsync()
+    {
+        var dirty = DirtyKeys();
+        if (dirty.Count == 0)
+        {
+            Toast.Add("Không có thay đổi nào để lưu");
+            return;
+        }
+
         var studentSelected = studentChecks.Where(x => x.Value).Select(x => x.Key).ToList();
         var instructorSelected = instructorChecks.Where(x => x.Value).Select(x => x.Key).ToList();
 
-        return ExecuteAsync(async () =>
+        await ExecuteAsync(async () =>
         {
             await Api.UpdateRolePermissionsAsync(UserRole.Student, new UpdateRolePermissionsRequest(studentSelected));
             await Api.UpdateRolePermissionsAsync(UserRole.Instructor, new UpdateRolePermissionsRequest(instructorSelected));
-        }, "Lưu thất bại", "Đã lưu phân quyền.");
+        }, "Lưu thất bại", $"Đã lưu {dirty.Count} thay đổi quyền.");
+
+        savedStudentChecks = new Dictionary<string, bool>(studentChecks);
+        savedInstructorChecks = new Dictionary<string, bool>(instructorChecks);
+        await SyncDirtyGuardAsync();
     }
 }

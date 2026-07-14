@@ -1,18 +1,49 @@
+using System.Security.Claims;
+using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
-using MudBlazor;
+using Microsoft.AspNetCore.Components;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class Users : AdminPageBase
 {
-    private MudTable<UserDto>? table;
+    [CascadingParameter] private Task<Microsoft.AspNetCore.Components.Authorization.AuthenticationState>? AuthStateTask { get; set; }
 
-    private Task<TableData<UserDto>> LoadServerData(TableState state, CancellationToken cancellationToken) =>
-        LoadTableDataAsync(async () =>
+    private AppTable<UserDto>? table;
+    private string? currentUserEmail;
+    private string? searchFilter;
+    private UserRole? roleFilter;
+    private bool? statusFilter;
+    private int resultCount;
+
+    protected override async Task OnInitializedAsync()
+    {
+        if (AuthStateTask != null)
         {
-            var result = await Api.GetUsersAsync(state.Page + 1, state.PageSize, cancellationToken);
-            return new TableData<UserDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+            var authState = await AuthStateTask;
+            currentUserEmail = authState.User.FindFirst(ClaimTypes.Email)?.Value
+                ?? authState.User.FindFirst("email")?.Value;
+        }
+    }
+
+    private async Task<AppTableData<UserDto>> LoadServerData(AppTableState state, CancellationToken cancellationToken)
+    {
+        var data = await LoadAppTableDataAsync(async () =>
+        {
+            var result = await Api.GetUsersAsync(state.Page + 1, state.PageSize, searchFilter, roleFilter, statusFilter, cancellationToken);
+            return new AppTableData<UserDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
         }, "Không tải được danh sách người dùng");
+        // resultCount thuộc component cha (Users) nhưng callback này chạy trong vòng đời render của
+        // AppTable (component con) - AppTable tự StateHasChanged() cho chính nó sau khi ServerData xong,
+        // KHÔNG tự động render lại cha, nên phải gọi StateHasChanged() ở đây để "N người dùng" cập nhật đúng.
+        resultCount = data.TotalItems;
+        StateHasChanged();
+        return data;
+    }
+
+    private Task ApplyFiltersAsync() => table?.ResetAndReloadAsync() ?? Task.CompletedTask;
+
+    private bool IsSelf(UserDto user) => user.Email == currentUserEmail;
 
     private Task ChangeRoleAsync(UserDto user, UserRole role)
     {

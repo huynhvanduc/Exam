@@ -4,49 +4,49 @@
 
 <PageTitle>Lịch sử làm bài</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Lịch sử làm bài</MudText>
+<h1 class="page-title">Lịch sử làm bài</h1>
+<p class="page-sub">Toàn bộ lượt làm bài của bạn, mới nhất trước.</p>
 
-<MudTable T="ExamResultSummaryDto" @ref="table" ServerData="LoadServerData" Hover="true">
-    <HeaderContent>
-        <MudTh>Đề thi</MudTh>
-        <MudTh>Điểm</MudTh>
-        <MudTh>Kết quả</MudTh>
-        <MudTh>Bắt đầu</MudTh>
-        <MudTh>Trạng thái</MudTh>
-        <MudTh></MudTh>
-    </HeaderContent>
-    <RowTemplate>
-        <MudTd DataLabel="Đề thi">@context.ExamTitle</MudTd>
-        <MudTd DataLabel="Điểm">@context.TotalScore/@context.MaxPossibleScore</MudTd>
-        <MudTd DataLabel="Kết quả">
-            @if (context.Passed.HasValue)
-            {
-                <MudChip T="string" Color="@(context.Passed.Value ? Color.Success : Color.Error)" Size="Size.Small">
-                    @(context.Passed.Value ? "Đạt" : "Không đạt")
-                </MudChip>
-            }
-            else
-            {
-                <MudText Typo="Typo.body2">—</MudText>
-            }
-        </MudTd>
-        <MudTd DataLabel="Bắt đầu">@context.ExamStartDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</MudTd>
-        <MudTd DataLabel="Trạng thái">@(context.Finished ? "Đã nộp" : "Đang làm")</MudTd>
-        <MudTd>
-            @if (context.Finished)
-            {
-                <MudButton Size="Size.Small" Href="@($"/exams/result/{context.Id}")">Xem</MudButton>
-            }
-            else
-            {
-                <MudButton Size="Size.Small" Href="@($"/exams/take/{context.Id}")">Tiếp tục</MudButton>
-            }
-        </MudTd>
-    </RowTemplate>
-    <NoRecordsContent>
-        <MudText>Bạn chưa làm bài thi nào.</MudText>
-    </NoRecordsContent>
-    <PagerContent>
-        <MudTablePager />
-    </PagerContent>
-</MudTable>
+<AppCard>
+    <AppTable TItem="ExamResultSummaryDto" @ref="table" ServerData="LoadServerData" ColumnCount="6"
+              EmptyText="Bạn chưa làm bài thi nào.">
+        <HeaderContent>
+            <th>Đề thi</th>
+            <th>Điểm</th>
+            <th>Kết quả</th>
+            <th>Bắt đầu</th>
+            <th>Trạng thái</th>
+            <th></th>
+        </HeaderContent>
+        <RowTemplate Context="row">
+            <tr>
+                <td>@row.ExamTitle</td>
+                <td>@row.TotalScore/@row.MaxPossibleScore</td>
+                <td>
+                    @if (row.Passed.HasValue)
+                    {
+                        <AppChip Variant="@(row.Passed.Value ? AppChipVariant.Success : AppChipVariant.Danger)">
+                            @(row.Passed.Value ? "Đạt" : "Không đạt")
+                        </AppChip>
+                    }
+                    else
+                    {
+                        @:—
+                    }
+                </td>
+                <td>@row.ExamStartDate.ToLocalTime().ToString("dd/MM/yyyy HH:mm")</td>
+                <td>@(row.Finished ? "Đã nộp" : "Đang làm")</td>
+                <td>
+                    @if (row.Finished)
+                    {
+                        <AppButton OnClick="() => GoToResult(row.Id)">Xem</AppButton>
+                    }
+                    else
+                    {
+                        <AppButton Variant="AppButtonVariant.Primary" OnClick="() => GoToTake(row.Id)">Tiếp tục</AppButton>
+                    }
+                </td>
+            </tr>
+        </RowTemplate>
+    </AppTable>
+</AppCard>

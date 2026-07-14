@@ -14,6 +14,7 @@ public class GetUsersQueryHandler : IRequestHandler<GetUsersQuery, PagedResult<U
 
     public Task<PagedResult<UserDto>> Handle(GetUsersQuery request, CancellationToken cancellationToken) =>
         PagedResultFactory.CreateAsync<UserDto>(request.Page, request.PageSize,
-            async (skip, take) => (await _userRepository.GetPagedAsync(skip, take, cancellationToken)).Select(UserMapper.ToDto).ToList(),
-            () => _userRepository.CountAsync(cancellationToken));
+            async (skip, take) => (await _userRepository.GetPagedAsync(skip, take, request.Search, request.Role, request.IsActive, cancellationToken))
+                .Select(UserMapper.ToDto).ToList(),
+            () => _userRepository.CountAsync(request.Search, request.Role, request.IsActive, cancellationToken));
 }

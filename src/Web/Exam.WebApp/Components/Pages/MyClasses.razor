@@ -4,37 +4,35 @@
 
 <PageTitle>Lớp của tôi</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Lớp của tôi</MudText>
+<h1 class="page-title">Lớp của tôi</h1>
 
-<MudPaper Class="pa-4 mb-4" Elevation="1" Style="max-width: 500px;">
-    <MudText Typo="Typo.h6" GutterBottom="true">Tham gia lớp mới</MudText>
-    <MudStack Row="true" Spacing="2">
-        <MudTextField T="string" Label="Mã lớp" @bind-Value="joinCode" Immediate="true" />
-        <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="JoinAsync" Disabled="string.IsNullOrWhiteSpace(joinCode)">
+<AppCard Class="join-card">
+    <div style="font-weight:700;font-size:14.5px;margin-bottom:10px;">Tham gia lớp mới</div>
+    <div class="join-row">
+        <input placeholder="Mã lớp" @bind="joinCode" @bind:event="oninput" />
+        <AppButton Variant="AppButtonVariant.Primary" OnClick="JoinAsync" Disabled="string.IsNullOrWhiteSpace(joinCode)">
             Tham gia
-        </MudButton>
-    </MudStack>
-</MudPaper>
+        </AppButton>
+    </div>
+</AppCard>
 
 @if (classes == null)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <AppSpinner />
 }
 else if (classes.Count == 0)
 {
-    <MudAlert Severity="Severity.Info">Bạn chưa tham gia lớp nào. Nhập mã lớp do giáo viên cung cấp để bắt đầu.</MudAlert>
+    <div class="empty-state">Bạn chưa tham gia lớp nào. Nhập mã lớp do giáo viên cung cấp để bắt đầu.</div>
 }
 else
 {
-    <MudGrid>
+    <div class="grid cols-3">
         @foreach (var classRoom in classes)
         {
-            <MudItem xs="12" sm="6" md="4">
-                <MudPaper Class="pa-4" Elevation="1">
-                    <MudText Typo="Typo.h6">@classRoom.Name</MudText>
-                    <MudText Typo="Typo.body2">@classRoom.MemberCount thành viên</MudText>
-                </MudPaper>
-            </MudItem>
+            <AppCard Class="class-card">
+                <h2>@classRoom.Name</h2>
+                <div class="sub">@classRoom.MemberCount thành viên</div>
+            </AppCard>
         }
-    </MudGrid>
+    </div>
 }

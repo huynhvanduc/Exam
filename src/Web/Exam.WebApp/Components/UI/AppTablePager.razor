@@ -1,0 +1,52 @@
+@if (TotalItems > 0)
+{
+    var (lo, hi) = Window();
+    <div class="pagination">
+        <span class="range">Hiển thị @from–@to trong @TotalItems kết quả</span>
+        <span class="spacer"></span>
+        <span>Số dòng/trang</span>
+        <select class="page-size" value="@PageSize" @onchange="OnPageSizeChanged">
+            @foreach (var size in PageSizeOptions)
+            {
+                <option value="@size">@size</option>
+            }
+        </select>
+        <div class="pager">
+            <button class="pbtn" disabled="@(Page == 0)" @onclick="() => ChangePage(0)">«</button>
+            <button class="pbtn" disabled="@(Page == 0)" @onclick="() => ChangePage(Page - 1)">‹</button>
+            @for (var p = lo; p <= hi; p++)
+            {
+                var pCapture = p;
+                <button class="pbtn @(pCapture == Page ? "current" : "")" @onclick="() => ChangePage(pCapture)">@(pCapture + 1)</button>
+            }
+            <button class="pbtn" disabled="@(Page >= totalPages - 1)" @onclick="() => ChangePage(Page + 1)">›</button>
+            <button class="pbtn" disabled="@(Page >= totalPages - 1)" @onclick="() => ChangePage(totalPages - 1)">»</button>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Page { get; set; }
+    [Parameter] public int PageSize { get; set; }
+    [Parameter] public int TotalItems { get; set; }
+    [Parameter] public EventCallback<int> PageChanged { get; set; }
+    [Parameter] public EventCallback<int> PageSizeChanged { get; set; }
+    [Parameter] public int[] PageSizeOptions { get; set; } = [10, 25, 50];
+
+    private int totalPages => Math.Max(1, (int)Math.Ceiling((double)TotalItems / PageSize));
+    private int from => Page * PageSize + 1;
+    private int to => Math.Min((Page + 1) * PageSize, TotalItems);
+
+    private (int lo, int hi) Window()
+    {
+        const int windowSize = 5;
+        var lo = Math.Max(0, Page - windowSize / 2);
+        var hi = Math.Min(totalPages - 1, lo + windowSize - 1);
+        lo = Math.Max(0, hi - windowSize + 1);
+        return (lo, hi);
+    }
+
+    private Task ChangePage(int page) => PageChanged.InvokeAsync(Math.Clamp(page, 0, totalPages - 1));
+
+    private Task OnPageSizeChanged(ChangeEventArgs e) => PageSizeChanged.InvokeAsync(int.Parse(e.Value!.ToString()!));
+}

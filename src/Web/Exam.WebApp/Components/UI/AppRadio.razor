@@ -1,0 +1,13 @@
+@typeparam TValue
+
+<label class="radio-row @Class">
+    <input type="radio" name="@Group.GroupName" checked="@Group.IsSelected(Value)" @onchange="@(() => Group.SelectAsync(Value))" />
+    @ChildContent
+</label>
+
+@code {
+    [CascadingParameter] private AppRadioGroup<TValue> Group { get; set; } = null!;
+    [Parameter] public TValue? Value { get; set; }
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public string? Class { get; set; }
+}

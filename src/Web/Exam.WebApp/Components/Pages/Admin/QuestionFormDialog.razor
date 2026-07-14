@@ -1,73 +1,64 @@
 @inherits FormDialogBase
 
-<MudDialog>
-    <DialogContent>
-        <MudForm @ref="form">
-            <MudTextField T="string" Label="Nội dung câu hỏi" @bind-Value="content" Lines="3" Required="true"
-                          RequiredError="Bắt buộc nhập nội dung." />
+<AppForm @ref="form">
+    <AppTextField Label="Nội dung câu hỏi" @bind-Value="content" Lines="3" Required="true" RequiredError="Bắt buộc nhập nội dung." />
 
-            <MudGrid Class="mt-2">
-                <MudItem xs="6">
-                    <MudSelect T="QuestionType" Label="Loại câu hỏi" @bind-Value="questionType" @bind-Value:after="OnQuestionTypeChanged">
-                        <MudSelectItem Value="QuestionType.SingleSelection">Một đáp án đúng</MudSelectItem>
-                        <MudSelectItem Value="QuestionType.MultipleSelection">Nhiều đáp án đúng</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-                <MudItem xs="6">
-                    <MudSelect T="Level" Label="Mức độ" @bind-Value="level">
-                        <MudSelectItem Value="Level.Easy">Dễ</MudSelectItem>
-                        <MudSelectItem Value="Level.Medium">Trung bình</MudSelectItem>
-                        <MudSelectItem Value="Level.Difficult">Khó</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-            </MudGrid>
+    <div class="field-row">
+        <AppSelect TValue="QuestionType" Label="Loại câu hỏi" @bind-Value="questionType" @bind-Value:after="OnQuestionTypeChanged">
+            <option value="@QuestionType.SingleSelection">Một đáp án đúng</option>
+            <option value="@QuestionType.MultipleSelection">Nhiều đáp án đúng</option>
+        </AppSelect>
+        <AppSelect TValue="Level" Label="Mức độ" @bind-Value="level">
+            <option value="@Level.Easy">Dễ</option>
+            <option value="@Level.Medium">Trung bình</option>
+            <option value="@Level.Difficult">Khó</option>
+        </AppSelect>
+    </div>
 
-            <MudNumericField T="int" Label="Điểm" @bind-Value="points" Min="1" Class="mt-3" Style="max-width: 200px;" />
+    <div style="max-width:160px;">
+        <AppNumericField TValue="int" Label="Điểm" @bind-Value="points" Min="1" />
+    </div>
 
-            <MudTextField T="string" Label="Giải thích (không bắt buộc)" @bind-Value="explain" Lines="2" Class="mt-3" />
+    <AppTextField Label="Giải thích (không bắt buộc)" @bind-Value="explain" Lines="2" />
+</AppForm>
 
-            <MudText Typo="Typo.subtitle2" Class="mt-4 mb-1">Đáp án</MudText>
-            @if (answerError != null)
-            {
-                <MudAlert Severity="Severity.Warning" Dense="true" Class="mb-2">@answerError</MudAlert>
-            }
+<div style="font-size:13px;font-weight:700;margin:14px 0 6px;">Đáp án</div>
+@if (answerError != null)
+{
+    <AppAlert Severity="AppAlertSeverity.Warning">@answerError</AppAlert>
+}
 
-            @if (questionType == QuestionType.SingleSelection)
-            {
-                <MudRadioGroup T="int" Value="singleCorrectIndex" ValueChanged="OnSingleCorrectChanged">
-                    @for (var i = 0; i < answers.Count; i++)
-                    {
-                        var index = i;
-                        <div class="d-flex align-center mb-2">
-                            <MudRadio T="int" Value="index" Color="Color.Primary" />
-                            <MudTextField T="string" @bind-Value="answers[index].Content" Placeholder="Nội dung đáp án"
-                                          Class="flex-grow-1 mx-2" />
-                            <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="() => RemoveAnswer(index)" />
-                        </div>
-                    }
-                </MudRadioGroup>
-            }
-            else
-            {
-                @for (var i = 0; i < answers.Count; i++)
-                {
-                    var index = i;
-                    <div class="d-flex align-center mb-2">
-                        <MudCheckBox T="bool" Value="answers[index].IsCorrect" ValueChanged="v => answers[index].IsCorrect = v" Color="Color.Primary" />
-                        <MudTextField T="string" @bind-Value="answers[index].Content" Placeholder="Nội dung đáp án"
-                                      Class="flex-grow-1 mx-2" />
-                        <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" OnClick="() => RemoveAnswer(index)" />
-                    </div>
-                }
-            }
+@if (questionType == QuestionType.SingleSelection)
+{
+    <AppRadioGroup TValue="int" Value="singleCorrectIndex" ValueChanged="OnSingleCorrectChanged">
+        @for (var i = 0; i < answers.Count; i++)
+        {
+            var index = i;
+            <div class="answer-row">
+                <AppRadio TValue="int" Value="index" />
+                <input type="text" value="@answers[index].Content" placeholder="Nội dung đáp án"
+                       @oninput="e => answers[index].Content = e.Value?.ToString() ?? string.Empty" />
+                <button type="button" class="rm" @onclick="() => RemoveAnswer(index)">🗑</button>
+            </div>
+        }
+    </AppRadioGroup>
+}
+else
+{
+    @for (var i = 0; i < answers.Count; i++)
+    {
+        var index = i;
+        <div class="answer-row">
+            <AppCheckbox Value="answers[index].IsCorrect" ValueChanged="v => answers[index].IsCorrect = v" />
+            <input type="text" value="@answers[index].Content" placeholder="Nội dung đáp án"
+                   @oninput="e => answers[index].Content = e.Value?.ToString() ?? string.Empty" />
+            <button type="button" class="rm" @onclick="() => RemoveAnswer(index)">🗑</button>
+        </div>
+    }
+}
+<AppButton Type="button" OnClick="AddAnswer">+ Thêm đáp án</AppButton>
 
-            <MudButton StartIcon="@Icons.Material.Filled.Add" Size="Size.Small" OnClick="AddAnswer" Class="mt-1">
-                Thêm đáp án
-            </MudButton>
-        </MudForm>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Huỷ</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Lưu</MudButton>
-    </DialogActions>
-</MudDialog>
+<div class="modal-actions">
+    <AppButton OnClick="Cancel">Huỷ</AppButton>
+    <AppButton Variant="AppButtonVariant.Primary" OnClick="Submit">Lưu</AppButton>
+</div>

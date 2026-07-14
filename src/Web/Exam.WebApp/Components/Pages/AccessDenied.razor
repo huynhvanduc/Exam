@@ -4,19 +4,17 @@
 
 <PageTitle>Không có quyền truy cập</PageTitle>
 
-<InfoMessagePage Icon="@Icons.Material.Filled.Lock" IconColor="Color.Warning"
+<InfoMessagePage Icon="🔒"
                  Title="Bạn không có quyền truy cập trang này"
                  Message="Tài khoản của bạn không đủ quyền để xem nội dung này. Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên.">
     <AuthorizeView>
         <Authorized>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
-                Về trang của tôi
-            </MudButton>
+            <a class="btn primary" href="@context.User.GetDefaultLandingPath()">Về trang của tôi</a>
         </Authorized>
         <NotAuthorized>
-            <MudButton Variant="Variant.Filled" Color="Color.Primary" OnClick="GoToLogin">
+            <AppButton Variant="AppButtonVariant.Primary" OnClick="GoToLogin">
                 Đăng nhập
-            </MudButton>
+            </AppButton>
         </NotAuthorized>
     </AuthorizeView>
 </InfoMessagePage>

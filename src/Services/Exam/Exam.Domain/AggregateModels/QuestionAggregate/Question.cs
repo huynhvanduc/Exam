@@ -71,6 +71,15 @@ public class Question : Entity, IAggregateRoot
         Points = points;
     }
 
+    public void ChangeCategory(string categoryId, string categoryName)
+    {
+        if (string.IsNullOrWhiteSpace(categoryId))
+            throw new ExamDomainException("Question category is required.");
+
+        CategoryId = categoryId;
+        CategoryName = categoryName;
+    }
+
     private static void EnsureValid(string content, string categoryId, IReadOnlyCollection<Answer> answers,
         QuestionType questionType, int points)
     {

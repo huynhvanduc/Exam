@@ -9,49 +9,47 @@
 
 @if (rows == null)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <AppSpinner />
 }
 else
 {
-    <MudPaper Class="pa-4" Elevation="1">
-        <table style="width:100%; border-collapse: collapse;">
+    <AppCard>
+        <div class="toolbar-row">
+            @if (DirtyKeys().Count > 0)
+            {
+                <span class="dirty-chip"><span class="dot"></span>Có @DirtyKeys().Count thay đổi chưa lưu</span>
+            }
+            <span class="spacer"></span>
+            <AppButton OnClick="RevertAsync">Huỷ thay đổi</AppButton>
+            <AppButton Variant="AppButtonVariant.Primary" OnClick="SaveAsync">Lưu thay đổi</AppButton>
+        </div>
+        <table class="perm">
             <thead>
-                <tr>
-                    <th style="text-align:left; padding:8px;">Quyền</th>
-                    <th style="text-align:center; padding:8px; width:100px;">Student</th>
-                    <th style="text-align:center; padding:8px; width:100px;">Instructor</th>
-                    <th style="text-align:center; padding:8px; width:100px;">Admin</th>
-                </tr>
+                <tr><th>Quyền</th><th class="c">Student</th><th class="c">Instructor</th><th class="c">Admin</th></tr>
             </thead>
             <tbody>
                 @foreach (var group in rows.GroupBy(r => r.GroupName))
                 {
-                    <tr>
-                        <td colspan="4" style="padding:12px 8px 4px 8px;">
-                            <MudText Typo="Typo.subtitle1"><b>@group.Key</b></MudText>
-                        </td>
-                    </tr>
+                    <tr><td colspan="4"><b>@group.Key</b></td></tr>
                     @foreach (var row in group)
                     {
-                        <tr>
-                            <td style="padding:4px 8px;">@row.Label</td>
-                            <td style="text-align:center;">
-                                <MudCheckBox T="bool" Value="studentChecks[row.Key]" ValueChanged="v => studentChecks[row.Key] = v" Color="Color.Primary" />
+                        <tr class="@(IsRowChanged(row.Key) ? "changed" : "")">
+                            <td>@row.Label</td>
+                            <td class="c">
+                                <AppCb Value="studentChecks[row.Key]" Changed="studentChecks[row.Key] != savedStudentChecks[row.Key]"
+                                       Class="perm-cb" CheckedClass="on" OnClick="() => ToggleStudentAsync(row.Key)" />
                             </td>
-                            <td style="text-align:center;">
-                                <MudCheckBox T="bool" Value="instructorChecks[row.Key]" ValueChanged="v => instructorChecks[row.Key] = v" Color="Color.Primary" />
+                            <td class="c">
+                                <AppCb Value="instructorChecks[row.Key]" Changed="instructorChecks[row.Key] != savedInstructorChecks[row.Key]"
+                                       Class="perm-cb" CheckedClass="on" OnClick="() => ToggleInstructorAsync(row.Key)" />
                             </td>
-                            <td style="text-align:center;">
-                                <MudCheckBox T="bool" Value="true" Disabled="true" Color="Color.Primary" />
+                            <td class="c">
+                                <AppCb Value="true" Class="perm-cb" CheckedClass="on" Disabled="true" Title="Admin luôn có toàn quyền" />
                             </td>
                         </tr>
                     }
                 }
             </tbody>
         </table>
-    </MudPaper>
-
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-4" OnClick="SaveAsync">
-        Lưu thay đổi
-    </MudButton>
+    </AppCard>
 }

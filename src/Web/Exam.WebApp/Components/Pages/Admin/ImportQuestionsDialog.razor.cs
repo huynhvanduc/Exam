@@ -1,7 +1,6 @@
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Forms;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
@@ -10,7 +9,7 @@ public partial class ImportQuestionsDialog : FormDialogBase
     private const int MaxPreviewRows = 50;
 
     [Inject] private ExamApiClient Api { get; set; } = null!;
-    [Inject] private ISnackbar Snackbar { get; set; } = null!;
+    [Inject] private IAppToastService Toast { get; set; } = null!;
 
     private IBrowserFile? selectedFile;
     private byte[]? fileBytes;
@@ -19,13 +18,13 @@ public partial class ImportQuestionsDialog : FormDialogBase
 
     // Chọn file xong là tự động xem trước ngay (không cần nút riêng) - an toàn vì đây là dry-run,
     // không ghi DB, giúp admin thấy ngay nội dung sắp nhập mà không tốn thêm 1 lượt bấm.
-    private async Task OnFileSelectedAsync(IBrowserFile file)
+    private async Task OnFileSelectedAsync(InputFileChangeEventArgs e)
     {
-        selectedFile = file;
+        selectedFile = e.File;
         previewResult = null;
         fileBytes = null;
 
-        if (file != null)
+        if (selectedFile != null)
             await PreviewAsync();
     }
 
@@ -49,7 +48,7 @@ public partial class ImportQuestionsDialog : FormDialogBase
         }
         catch (ExamApiException ex)
         {
-            Snackbar.Add($"Xem trước thất bại: {ex.Message}", Severity.Error);
+            Toast.Add($"Xem trước thất bại: {ex.Message}", AppSeverity.Error);
         }
         finally
         {
@@ -66,11 +65,11 @@ public partial class ImportQuestionsDialog : FormDialogBase
         try
         {
             var result = await Api.ImportQuestionsAsync(new MemoryStream(fileBytes), selectedFile.Name, dryRun: false);
-            MudDialog.Close(DialogResult.Ok(result));
+            Dialog.Close(AppDialogResult.Ok(result));
         }
         catch (ExamApiException ex)
         {
-            Snackbar.Add($"Nhập câu hỏi thất bại: {ex.Message}", Severity.Error);
+            Toast.Add($"Nhập câu hỏi thất bại: {ex.Message}", AppSeverity.Error);
         }
         finally
         {

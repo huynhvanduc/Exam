@@ -1,4 +1,4 @@
-using MudBlazor;
+using Exam.WebApp.Components.UI;
 
 namespace Exam.WebApp.Extensions;
 
@@ -20,11 +20,11 @@ public static class EnumDisplayExtensions
         _ => status.ToString()
     };
 
-    public static Color ToColor(this ExamStatus status) => status switch
+    public static AppStatusPillVariant ToPillVariant(this ExamStatus status) => status switch
     {
-        ExamStatus.Draft => Color.Default,
-        ExamStatus.Published => Color.Success,
-        ExamStatus.Archived => Color.Dark,
-        _ => Color.Default
+        ExamStatus.Draft => AppStatusPillVariant.Warning,
+        ExamStatus.Published => AppStatusPillVariant.Success,
+        ExamStatus.Archived => AppStatusPillVariant.Danger,
+        _ => AppStatusPillVariant.Info
     };
 }

@@ -14,8 +14,9 @@ public class GetAuditLogQueryHandler : IRequestHandler<GetAuditLogQuery, PagedRe
 
     public Task<PagedResult<AuditLogEntryDto>> Handle(GetAuditLogQuery request, CancellationToken cancellationToken) =>
         PagedResultFactory.CreateAsync<AuditLogEntryDto>(request.Page, request.PageSize,
-            async (skip, take) => (await _auditLogRepository.GetPagedAsync(skip, take, cancellationToken))
+            async (skip, take) => (await _auditLogRepository.GetPagedAsync(skip, take, request.Actor, request.Action,
+                    request.From, request.To, cancellationToken))
                 .Select(e => new AuditLogEntryDto(e.Id, e.Timestamp, e.ActorUserId, e.Action, e.TargetId, e.Description))
                 .ToList(),
-            () => _auditLogRepository.CountAsync(cancellationToken));
+            () => _auditLogRepository.CountAsync(request.Actor, request.Action, request.From, request.To, cancellationToken));
 }

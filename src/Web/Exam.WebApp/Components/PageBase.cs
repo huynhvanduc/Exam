@@ -1,6 +1,6 @@
+using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 using Polly.CircuitBreaker;
 using Polly.Timeout;
 
@@ -11,7 +11,7 @@ public abstract class PageBase : ComponentBase
     private const string ConnectivityErrorMessage = "Không kết nối được máy chủ, vui lòng thử lại sau.";
 
     [Inject] protected ExamApiClient Api { get; set; } = null!;
-    [Inject] protected ISnackbar Snackbar { get; set; } = null!;
+    [Inject] protected IAppToastService Toast { get; set; } = null!;
 
     protected async Task ExecuteAsync(Func<Task> action, string errorPrefix, string? successMessage = null)
     {
@@ -19,19 +19,19 @@ public abstract class PageBase : ComponentBase
         {
             await action();
             if (successMessage != null)
-                Snackbar.Add(successMessage, Severity.Success);
+                Toast.Add(successMessage, AppSeverity.Success);
         }
         catch (ExamApiException ex)
         {
-            Snackbar.Add($"{errorPrefix}: {ex.Message}", Severity.Error);
+            Toast.Add($"{errorPrefix}: {ex.Message}", AppSeverity.Error);
         }
         catch (Exception ex) when (IsConnectivityFailure(ex))
         {
-            Snackbar.Add($"{errorPrefix}: {ConnectivityErrorMessage}", Severity.Error);
+            Toast.Add($"{errorPrefix}: {ConnectivityErrorMessage}", AppSeverity.Error);
         }
     }
 
-    protected async Task<TableData<TItem>> LoadTableDataAsync<TItem>(Func<Task<TableData<TItem>>> load, string errorPrefix)
+    protected async Task<AppTableData<TItem>> LoadAppTableDataAsync<TItem>(Func<Task<AppTableData<TItem>>> load, string errorPrefix)
     {
         try
         {
@@ -39,13 +39,13 @@ public abstract class PageBase : ComponentBase
         }
         catch (ExamApiException ex)
         {
-            Snackbar.Add($"{errorPrefix}: {ex.Message}", Severity.Error);
-            return new TableData<TItem> { Items = [], TotalItems = 0 };
+            Toast.Add($"{errorPrefix}: {ex.Message}", AppSeverity.Error);
+            return new AppTableData<TItem> { Items = [], TotalItems = 0 };
         }
         catch (Exception ex) when (IsConnectivityFailure(ex))
         {
-            Snackbar.Add($"{errorPrefix}: {ConnectivityErrorMessage}", Severity.Error);
-            return new TableData<TItem> { Items = [], TotalItems = 0 };
+            Toast.Add($"{errorPrefix}: {ConnectivityErrorMessage}", AppSeverity.Error);
+            return new AppTableData<TItem> { Items = [], TotalItems = 0 };
         }
     }
 

@@ -1,81 +1,73 @@
 @inherits FormDialogBase
 
-<MudDialog>
-    <DialogContent>
-        <MudForm @ref="form">
-            <MudTextField T="string" Label="Tên đề thi" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên." />
-            <MudTextField T="string" Label="Mô tả ngắn" @bind-Value="shortDesc" Class="mt-3" />
-            <MudTextField T="string" Label="Nội dung / hướng dẫn" @bind-Value="content" Lines="3" Class="mt-3" />
+<AppForm @ref="form">
+    <AppTextField Label="Tên đề thi" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên." />
+    <AppTextField Label="Mô tả ngắn" @bind-Value="shortDesc" />
+    <AppTextField Label="Nội dung / hướng dẫn" @bind-Value="content" Lines="2" />
 
-            <MudGrid Class="mt-2">
-                <MudItem xs="6">
-                    <MudNumericField T="int" Label="Thời lượng (phút)" @bind-Value="durationMinutes" Min="1" Required="true" />
-                </MudItem>
-                <MudItem xs="6">
-                    <MudSelect T="Level" Label="Mức độ" @bind-Value="level">
-                        <MudSelectItem Value="Level.Easy">Dễ</MudSelectItem>
-                        <MudSelectItem Value="Level.Medium">Trung bình</MudSelectItem>
-                        <MudSelectItem Value="Level.Difficult">Khó</MudSelectItem>
-                    </MudSelect>
-                </MudItem>
-            </MudGrid>
+    <div class="field-row">
+        <AppNumericField TValue="int" Label="Thời lượng (phút)" @bind-Value="durationMinutes" Min="1" Required="true" />
+        <AppSelect TValue="Level" Label="Mức độ" @bind-Value="level">
+            <option value="@Level.Easy">Dễ</option>
+            <option value="@Level.Medium">Trung bình</option>
+            <option value="@Level.Difficult">Khó</option>
+        </AppSelect>
+    </div>
 
-            <MudGrid Class="mt-2">
-                <MudItem xs="6">
-                    <MudNumericField T="int" Label="Điểm đạt tối thiểu" @bind-Value="minimumPassingScore" Min="0" Required="true" />
-                </MudItem>
-                <MudItem xs="6" Class="d-flex align-center">
-                    <MudSwitch T="bool" @bind-Value="isTimeRestricted" Color="Color.Primary" Label="Giới hạn thời gian làm bài" />
-                </MudItem>
-            </MudGrid>
+    <div class="field-row">
+        <AppNumericField TValue="int" Label="Điểm đạt tối thiểu" @bind-Value="minimumPassingScore" Min="0" Required="true" />
+        <div style="margin-top:22px;">
+            <AppSwitch Value="isTimeRestricted" ValueChanged="v => isTimeRestricted = v">Giới hạn thời gian làm bài</AppSwitch>
+        </div>
+    </div>
+</AppForm>
 
-            <MudExpansionPanels Class="mt-4" Elevation="0">
-                <MudExpansionPanel Text="Cấu hình nâng cao (tuỳ chọn)">
-                    <MudSwitch T="bool" @bind-Value="enableAvailability" Color="Color.Primary"
-                               Label="Giới hạn thời gian phát hành" Disabled="isArchived" />
-                    @if (enableAvailability)
-                    {
-                        <MudDatePicker Label="Mở từ ngày" @bind-Date="availableFrom" Disabled="isArchived" />
-                        <MudDatePicker Label="Đóng vào ngày" @bind-Date="availableTo" Class="mt-2" Disabled="isArchived" />
-                    }
+<details class="advanced-panel">
+    <summary>Cấu hình nâng cao (tuỳ chọn)</summary>
+    <div class="body">
+        <AppSwitch Value="enableAvailability" ValueChanged="v => enableAvailability = v" Disabled="isArchived">Giới hạn thời gian phát hành</AppSwitch>
+        @if (enableAvailability)
+        {
+            <div class="field-row">
+                <AppDateField Label="Mở từ ngày" @bind-Value="availableFrom" Disabled="isArchived" />
+                <AppDateField Label="Đóng vào ngày" @bind-Value="availableTo" Disabled="isArchived" />
+            </div>
+        }
 
-                    <MudSwitch T="bool" @bind-Value="enableNegativeMarking" Color="Color.Primary"
-                               Label="Trừ điểm khi chọn sai" Class="mt-4" Disabled="isLocked" />
-                    @if (enableNegativeMarking)
-                    {
-                        <MudNumericField T="decimal" Label="Tỉ lệ trừ điểm (0 - 1)" @bind-Value="negativeMarkingRatio"
-                                         Min="0" Max="1" Step="0.05M" Disabled="isLocked" />
-                    }
+        <AppSwitch Value="enableNegativeMarking" ValueChanged="v => enableNegativeMarking = v" Disabled="isLocked">Trừ điểm khi chọn sai</AppSwitch>
+        @if (enableNegativeMarking)
+        {
+            <div style="max-width:220px;">
+                <AppNumericField TValue="decimal" Label="Tỉ lệ trừ điểm (0–1)" @bind-Value="negativeMarkingRatio" Min="0" Max="1" Step="0.05" Disabled="isLocked" />
+            </div>
+        }
 
-                    @if (!hasFixedQuestions)
-                    {
-                        <MudSwitch T="bool" @bind-Value="enablePool" Color="Color.Primary"
-                                   Label="Chọn câu hỏi ngẫu nhiên theo pool (thay vì danh sách cố định)" Class="mt-4" Disabled="isLocked" />
-                        @if (enablePool)
-                        {
-                            <MudNumericField T="int" Label="Số câu hỏi lấy ngẫu nhiên từ môn học" @bind-Value="poolQuestionCount"
-                                             Min="1" Disabled="isLocked" />
-                        }
-                    }
-                    else
-                    {
-                        <MudText Typo="Typo.caption" Class="mud-text-secondary mt-4">
-                            Đề thi đã có câu hỏi cố định - vào Chi tiết đề thi nếu muốn chuyển sang chế độ pool.
-                        </MudText>
-                    }
+        @if (!hasFixedQuestions)
+        {
+            <AppSwitch Value="enablePool" ValueChanged="v => enablePool = v" Disabled="isLocked">Chọn câu hỏi ngẫu nhiên theo pool</AppSwitch>
+            @if (enablePool)
+            {
+                <div style="max-width:260px;">
+                    <AppNumericField TValue="int" Label="Số câu hỏi lấy ngẫu nhiên từ môn học" @bind-Value="poolQuestionCount" Min="1" Disabled="isLocked" />
+                </div>
+            }
+        }
+        else
+        {
+            <p class="page-sub">Đề thi đã có câu hỏi cố định - vào Chi tiết đề thi nếu muốn chuyển sang chế độ pool.</p>
+        }
 
-                    <MudSwitch T="bool" @bind-Value="enableMaxAttempts" Color="Color.Primary"
-                               Label="Giới hạn số lần thi lại" Class="mt-4" Disabled="isLocked" />
-                    @if (enableMaxAttempts)
-                    {
-                        <MudNumericField T="int" Label="Số lần thi tối đa" @bind-Value="maxAttempts" Min="1" Disabled="isLocked" />
-                    }
-                </MudExpansionPanel>
-            </MudExpansionPanels>
-        </MudForm>
-    </DialogContent>
-    <DialogActions>
-        <MudButton OnClick="Cancel">Huỷ</MudButton>
-        <MudButton Color="Color.Primary" Variant="Variant.Filled" OnClick="Submit">Lưu</MudButton>
-    </DialogActions>
-</MudDialog>
+        <AppSwitch Value="enableMaxAttempts" ValueChanged="v => enableMaxAttempts = v" Disabled="isLocked">Giới hạn số lần thi lại</AppSwitch>
+        @if (enableMaxAttempts)
+        {
+            <div style="max-width:200px;">
+                <AppNumericField TValue="int" Label="Số lần thi tối đa" @bind-Value="maxAttempts" Min="1" Disabled="isLocked" />
+            </div>
+        }
+    </div>
+</details>
+
+<div class="modal-actions">
+    <AppButton OnClick="Cancel">Huỷ</AppButton>
+    <AppButton Variant="AppButtonVariant.Primary" OnClick="Submit">Lưu</AppButton>
+</div>

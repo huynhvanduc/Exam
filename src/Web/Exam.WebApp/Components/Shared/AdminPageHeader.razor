@@ -1,7 +1,7 @@
-<MudText Typo="Typo.h4" GutterBottom="true">@Title</MudText>
+<h1 class="page-title">@Title</h1>
 @if (!string.IsNullOrEmpty(Subtitle))
 {
-    <MudText Typo="Typo.body2" Class="mb-4">@Subtitle</MudText>
+    <p class="page-sub">@Subtitle</p>
 }
 @ChildContent
 

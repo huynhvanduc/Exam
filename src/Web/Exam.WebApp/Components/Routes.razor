@@ -4,12 +4,10 @@
     <Found Context="routeData">
         <AuthorizeRouteView RouteData="routeData" DefaultLayout="typeof(Layout.MainLayout)">
             <NotAuthorized>
-                <InfoMessagePage Icon="@Icons.Material.Filled.Lock" IconColor="Color.Warning"
+                <InfoMessagePage Icon="🔒"
                                  Title="Bạn không có quyền truy cập trang này"
                                  Message="Tài khoản của bạn không đủ quyền để xem nội dung này. Nếu bạn cho rằng đây là nhầm lẫn, hãy liên hệ quản trị viên.">
-                    <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
-                        Về trang của tôi
-                    </MudButton>
+                    <a class="btn primary" href="@context.User.GetDefaultLandingPath()">Về trang của tôi</a>
                 </InfoMessagePage>
             </NotAuthorized>
         </AuthorizeRouteView>
@@ -17,19 +15,15 @@
     </Found>
     <NotFound>
         <LayoutView Layout="typeof(Layout.MainLayout)">
-            <InfoMessagePage Icon="@Icons.Material.Filled.SearchOff" IconColor="Color.Default"
+            <InfoMessagePage Icon="🔍"
                              Title="Không tìm thấy trang"
                              Message="Đường dẫn bạn truy cập không tồn tại hoặc đã bị thay đổi.">
                 <AuthorizeView>
                     <Authorized>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="@context.User.GetDefaultLandingPath()">
-                            Về trang của tôi
-                        </MudButton>
+                        <a class="btn primary" href="@context.User.GetDefaultLandingPath()">Về trang của tôi</a>
                     </Authorized>
                     <NotAuthorized>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Href="/">
-                            Về trang chủ
-                        </MudButton>
+                        <a class="btn primary" href="/">Về trang chủ</a>
                     </NotAuthorized>
                 </AuthorizeView>
             </InfoMessagePage>

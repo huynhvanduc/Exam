@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages;
 
@@ -7,11 +6,15 @@ public partial class TakeExam : PageBase, IDisposable
 {
     [Parameter] public string AttemptId { get; set; } = "";
 
-    [Inject] private IDialogService DialogService { get; set; } = null!;
     [Inject] private NavigationManager Navigation { get; set; } = null!;
 
     private ExamAttemptDto? attempt;
+    private List<ExamAttemptQuestionDto> questions = [];
     private readonly Dictionary<string, HashSet<string>> selections = new();
+    private readonly HashSet<string> marked = [];
+    private int currentIndex;
+    private bool showSubmitModal;
+    private bool navigatorOpen;
     private System.Timers.Timer? timer;
     private TimeSpan? remaining;
 
@@ -29,6 +32,7 @@ public partial class TakeExam : PageBase, IDisposable
         }
 
         attempt = status.Attempt;
+        questions = attempt.Questions.ToList();
         selections.Clear();
         foreach (var selection in attempt.SelectedAnswers)
             selections[selection.QuestionId] = selection.SelectedAnswerIds.ToHashSet();
@@ -62,32 +66,30 @@ public partial class TakeExam : PageBase, IDisposable
         Navigation.NavigateTo($"/exams/result/{AttemptId}", replace: true);
     }
 
-    private string? SingleSelected(string questionId) =>
-        selections.TryGetValue(questionId, out var set) ? set.FirstOrDefault() : null;
+    private bool IsAnswered(string questionId) => selections.TryGetValue(questionId, out var set) && set.Count > 0;
 
     private bool IsSelected(string questionId, string answerId) =>
         selections.TryGetValue(questionId, out var set) && set.Contains(answerId);
 
-    private Task OnSingleAnswerChanged(string questionId, string answerId)
+    private Task OnAnswerClicked(ExamAttemptQuestionDto question, string answerId)
     {
-        selections[questionId] = [answerId];
-        return SaveAnswerAsync(questionId);
-    }
-
-    private Task OnMultiAnswerChanged(string questionId, string answerId, bool value)
-    {
-        if (!selections.TryGetValue(questionId, out var set))
+        if (question.QuestionType == QuestionType.SingleSelection)
         {
-            set = [];
-            selections[questionId] = set;
+            selections[question.Id] = [answerId];
+        }
+        else
+        {
+            if (!selections.TryGetValue(question.Id, out var set))
+            {
+                set = [];
+                selections[question.Id] = set;
+            }
+
+            if (!set.Add(answerId))
+                set.Remove(answerId);
         }
 
-        if (value)
-            set.Add(answerId);
-        else
-            set.Remove(answerId);
-
-        return SaveAnswerAsync(questionId);
+        return SaveAnswerAsync(question.Id);
     }
 
     private Task SaveAnswerAsync(string questionId) => ExecuteAsync(async () =>
@@ -98,13 +100,45 @@ public partial class TakeExam : PageBase, IDisposable
             Navigation.NavigateTo($"/exams/result/{AttemptId}", replace: true);
     }, "Không lưu được câu trả lời");
 
+    private void GoTo(int index)
+    {
+        currentIndex = Math.Clamp(index, 0, questions.Count - 1);
+        navigatorOpen = false;
+    }
+
+    private void ToggleMark(string questionId)
+    {
+        if (!marked.Add(questionId))
+            marked.Remove(questionId);
+    }
+
+    private void OnNextClicked()
+    {
+        if (currentIndex < questions.Count - 1)
+            currentIndex++;
+        else
+            OpenSubmitModal();
+    }
+
+    private void OpenSubmitModal() => showSubmitModal = true;
+
+    private int UnansweredCount() => questions.Count(q => !IsAnswered(q.Id));
+
+    private string UnansweredListText()
+    {
+        var nums = questions.Select((q, i) => (q, i)).Where(x => !IsAnswered(x.q.Id)).Select(x => x.i + 1).ToList();
+        return nums.Count > 0 ? "Câu " + string.Join(", ", nums) : "Không có";
+    }
+
+    private string MarkedListText()
+    {
+        var nums = questions.Select((q, i) => (q, i)).Where(x => marked.Contains(x.q.Id)).Select(x => x.i + 1).ToList();
+        return nums.Count > 0 ? "Câu " + string.Join(", ", nums) : "Không có";
+    }
+
     private async Task SubmitAsync()
     {
-        var confirmed = await DialogService.ShowMessageBoxAsync("Xác nhận nộp bài",
-            "Bạn có chắc muốn nộp bài? Không thể chỉnh sửa sau khi nộp.", yesText: "Nộp bài", cancelText: "Huỷ");
-        if (confirmed != true)
-            return;
-
+        showSubmitModal = false;
         await ExecuteAsync(async () =>
         {
             await Api.FinishExamAsync(AttemptId);

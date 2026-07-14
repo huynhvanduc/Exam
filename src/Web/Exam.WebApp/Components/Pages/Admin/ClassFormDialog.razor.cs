@@ -1,5 +1,5 @@
+using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
@@ -20,6 +20,6 @@ public partial class ClassFormDialog : FormDialogBase
         if (!await ValidateAsync())
             return;
 
-        MudDialog.Close(DialogResult.Ok(new CreateClassRoomRequest(name)));
+        Dialog.Close(AppDialogResult.Ok(new CreateClassRoomRequest(name)));
     }
 }

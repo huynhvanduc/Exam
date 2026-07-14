@@ -1,7 +1,7 @@
+using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
 using Microsoft.JSInterop;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
@@ -10,11 +10,14 @@ public partial class Questions : AdminPageBase
     [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private IReadOnlyCollection<CategoryDto>? categories;
-    private MudTable<QuestionDto>? table;
+    private AppTable<QuestionDto>? table;
     private string? selectedCategoryId;
     private string? keyword;
     private Level? levelFilter;
     private QuestionType? questionTypeFilter;
+    private readonly HashSet<string> selectedIds = [];
+    private bool showMoveModal;
+    private string? moveTargetCategoryId;
 
     protected override async Task OnInitializedAsync() =>
         await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách môn học");
@@ -22,49 +25,58 @@ public partial class Questions : AdminPageBase
     private async Task OnCategoryChangedAsync(string categoryId)
     {
         selectedCategoryId = categoryId;
+        selectedIds.Clear();
         if (table != null)
-            await table.ReloadServerData();
+            await table.ResetAndReloadAsync();
     }
 
     private async Task OnKeywordChangedAsync(string value)
     {
         keyword = value;
         if (table != null)
-            await table.ReloadServerData();
+            await table.ResetAndReloadAsync();
     }
 
     private async Task OnLevelChangedAsync(Level? value)
     {
         levelFilter = value;
         if (table != null)
-            await table.ReloadServerData();
+            await table.ResetAndReloadAsync();
     }
 
     private async Task OnQuestionTypeChangedAsync(QuestionType? value)
     {
         questionTypeFilter = value;
         if (table != null)
-            await table.ReloadServerData();
+            await table.ResetAndReloadAsync();
     }
 
-    private Task<TableData<QuestionDto>> LoadServerData(TableState state, CancellationToken cancellationToken)
+    private Task<AppTableData<QuestionDto>> LoadServerData(AppTableState state, CancellationToken cancellationToken)
     {
         if (string.IsNullOrEmpty(selectedCategoryId))
-            return Task.FromResult(new TableData<QuestionDto> { Items = [], TotalItems = 0 });
+            return Task.FromResult(new AppTableData<QuestionDto> { Items = [], TotalItems = 0 });
 
-        return LoadTableDataAsync(async () =>
+        return LoadAppTableDataAsync(async () =>
         {
             var result = await Api.GetQuestionsByCategoryPagedAsync(selectedCategoryId, state.Page + 1, state.PageSize,
                 levelFilter, questionTypeFilter, keyword, cancellationToken);
-            return new TableData<QuestionDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+            return new AppTableData<QuestionDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
         }, "Không tải được danh sách câu hỏi");
+    }
+
+    private bool IsSelected(QuestionDto question) => selectedIds.Contains(question.Id);
+
+    private void ToggleSelect(QuestionDto question)
+    {
+        if (!selectedIds.Add(question.Id))
+            selectedIds.Remove(question.Id);
     }
 
     private async Task OpenCreateDialog()
     {
-        var parameters = new DialogParameters<QuestionFormDialog> { { x => x.CategoryId, selectedCategoryId! } };
+        var parameters = new Dictionary<string, object> { ["CategoryId"] = selectedCategoryId! };
         var data = await ShowFormDialogAsync<QuestionFormDialog, QuestionRequest>("Thêm câu hỏi", parameters,
-            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+            new AppDialogOptions { Wide = true });
         if (data == null)
             return;
 
@@ -75,13 +87,13 @@ public partial class Questions : AdminPageBase
 
     private async Task OpenEditDialog(QuestionDto question)
     {
-        var parameters = new DialogParameters<QuestionFormDialog>
+        var parameters = new Dictionary<string, object>
         {
-            { x => x.CategoryId, question.CategoryId },
-            { x => x.Model, question }
+            ["CategoryId"] = question.CategoryId,
+            ["Model"] = question
         };
         var data = await ShowFormDialogAsync<QuestionFormDialog, QuestionRequest>("Sửa câu hỏi", parameters,
-            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+            new AppDialogOptions { Wide = true });
         if (data == null)
             return;
 
@@ -95,7 +107,7 @@ public partial class Questions : AdminPageBase
         // Dialog tự lo bước Xem trước (dry-run) + Xác nhận nhập bên trong nó, chỉ đóng lại và trả về
         // kết quả cuối cùng SAU KHI admin đã xác nhận (Cancel nếu admin bỏ ngang ở bất kỳ bước nào).
         var result = await ShowFormDialogAsync<ImportQuestionsDialog, ImportQuestionsResultDto>("Nhập câu hỏi từ Excel",
-            new DialogParameters<ImportQuestionsDialog>(), new DialogOptions { MaxWidth = MaxWidth.Small, FullWidth = true });
+            new Dictionary<string, object>());
         if (result == null)
             return;
 
@@ -110,7 +122,7 @@ public partial class Questions : AdminPageBase
             ? $"Đã nhập {result.SuccessCount}/{result.TotalRows} câu hỏi vào: {categorySummary}."
             : $"Không có câu hỏi nào được nhập ({result.TotalRows} dòng, {result.Errors.Count} lỗi).";
 
-        Snackbar.Add(message, result.Errors.Count == 0 ? Severity.Success : Severity.Warning);
+        Toast.Add(message, result.Errors.Count == 0 ? AppSeverity.Success : AppSeverity.Warning);
 
         if (table != null)
             await table.ReloadServerData();
@@ -134,6 +146,43 @@ public partial class Questions : AdminPageBase
         },
         "Xoá thất bại (có thể còn đề thi đang dùng)", "Đã xoá.");
 
+    private Task BulkDeleteAsync()
+    {
+        var ids = selectedIds.ToList();
+        return ConfirmAndExecuteAsync("Xác nhận xoá", $"Xoá {ids.Count} câu hỏi đã chọn?",
+            async () =>
+            {
+                foreach (var id in ids)
+                    await Api.DeleteQuestionAsync(id);
+                selectedIds.Clear();
+                if (table != null)
+                    await table.ReloadServerData();
+            }, "Xoá thất bại", $"Đã xoá {ids.Count} câu hỏi.");
+    }
+
+    private void OpenMoveModal()
+    {
+        moveTargetCategoryId = categories!.FirstOrDefault(c => c.Id != selectedCategoryId)?.Id;
+        showMoveModal = true;
+    }
+
+    private Task ConfirmMoveAsync()
+    {
+        if (string.IsNullOrEmpty(moveTargetCategoryId))
+            return Task.CompletedTask;
+
+        var ids = selectedIds.ToList();
+        var destName = categories!.First(c => c.Id == moveTargetCategoryId).Name;
+        return ExecuteAsync(async () =>
+        {
+            await Api.MoveQuestionsAsync(new MoveQuestionsRequest(ids, moveTargetCategoryId));
+            selectedIds.Clear();
+            showMoveModal = false;
+            if (table != null)
+                await table.ReloadServerData();
+        }, "Chuyển câu hỏi thất bại", $"Đã chuyển {ids.Count} câu hỏi sang {destName}");
+    }
+
     private static string Truncate(string content) => content.Length <= 80 ? content : content[..80] + "…";
 
     private static string QuestionTypeLabel(QuestionType type) => type switch
@@ -142,5 +191,4 @@ public partial class Questions : AdminPageBase
         QuestionType.MultipleSelection => "Nhiều đáp án đúng",
         _ => type.ToString()
     };
-
 }

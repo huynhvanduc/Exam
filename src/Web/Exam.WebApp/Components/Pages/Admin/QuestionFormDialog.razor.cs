@@ -1,6 +1,5 @@
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
@@ -91,7 +90,7 @@ public partial class QuestionFormDialog : FormDialogBase
             explain,
             points);
 
-        MudDialog.Close(DialogResult.Ok(request));
+        Dialog.Close(AppDialogResult.Ok(request));
     }
 
     private class AnswerRow

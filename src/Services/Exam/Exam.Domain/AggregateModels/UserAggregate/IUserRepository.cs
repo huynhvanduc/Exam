@@ -1,3 +1,4 @@
+using Exam.Contracts;
 using Exam.Domain.SeedWork;
 
 namespace Exam.Domain.AggregateModels.UserAggregate;
@@ -15,4 +16,9 @@ public interface IUserRepository : IRepositoryBase<User>
     Task<IReadOnlyCollection<User>> GetPagedAsync(int skip, int take, CancellationToken cancellationToken = default);
 
     Task<long> CountAsync(CancellationToken cancellationToken = default);
+
+    Task<IReadOnlyCollection<User>> GetPagedAsync(int skip, int take, string? search, UserRole? role, bool? isActive,
+        CancellationToken cancellationToken = default);
+
+    Task<long> CountAsync(string? search, UserRole? role, bool? isActive, CancellationToken cancellationToken = default);
 }

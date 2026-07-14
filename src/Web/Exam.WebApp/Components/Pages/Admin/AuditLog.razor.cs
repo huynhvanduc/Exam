@@ -1,18 +1,42 @@
+using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class AuditLog : AdminPageBase
 {
-    private MudTable<AuditLogEntryDto>? table;
+    private AppTable<AuditLogEntryDto>? table;
+    private string? actorFilter;
+    private string? actionFilter;
+    private DateTime? fromFilter;
+    private DateTime? toFilter;
+    private int resultCount;
 
-    private Task<TableData<AuditLogEntryDto>> LoadServerData(TableState state, CancellationToken cancellationToken) =>
-        LoadTableDataAsync(async () =>
+    private async Task<AppTableData<AuditLogEntryDto>> LoadServerData(AppTableState state, CancellationToken cancellationToken)
+    {
+        var data = await LoadAppTableDataAsync(async () =>
         {
-            var result = await Api.GetAuditLogAsync(state.Page + 1, state.PageSize, cancellationToken);
-            return new TableData<AuditLogEntryDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+            var result = await Api.GetAuditLogAsync(state.Page + 1, state.PageSize, actorFilter, actionFilter, fromFilter, toFilter, cancellationToken);
+            return new AppTableData<AuditLogEntryDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
         }, "Không tải được nhật ký");
+        // resultCount thuộc component cha (AuditLog) nhưng callback này chạy trong vòng đời render của
+        // AppTable (component con) - AppTable tự StateHasChanged() cho chính nó sau khi ServerData xong,
+        // KHÔNG tự động render lại cha, nên phải gọi StateHasChanged() ở đây để "N sự kiện" cập nhật đúng.
+        resultCount = data.TotalItems;
+        StateHasChanged();
+        return data;
+    }
+
+    private Task ApplyFiltersAsync() => table?.ResetAndReloadAsync() ?? Task.CompletedTask;
+
+    private Task ResetFiltersAsync()
+    {
+        actorFilter = null;
+        actionFilter = null;
+        fromFilter = null;
+        toFilter = null;
+        return table?.ResetAndReloadAsync() ?? Task.CompletedTask;
+    }
 
     private static string ActionLabel(string action) => action switch
     {

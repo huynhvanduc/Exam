@@ -4,72 +4,92 @@
 
 <PageTitle>Ngân hàng câu hỏi</PageTitle>
 
-<AdminPageHeader Title="Ngân hàng câu hỏi">
+<div class="toolbar">
+    <h1 class="page-title" style="margin:0;">Ngân hàng câu hỏi</h1>
     <CategorySelector Categories="categories" Value="@selectedCategoryId" ValueChanged="OnCategoryChangedAsync" />
-
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-               Class="mb-4 ml-4" OnClick="OpenCreateDialog" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
-        Thêm câu hỏi
-    </MudButton>
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.UploadFile"
-               Class="mb-4 ml-2" OnClick="OpenImportDialogAsync">
-        Import Excel
-    </MudButton>
-    <MudButton Variant="Variant.Outlined" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Download"
-               Class="mb-4 ml-2" OnClick="ExportAsync" Disabled="string.IsNullOrEmpty(selectedCategoryId)">
-        Export Excel
-    </MudButton>
-</AdminPageHeader>
+    <span class="spacer"></span>
+    <AppButton OnClick="OpenImportDialogAsync">Import Excel</AppButton>
+    <AppButton Disabled="string.IsNullOrEmpty(selectedCategoryId)" OnClick="ExportAsync">Export Excel</AppButton>
+    <AppButton Variant="AppButtonVariant.Primary" Disabled="string.IsNullOrEmpty(selectedCategoryId)" OnClick="OpenCreateDialog">+ Thêm câu hỏi</AppButton>
+</div>
 
 @if (categories == null)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <AppSpinner />
 }
 else if (string.IsNullOrEmpty(selectedCategoryId))
 {
-    <MudAlert Severity="Severity.Info">Chọn môn học để xem danh sách câu hỏi.</MudAlert>
+    <AppAlert Severity="AppAlertSeverity.Info">Chọn môn học để xem danh sách câu hỏi.</AppAlert>
 }
 else
 {
-    <MudStack Row="true" Spacing="4" Class="mb-4" Style="max-width: 900px;">
-        <MudTextField T="string" Label="Tìm theo nội dung" Value="keyword" ValueChanged="OnKeywordChangedAsync"
-                      Immediate="true" DebounceInterval="400" Clearable="true" />
-        <MudSelect T="Level?" Label="Mức độ" Value="levelFilter" ValueChanged="OnLevelChangedAsync" Clearable="true">
-            <MudSelectItem T="Level?" Value="Level.Easy">Dễ</MudSelectItem>
-            <MudSelectItem T="Level?" Value="Level.Medium">Trung bình</MudSelectItem>
-            <MudSelectItem T="Level?" Value="Level.Difficult">Khó</MudSelectItem>
-        </MudSelect>
-        <MudSelect T="QuestionType?" Label="Loại câu hỏi" Value="questionTypeFilter" ValueChanged="OnQuestionTypeChangedAsync" Clearable="true">
-            <MudSelectItem T="QuestionType?" Value="QuestionType.SingleSelection">Một đáp án đúng</MudSelectItem>
-            <MudSelectItem T="QuestionType?" Value="QuestionType.MultipleSelection">Nhiều đáp án đúng</MudSelectItem>
-        </MudSelect>
-    </MudStack>
+    <div class="filters">
+        <AppTextField Value="@keyword" ValueChanged="OnKeywordChangedAsync" Placeholder="Tìm theo nội dung…" />
+        <AppSelect TValue="Level?" Value="levelFilter" ValueChanged="OnLevelChangedAsync">
+            <option value="">Mức độ</option>
+            <option value="@Level.Easy">Dễ</option>
+            <option value="@Level.Medium">Trung bình</option>
+            <option value="@Level.Difficult">Khó</option>
+        </AppSelect>
+        <AppSelect TValue="QuestionType?" Value="questionTypeFilter" ValueChanged="OnQuestionTypeChangedAsync">
+            <option value="">Loại câu hỏi</option>
+            <option value="@QuestionType.SingleSelection">Một đáp án</option>
+            <option value="@QuestionType.MultipleSelection">Nhiều đáp án</option>
+        </AppSelect>
+    </div>
 
-    <MudTable T="QuestionDto" @ref="table" ServerData="LoadServerData" Hover="true">
-        <HeaderContent>
-            <MudTh>Nội dung</MudTh>
-            <MudTh>Loại</MudTh>
-            <MudTh>Mức độ</MudTh>
-            <MudTh>Điểm</MudTh>
-            <MudTh>Đáp án</MudTh>
-            <MudTh>Hành động</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Nội dung">@Truncate(context.Content)</MudTd>
-            <MudTd DataLabel="Loại">@QuestionTypeLabel(context.QuestionType)</MudTd>
-            <MudTd DataLabel="Mức độ">@context.Level.ToLabel()</MudTd>
-            <MudTd DataLabel="Điểm">@context.Points</MudTd>
-            <MudTd DataLabel="Đáp án">@context.Answers.Count(a => a.IsCorrect)/@context.Answers.Count đúng</MudTd>
-            <MudTd DataLabel="Hành động">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>Chưa có câu hỏi nào trong môn học này.</MudText>
-        </NoRecordsContent>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
+    @if (selectedIds.Count > 0)
+    {
+        <div class="bulkbar">
+            <span>Đã chọn @selectedIds.Count câu hỏi</span>
+            <span class="spacer"></span>
+            <AppButton Variant="AppButtonVariant.OutlineAccent" OnClick="OpenMoveModal">↔ Chuyển sang môn học khác</AppButton>
+            <AppButton Variant="AppButtonVariant.Danger" OnClick="BulkDeleteAsync">Xoá</AppButton>
+        </div>
+    }
+
+    <AppCard>
+        <AppTable TItem="QuestionDto" @ref="table" ServerData="LoadServerData" ColumnCount="7"
+                  EmptyText="Chưa có câu hỏi nào trong môn học này.">
+            <HeaderContent>
+                <th style="width:32px;"></th><th>Nội dung</th><th>Loại</th><th>Mức độ</th><th>Điểm</th><th>Đáp án</th><th></th>
+            </HeaderContent>
+            <RowTemplate Context="question">
+                <tr class="@(IsSelected(question) ? "selected" : "")">
+                    <td><AppCb Value="IsSelected(question)" OnClick="() => ToggleSelect(question)" /></td>
+                    <td>@Truncate(question.Content)</td>
+                    <td>@QuestionTypeLabel(question.QuestionType)</td>
+                    <td>@question.Level.ToLabel()</td>
+                    <td>@question.Points</td>
+                    <td>@question.Answers.Count(a => a.IsCorrect)/@question.Answers.Count đúng</td>
+                    <td>
+                        <AppButton OnClick="() => OpenEditDialog(question)">✎</AppButton>
+                        <AppButton Variant="AppButtonVariant.Danger" OnClick="() => DeleteAsync(question)">🗑</AppButton>
+                    </td>
+                </tr>
+            </RowTemplate>
+        </AppTable>
+    </AppCard>
+}
+
+@if (showMoveModal)
+{
+    <div class="modal-overlay open">
+        <div class="modal" style="max-width:420px;">
+            <h2>Chuyển @selectedIds.Count câu hỏi sang môn học khác</h2>
+            <div class="field">
+                <label>Môn học đích</label>
+                <AppSelect TValue="string" @bind-Value="moveTargetCategoryId">
+                    @foreach (var c in categories!.Where(c => c.Id != selectedCategoryId))
+                    {
+                        <option value="@c.Id">@c.Name</option>
+                    }
+                </AppSelect>
+            </div>
+            <div class="modal-actions">
+                <AppButton OnClick="() => showMoveModal = false">Huỷ</AppButton>
+                <AppButton Variant="AppButtonVariant.Primary" OnClick="ConfirmMoveAsync">Chuyển câu hỏi</AppButton>
+            </div>
+        </div>
+    </div>
 }

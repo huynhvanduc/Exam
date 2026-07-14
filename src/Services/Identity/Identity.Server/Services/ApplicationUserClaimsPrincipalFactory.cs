@@ -22,6 +22,7 @@ public class ApplicationUserClaimsPrincipalFactory : UserClaimsPrincipalFactory<
         identity.AddClaim(new Claim("given_name", user.FirstName ?? string.Empty));
         identity.AddClaim(new Claim("family_name", user.LastName ?? string.Empty));
         identity.AddClaim(new Claim("email", user.Email ?? string.Empty));
+        identity.AddClaim(new Claim("name", $"{user.FirstName} {user.LastName}".Trim()));
 
         return identity;
     }

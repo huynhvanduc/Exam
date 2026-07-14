@@ -15,6 +15,9 @@ public class ExamApiClient
         _httpContextAccessor = httpContextAccessor;
     }
 
+    public Task<UserDto> GetMeAsync(CancellationToken cancellationToken = default) =>
+        SendAsync<UserDto>(HttpMethod.Get, ApiRoutes.Users.Me, cancellationToken: cancellationToken);
+
     public Task<IReadOnlyCollection<CategoryDto>> GetCategoriesAsync(CancellationToken cancellationToken = default) =>
         SendForCollectionAsync<CategoryDto>(HttpMethod.Get, ApiRoutes.Categories.Base, cancellationToken: cancellationToken);
 
@@ -42,6 +45,9 @@ public class ExamApiClient
 
     public Task DeleteQuestionAsync(string id, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Delete, ApiRoutes.Questions.ById(id), cancellationToken: cancellationToken);
+
+    public Task MoveQuestionsAsync(MoveQuestionsRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync(HttpMethod.Post, ApiRoutes.Questions.Move, body, cancellationToken);
 
     public async Task<ImportQuestionsResultDto> ImportQuestionsAsync(Stream fileStream, string fileName, bool dryRun, CancellationToken cancellationToken = default)
     {
@@ -125,8 +131,9 @@ public class ExamApiClient
     public Task<RolePermissionDto> UpdateRolePermissionsAsync(UserRole role, UpdateRolePermissionsRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<RolePermissionDto>(HttpMethod.Put, ApiRoutes.RolePermissions.ByRole(role), body, cancellationToken);
 
-    public Task<PagedResult<UserDto>> GetUsersAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
-        SendAsync<PagedResult<UserDto>>(HttpMethod.Get, ApiRoutes.Users.Paged(page, pageSize), cancellationToken: cancellationToken);
+    public Task<PagedResult<UserDto>> GetUsersAsync(int page, int pageSize, string? search = null, UserRole? role = null,
+        bool? isActive = null, CancellationToken cancellationToken = default) =>
+        SendAsync<PagedResult<UserDto>>(HttpMethod.Get, ApiRoutes.Users.Paged(page, pageSize, search, role, isActive), cancellationToken: cancellationToken);
 
     public Task<UserDto> PromoteUserRoleAsync(string externalId, PromoteUserRoleRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<UserDto>(HttpMethod.Put, ApiRoutes.Users.Role(externalId), body, cancellationToken);
@@ -134,8 +141,9 @@ public class ExamApiClient
     public Task<UserDto> ToggleUserActiveAsync(string externalId, ToggleUserActiveRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<UserDto>(HttpMethod.Put, ApiRoutes.Users.Active(externalId), body, cancellationToken);
 
-    public Task<PagedResult<AuditLogEntryDto>> GetAuditLogAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
-        SendAsync<PagedResult<AuditLogEntryDto>>(HttpMethod.Get, ApiRoutes.AuditLog.Paged(page, pageSize), cancellationToken: cancellationToken);
+    public Task<PagedResult<AuditLogEntryDto>> GetAuditLogAsync(int page, int pageSize, string? actor = null, string? action = null,
+        DateTime? from = null, DateTime? to = null, CancellationToken cancellationToken = default) =>
+        SendAsync<PagedResult<AuditLogEntryDto>>(HttpMethod.Get, ApiRoutes.AuditLog.Paged(page, pageSize, actor, action, from, to), cancellationToken: cancellationToken);
 
     public Task<PagedResult<ExamDto>> GetAvailableExamsAsync(int page, int pageSize, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<ExamDto>>(HttpMethod.Get, ApiRoutes.Exams.Available(page, pageSize), cancellationToken: cancellationToken);
@@ -151,6 +159,12 @@ public class ExamApiClient
 
     public Task<ExamResultDto> FinishExamAsync(string attemptId, CancellationToken cancellationToken = default) =>
         SendAsync<ExamResultDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.Finish(attemptId), cancellationToken: cancellationToken);
+
+    public Task<ExamAttemptStatusDto> GetExamAttemptAdminStatusAsync(string attemptId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamAttemptStatusDto>(HttpMethod.Get, ApiRoutes.ExamAttempts.AdminStatus(attemptId), cancellationToken: cancellationToken);
+
+    public Task<ExamResultDto> AdminForceFinishExamAsync(string attemptId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamResultDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.AdminForceFinish(attemptId), cancellationToken: cancellationToken);
 
     public Task<ExamResultDto> GetExamResultAsync(string attemptId, CancellationToken cancellationToken = default) =>
         SendAsync<ExamResultDto>(HttpMethod.Get, ApiRoutes.ExamAttempts.Result(attemptId), cancellationToken: cancellationToken);

@@ -6,53 +6,72 @@
 
 <AdminPageHeader Title="Quản lý người dùng" Subtitle="Đổi vai trò có hiệu lực ngay từ lần request tiếp theo của người dùng đó." />
 
-<MudTable T="UserDto" @ref="table" ServerData="LoadServerData" Hover="true">
+<AppCard>
+    <div class="users-toolbar">
+        <AppTextField Value="@searchFilter" ValueChanged="v => { searchFilter = v; return ApplyFiltersAsync(); }"
+                      Class="search" Placeholder="Tìm theo tên hoặc email…" />
+        <AppSelect TValue="UserRole?" Value="roleFilter" ValueChanged="v => { roleFilter = v; return ApplyFiltersAsync(); }" Class="role-select">
+            <option value="">Tất cả vai trò</option>
+            <option value="@UserRole.Student">Student</option>
+            <option value="@UserRole.Instructor">Instructor</option>
+            <option value="@UserRole.Admin">Admin</option>
+        </AppSelect>
+        <AppSelect TValue="bool?" Value="statusFilter" ValueChanged="v => { statusFilter = v; return ApplyFiltersAsync(); }" Class="role-select">
+            <option value="">Tất cả trạng thái</option>
+            <option value="true">Hoạt động</option>
+            <option value="false">Đã khoá</option>
+        </AppSelect>
+        <span class="spacer"></span>
+        <span class="result-count">@resultCount người dùng</span>
+    </div>
+
+    <AppTable TItem="UserDto" @ref="table" ServerData="LoadServerData" ColumnCount="5"
+              EmptyText="Không tìm thấy người dùng phù hợp.">
         <HeaderContent>
-            <MudTh>Họ tên</MudTh>
-            <MudTh>Email</MudTh>
-            <MudTh>External Id</MudTh>
-            <MudTh>Vai trò</MudTh>
-            <MudTh>Trạng thái</MudTh>
-            <MudTh></MudTh>
+            <th>Họ tên</th><th>Email</th><th>Vai trò</th><th>Trạng thái</th><th></th>
         </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Họ tên">@context.FirstName @context.LastName</MudTd>
-            <MudTd DataLabel="Email">@context.Email</MudTd>
-            <MudTd DataLabel="External Id">@context.ExternalId</MudTd>
-            <MudTd DataLabel="Vai trò" Style="max-width: 220px;">
-                <MudSelect T="UserRole" Value="context.Role" ValueChanged="role => ChangeRoleAsync(context, role)">
-                    <MudSelectItem Value="UserRole.Student">Student</MudSelectItem>
-                    <MudSelectItem Value="UserRole.Instructor">Instructor</MudSelectItem>
-                    <MudSelectItem Value="UserRole.Admin">Admin</MudSelectItem>
-                </MudSelect>
-            </MudTd>
-            <MudTd DataLabel="Trạng thái">
-                @if (context.IsActive)
-                {
-                    <MudChip T="string" Color="Color.Success" Size="Size.Small">Hoạt động</MudChip>
-                }
-                else
-                {
-                    <MudChip T="string" Color="Color.Error" Size="Size.Small">Đã khóa</MudChip>
-                }
-            </MudTd>
-            <MudTd>
-                @if (context.IsActive)
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.Lock" Color="Color.Error" Size="Size.Small"
-                                   title="Khóa tài khoản" OnClick="() => ToggleActiveAsync(context, false)" />
-                }
-                else
-                {
-                    <MudIconButton Icon="@Icons.Material.Filled.LockOpen" Color="Color.Success" Size="Size.Small"
-                                   title="Mở khóa tài khoản" OnClick="() => ToggleActiveAsync(context, true)" />
-                }
-            </MudTd>
+        <RowTemplate Context="user">
+            <tr class="@(IsSelf(user) ? "row-self" : "")">
+                <td>
+                    @user.FirstName @user.LastName
+                    @if (IsSelf(user))
+                    {
+                        <span class="self-tag">(Bạn)</span>
+                    }
+                </td>
+                <td>@user.Email</td>
+                <td>
+                    @if (IsSelf(user))
+                    {
+                        <AppStatusPill Variant="AppStatusPillVariant.Info">@user.Role</AppStatusPill>
+                    }
+                    else
+                    {
+                        <AppSelect TValue="UserRole" Class="role-select" Value="user.Role" ValueChanged="role => ChangeRoleAsync(user, role)">
+                            <option value="@UserRole.Student">Student</option>
+                            <option value="@UserRole.Instructor">Instructor</option>
+                            <option value="@UserRole.Admin">Admin</option>
+                        </AppSelect>
+                    }
+                </td>
+                <td>
+                    @if (user.IsActive)
+                    {
+                        <AppStatusPill Variant="AppStatusPillVariant.Success">Hoạt động</AppStatusPill>
+                    }
+                    else
+                    {
+                        <AppStatusPill Variant="AppStatusPillVariant.Danger">Đã khoá</AppStatusPill>
+                    }
+                </td>
+                <td>
+                    <button class="lock-btn" disabled="@IsSelf(user)"
+                            title="@(IsSelf(user) ? "Không thể tự khoá tài khoản của chính mình" : null)"
+                            @onclick="() => ToggleActiveAsync(user, !user.IsActive)">
+                        @(user.IsActive ? "🔒" : "🔓")
+                    </button>
+                </td>
+            </tr>
         </RowTemplate>
-        <NoRecordsContent>
-            <MudText>Chưa có người dùng nào.</MudText>
-        </NoRecordsContent>
-        <PagerContent>
-            <MudTablePager />
-        </PagerContent>
-    </MudTable>
+    </AppTable>
+</AppCard>

@@ -1,6 +1,5 @@
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
@@ -91,6 +90,6 @@ public partial class ExamFormDialog : FormDialogBase
         var pool = enablePool && !hasFixedQuestions ? new ConfigureQuestionPoolRequest(CategoryId, poolQuestionCount) : null;
         var maxAttemptsRequest = enableMaxAttempts ? new ConfigureMaxAttemptsRequest(maxAttempts) : null;
 
-        MudDialog.Close(DialogResult.Ok(new ExamFormResult(request, availability, negativeMarking, pool, maxAttemptsRequest)));
+        Dialog.Close(AppDialogResult.Ok(new ExamFormResult(request, availability, negativeMarking, pool, maxAttemptsRequest)));
     }
 }

@@ -1,41 +1,79 @@
 @page "/admin/classes"
+@page "/admin/classes/{Id}"
 @attribute [Authorize(Roles = "Instructor,Admin")]
 @inherits AdminPageBase
 @inject NavigationManager Navigation
 
 <PageTitle>Quản lý lớp học</PageTitle>
 
-<AdminPageHeader Title="Quản lý lớp học">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-               Class="mb-4" OnClick="OpenCreateDialog">
-        Thêm lớp
-    </MudButton>
-</AdminPageHeader>
+<h1 class="page-title">Quản lý lớp học</h1>
+<p class="page-sub">Chọn 1 lớp bên trái để xem thành viên và mã tham gia — không cần chuyển trang.</p>
 
-@if (classes == null)
-{
-    <MudProgressCircular Indeterminate="true" />
-}
-else
-{
-    <MudTable Items="classes" Hover="true">
-        <HeaderContent>
-            <MudTh>Tên lớp</MudTh>
-            <MudTh>Mã lớp</MudTh>
-            <MudTh>Số thành viên</MudTh>
-            <MudTh>Hành động</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Tên lớp">@context.Name</MudTd>
-            <MudTd DataLabel="Mã lớp"><MudChip T="string" Size="Size.Small">@context.JoinCode</MudChip></MudTd>
-            <MudTd DataLabel="Số thành viên">@context.MemberCount</MudTd>
-            <MudTd DataLabel="Hành động">
-                <MudIconButton Icon="@Icons.Material.Filled.Settings" Size="Size.Small" OnClick="() => NavigateToDetail(context.Id)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>Chưa có lớp học nào.</MudText>
-        </NoRecordsContent>
-    </MudTable>
-}
+<div class="master-detail">
+    <aside class="md-list">
+        <div class="md-list-items">
+            @if (classes == null)
+            {
+                <AppSpinner />
+            }
+            else if (classes.Count == 0)
+            {
+                <div class="empty-state">Chưa có lớp học nào.</div>
+            }
+            else
+            {
+                @foreach (var c in classes)
+                {
+                    <div class="md-item @(c.Id == selected?.Id ? "active" : "")" @onclick="() => SelectClass(c.Id)">
+                        <div class="t">@c.Name</div>
+                        <div class="m"><code>@c.JoinCode</code> · @c.MemberCount thành viên</div>
+                    </div>
+                }
+            }
+        </div>
+        <div class="md-list-footer">
+            <AppButton Variant="AppButtonVariant.Primary" FullWidth="true" OnClick="OpenCreateDialog">+ Thêm lớp</AppButton>
+        </div>
+    </aside>
+    <section class="md-detail">
+        @if (selected == null)
+        {
+            <div class="md-empty"><div class="big">🏫</div>Chọn một lớp bên trái để xem chi tiết</div>
+        }
+        else
+        {
+            <h2 style="font-size:18px;margin:0 0 14px;">@selected.Name</h2>
+            <div class="grid2">
+                <AppCard>
+                    <h3>Thông tin chung</h3>
+                    <AppTextField Label="Tên lớp" @bind-Value="renameValue" />
+                    <AppButton Variant="AppButtonVariant.Primary" OnClick="RenameAsync">Lưu tên lớp</AppButton>
+                    <hr style="border:none;border-top:1px solid var(--line);margin:16px 0;" />
+                    <div style="font-size:12px;color:var(--ink-soft);">Mã lớp (học viên nhập mã này để tham gia):</div>
+                    <div class="join-code-display">@selected.JoinCode</div>
+                    <AppButton OnClick="RegenerateCodeAsync">Tạo mã mới</AppButton>
+                </AppCard>
+                <AppCard>
+                    <h3>Thành viên (@selected.Members.Count)</h3>
+                    @if (selected.Members.Count == 0)
+                    {
+                        <div class="empty-state">Chưa có học viên nào tham gia lớp này.</div>
+                    }
+                    else
+                    {
+                        @foreach (var member in selected.Members)
+                        {
+                            <div class="member-row">
+                                <span>@member.FullName (@member.Email)</span>
+                                <AppButton Variant="AppButtonVariant.Danger" Class="p-2" OnClick="() => RemoveMemberAsync(member)">Xoá</AppButton>
+                            </div>
+                        }
+                    }
+                </AppCard>
+            </div>
+            <div style="margin-top:14px;">
+                <AppButton Variant="AppButtonVariant.Danger" OnClick="() => DeleteAsync(classes!.First(c => c.Id == selected.Id))">Xoá lớp học</AppButton>
+            </div>
+        }
+    </section>
+</div>

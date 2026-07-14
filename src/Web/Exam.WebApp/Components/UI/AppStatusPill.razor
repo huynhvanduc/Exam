@@ -1,0 +1,15 @@
+<span class="status-pill @VariantClass @Class">@ChildContent</span>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+    [Parameter] public AppStatusPillVariant Variant { get; set; } = AppStatusPillVariant.Info;
+    [Parameter] public string? Class { get; set; }
+
+    private string VariantClass => Variant switch
+    {
+        AppStatusPillVariant.Success => "success",
+        AppStatusPillVariant.Danger => "danger",
+        AppStatusPillVariant.Warning => "warning",
+        _ => "info"
+    };
+}

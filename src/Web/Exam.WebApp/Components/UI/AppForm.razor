@@ -1,0 +1,20 @@
+<CascadingValue Value="this" IsFixed="true">
+    @ChildContent
+</CascadingValue>
+
+@code {
+    [Parameter] public RenderFragment? ChildContent { get; set; }
+
+    private readonly List<IAppFormField> fields = [];
+    public bool IsValid { get; private set; } = true;
+
+    internal void Register(IAppFormField field) => fields.Add(field);
+    internal void Unregister(IAppFormField field) => fields.Remove(field);
+
+    public Task<bool> ValidateAsync()
+    {
+        IsValid = fields.Aggregate(true, (acc, f) => f.Validate() & acc);
+        StateHasChanged();
+        return Task.FromResult(IsValid);
+    }
+}

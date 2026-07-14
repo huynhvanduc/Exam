@@ -5,75 +5,80 @@
 
 <PageTitle>Đề thi</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Đề thi khả dụng</MudText>
+<h1 class="page-title">Đề thi khả dụng</h1>
 
 @if (exams == null)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <AppSpinner />
 }
 else if (exams.Count == 0)
 {
-    <MudAlert Severity="Severity.Info">Hiện chưa có đề thi nào khả dụng.</MudAlert>
+    <AppAlert Severity="AppAlertSeverity.Info">Hiện chưa có đề thi nào khả dụng.</AppAlert>
 }
 else
 {
-    <MudGrid>
+    <div class="grid cols-3">
         @foreach (var exam in exams)
         {
-            <MudItem xs="12" sm="6" md="4">
-                <MudPaper Class="pa-4" Elevation="1">
-                    <MudText Typo="Typo.h6">@exam.Name</MudText>
-                    <MudText Typo="Typo.body2" Class="mb-2">@exam.ShortDesc</MudText>
-                    <MudText Typo="Typo.body2"><b>Số câu hỏi:</b> @exam.NumberOfQuestions</MudText>
-                    <MudText Typo="Typo.body2"><b>Điểm đạt:</b> @exam.MinimumPassingScore</MudText>
-                    @if (exam.IsTimeRestricted)
-                    {
-                        <MudText Typo="Typo.body2"><b>Thời gian:</b> @exam.Duration.TotalMinutes phút</MudText>
-                    }
-                    @if (exam.MaxAttempts.HasValue)
-                    {
-                        <MudText Typo="Typo.body2"><b>Số lần thi tối đa:</b> @exam.MaxAttempts lần</MudText>
-                    }
+            <AppCard Class="exam-card">
+                <h2>@exam.Name</h2>
+                <p class="desc">@exam.ShortDesc</p>
+                <div class="meta"><b>Số câu hỏi:</b> @exam.NumberOfQuestions</div>
+                @if (exam.MinimumPassingScore > 0)
+                {
+                    <div class="meta"><b>Điểm đạt:</b> @exam.MinimumPassingScore</div>
+                }
+                @if (exam.IsTimeRestricted)
+                {
+                    <div class="meta"><b>Thời gian:</b> @exam.Duration.TotalMinutes phút</div>
+                }
+                @if (exam.MaxAttempts.HasValue)
+                {
+                    <div class="meta"><b>Số lần thi tối đa:</b> @exam.MaxAttempts lần</div>
+                }
 
-                    @{ var attempt = myAttempts.GetValueOrDefault(exam.Id); }
+                @{ var attempt = myAttempts.GetValueOrDefault(exam.Id); }
+                <div class="actions">
                     @if (attempt == null)
                     {
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" Class="mt-3" FullWidth="true"
+                        <AppButton Variant="AppButtonVariant.Primary" FullWidth="true"
                                    OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
                             Bắt đầu làm bài
-                        </MudButton>
+                        </AppButton>
                     }
                     else if (!attempt.Finished)
                     {
-                        <MudAlert Severity="Severity.Info" Dense="true" Class="mt-3 mb-2">Bạn đang làm dở đề này.</MudAlert>
-                        <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true" Href="@($"/exams/take/{attempt.Id}")">
+                        <AppAlert Severity="AppAlertSeverity.Info">Bạn đang làm dở đề này.</AppAlert>
+                        <AppButton Variant="AppButtonVariant.Primary" FullWidth="true"
+                                   OnClick="() => GoToTake(attempt.Id)">
                             Tiếp tục làm bài
-                        </MudButton>
+                        </AppButton>
                     }
                     else
                     {
-                        <MudAlert Severity="@(attempt.Passed == true ? Severity.Success : Severity.Warning)" Dense="true" Class="mt-3 mb-2">
+                        <AppAlert Severity="@(attempt.Passed == true ? AppAlertSeverity.Success : AppAlertSeverity.Warning)">
                             Đã làm — @attempt.TotalScore/@attempt.MaxPossibleScore điểm (@(attempt.Passed == true ? "Đạt" : "Không đạt"))
-                        </MudAlert>
+                        </AppAlert>
                         @if (exam.MaxAttempts.HasValue)
                         {
-                            <MudText Typo="Typo.caption" Class="mud-text-secondary">
-                                Đã dùng @myAttemptCounts.GetValueOrDefault(exam.Id)/@exam.MaxAttempts lượt thi.
-                            </MudText>
+                            <div class="attempts-caption">Đã dùng @myAttemptCounts.GetValueOrDefault(exam.Id)/@exam.MaxAttempts lượt thi.</div>
                         }
-                        <MudStack Row="true" Spacing="2" Class="mt-1">
-                            <MudButton Variant="Variant.Outlined" FullWidth="true" Href="@($"/exams/result/{attempt.Id}")">Xem kết quả</MudButton>
+                        <div class="row">
+                            <AppButton Variant="AppButtonVariant.OutlineAccent"
+                                       OnClick="() => GoToResult(attempt.Id)">
+                                Xem kết quả
+                            </AppButton>
                             @if (!HasReachedAttemptLimit(exam))
                             {
-                                <MudButton Variant="Variant.Filled" Color="Color.Primary" FullWidth="true"
+                                <AppButton Variant="AppButtonVariant.Primary"
                                            OnClick="() => StartAsync(exam.Id)" Disabled="startingExamId == exam.Id">
                                     Làm lại
-                                </MudButton>
+                                </AppButton>
                             }
-                        </MudStack>
+                        </div>
                     }
-                </MudPaper>
-            </MudItem>
+                </div>
+            </AppCard>
         }
-    </MudGrid>
+    </div>
 }

@@ -1,0 +1,66 @@
+@implements IAppFormField
+@implements IDisposable
+
+<div class="field @Class">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <label for="@id">@Label@(Required ? " *" : "")</label>
+    }
+    @if (Lines > 1)
+    {
+        <textarea id="@id" rows="@Lines" disabled="@Disabled" placeholder="@Placeholder"
+                   value="@Value" @oninput="OnInput"></textarea>
+    }
+    else
+    {
+        <input id="@id" type="@Type" disabled="@Disabled" placeholder="@Placeholder"
+               value="@Value" @oninput="OnInput" />
+    }
+    @if (!string.IsNullOrEmpty(computedError ?? ErrorText))
+    {
+        <div class="error">@(computedError ?? ErrorText)</div>
+    }
+    else if (!string.IsNullOrEmpty(Hint))
+    {
+        <div class="hint">@Hint</div>
+    }
+</div>
+
+@code {
+    private readonly string id = $"f{Guid.NewGuid():N}";
+    private string? computedError;
+
+    [CascadingParameter] private AppForm? Form { get; set; }
+
+    [Parameter] public string? Value { get; set; }
+    [Parameter] public EventCallback<string?> ValueChanged { get; set; }
+    [Parameter] public string? Label { get; set; }
+    [Parameter] public string? Placeholder { get; set; }
+    [Parameter] public string? Hint { get; set; }
+    [Parameter] public string? ErrorText { get; set; }
+    [Parameter] public string? RequiredError { get; set; }
+    [Parameter] public string Type { get; set; } = "text";
+    [Parameter] public int Lines { get; set; } = 1;
+    [Parameter] public bool Required { get; set; }
+    [Parameter] public bool Disabled { get; set; }
+    [Parameter] public string? Class { get; set; }
+
+    protected override void OnInitialized() => Form?.Register(this);
+
+    public bool Validate()
+    {
+        computedError = Required && string.IsNullOrWhiteSpace(Value) ? RequiredError ?? "Bắt buộc nhập." : null;
+        StateHasChanged();
+        return computedError == null;
+    }
+
+    private async Task OnInput(ChangeEventArgs e)
+    {
+        Value = e.Value?.ToString();
+        if (computedError != null)
+            Validate();
+        await ValueChanged.InvokeAsync(Value);
+    }
+
+    void IDisposable.Dispose() => Form?.Unregister(this);
+}

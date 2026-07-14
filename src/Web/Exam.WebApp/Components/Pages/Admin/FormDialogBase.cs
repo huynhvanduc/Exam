@@ -1,19 +1,16 @@
+using Exam.WebApp.Components.UI;
+using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
-using MudBlazor;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public abstract class FormDialogBase : ComponentBase
 {
-    [CascadingParameter] protected IMudDialogInstance MudDialog { get; set; } = null!;
+    [CascadingParameter] protected IAppDialogInstance Dialog { get; set; } = null!;
 
-    protected MudForm form = null!;
+    protected AppForm form = null!;
 
-    protected async Task<bool> ValidateAsync()
-    {
-        await form.ValidateAsync();
-        return form.IsValid;
-    }
+    protected Task<bool> ValidateAsync() => form.ValidateAsync();
 
-    protected void Cancel() => MudDialog.Cancel();
+    protected void Cancel() => Dialog.Cancel();
 }

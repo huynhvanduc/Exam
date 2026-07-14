@@ -4,35 +4,34 @@
 
 <PageTitle>Quản lý môn học</PageTitle>
 
-<AdminPageHeader Title="Quản lý môn học">
-    <MudButton Variant="Variant.Filled" Color="Color.Primary" StartIcon="@Icons.Material.Filled.Add"
-               Class="mb-4" OnClick="OpenCreateDialog">
-        Thêm môn học
-    </MudButton>
-</AdminPageHeader>
+<div class="page-header">
+    <h1 class="page-title" style="margin:0;">Quản lý môn học</h1>
+    <span class="spacer"></span>
+    <AppButton Variant="AppButtonVariant.Primary" OnClick="OpenCreateDialog">+ Thêm môn học</AppButton>
+</div>
 
 @if (categories == null)
 {
-    <MudProgressCircular Indeterminate="true" />
+    <AppSpinner />
 }
 else
 {
-    <MudTable Items="categories" Hover="true">
-        <HeaderContent>
-            <MudTh>Tên</MudTh>
-            <MudTh>Url Path</MudTh>
-            <MudTh>Hành động</MudTh>
-        </HeaderContent>
-        <RowTemplate>
-            <MudTd DataLabel="Tên">@context.Name</MudTd>
-            <MudTd DataLabel="Url Path">@context.UrlPath</MudTd>
-            <MudTd DataLabel="Hành động">
-                <MudIconButton Icon="@Icons.Material.Filled.Edit" Size="Size.Small" OnClick="() => OpenEditDialog(context)" />
-                <MudIconButton Icon="@Icons.Material.Filled.Delete" Size="Size.Small" Color="Color.Error" OnClick="() => DeleteAsync(context)" />
-            </MudTd>
-        </RowTemplate>
-        <NoRecordsContent>
-            <MudText>Chưa có môn học nào.</MudText>
-        </NoRecordsContent>
-    </MudTable>
+    <AppCard>
+        <AppTable TItem="CategoryDto" @ref="table" ServerData="LoadTableData" ColumnCount="3" InitialPageSize="6"
+                  EmptyText="Chưa có môn học nào.">
+            <HeaderContent>
+                <th>Tên</th><th>Url Path</th><th>Hành động</th>
+            </HeaderContent>
+            <RowTemplate Context="category">
+                <tr>
+                    <td>@category.Name</td>
+                    <td><code>@category.UrlPath</code></td>
+                    <td>
+                        <AppButton OnClick="() => OpenEditDialog(category)">✎ Sửa</AppButton>
+                        <AppButton Variant="AppButtonVariant.Danger" OnClick="() => DeleteAsync(category)">🗑 Xoá</AppButton>
+                    </td>
+                </tr>
+            </RowTemplate>
+        </AppTable>
+    </AppCard>
 }

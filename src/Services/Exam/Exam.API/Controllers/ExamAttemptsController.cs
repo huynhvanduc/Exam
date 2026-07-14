@@ -1,12 +1,15 @@
 using Exam.API.Extensions;
+using Exam.Application.ExamResultAggregate.Commands.AdminForceFinishExam;
 using Exam.Application.ExamResultAggregate.Commands.FinishExam;
 using Exam.Application.ExamResultAggregate.Commands.RecordAnswer;
 using Exam.Application.ExamResultAggregate.Commands.StartExam;
 using Exam.Application.ExamResultAggregate.Queries.GetExamAttempt;
+using Exam.Application.ExamResultAggregate.Queries.GetExamAttemptAdminStatus;
 using Exam.Application.ExamResultAggregate.Queries.GetExamResultById;
 using Exam.Application.ExamResultAggregate.Queries.GetMyExamHistory;
 using Exam.Contracts;
 using MediatR;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace Exam.API.Controllers;
@@ -56,6 +59,22 @@ public class ExamAttemptsController : ControllerBase
     {
         var result = await _mediator.Send(new GetExamResultByIdQuery(id, User.GetUserId()!), cancellationToken);
         return result == null ? NotFound() : Ok(result);
+    }
+
+    [HttpGet("{id}/admin-status")]
+    [Authorize(Policy = Permissions.Exam.ViewResults)]
+    public async Task<IActionResult> GetAdminStatus(string id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetExamAttemptAdminStatusQuery(id), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/admin-force-finish")]
+    [Authorize(Policy = Permissions.Exam.ForceFinishAttempt)]
+    public async Task<IActionResult> AdminForceFinish(string id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new AdminForceFinishExamCommand(id), cancellationToken);
+        return Ok(result);
     }
 
     [HttpGet("history")]

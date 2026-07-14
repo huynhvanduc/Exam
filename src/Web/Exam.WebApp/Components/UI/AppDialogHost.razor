@@ -1,0 +1,28 @@
+@implements IDisposable
+@inject IAppDialogService DialogService
+
+@if (currentDialog != null)
+{
+    <div class="modal-overlay open">
+        <div class="modal @(currentDialog.Options.Wide ? "wide" : "")">
+            <h2>@currentDialog.Title</h2>
+            <CascadingValue Value="currentDialogInstance" IsFixed="true">
+                <DynamicComponent Type="currentDialog.ComponentType" Parameters="currentDialog.Parameters" />
+            </CascadingValue>
+        </div>
+    </div>
+}
+
+@if (currentConfirm != null)
+{
+    <div class="modal-overlay open">
+        <div class="modal">
+            <h2>@currentConfirm.Title</h2>
+            <p class="desc">@currentConfirm.Message</p>
+            <div class="modal-actions">
+                <button class="btn" @onclick="() => ResolveConfirm(false)">@currentConfirm.CancelText</button>
+                <button class="btn danger" @onclick="() => ResolveConfirm(true)">@currentConfirm.YesText</button>
+            </div>
+        </div>
+    </div>
+}

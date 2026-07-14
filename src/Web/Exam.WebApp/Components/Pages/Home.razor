@@ -3,14 +3,14 @@
 
 <PageTitle>Exam Platform</PageTitle>
 
-<MudText Typo="Typo.h4" GutterBottom="true">Exam Platform</MudText>
+<h1 class="page-title">Exam Platform</h1>
 
 <AuthorizeView>
     <Authorized>
-        <MudText>Xin chào, @context.User.Identity?.Name.</MudText>
+        <p>Xin chào, @context.User.Identity?.Name.</p>
     </Authorized>
     <NotAuthorized>
-        <MudText Class="mb-4">Vui lòng đăng nhập để tiếp tục.</MudText>
-        <MudButton OnClick="GoToLogin" Variant="Variant.Filled" Color="Color.Primary">Đăng nhập</MudButton>
+        <p class="page-sub">Vui lòng đăng nhập để tiếp tục.</p>
+        <AppButton Variant="AppButtonVariant.Primary" OnClick="GoToLogin">Đăng nhập</AppButton>
     </NotAuthorized>
 </AuthorizeView>

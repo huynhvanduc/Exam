@@ -1,15 +1,14 @@
-<MudContainer Class="mt-8" MaxWidth="MaxWidth.Small">
-    <MudPaper Class="pa-8 text-center" Elevation="1">
-        <MudIcon Icon="@Icon" Style="font-size: 4rem;" Color="@IconColor" />
-        <MudText Typo="Typo.h5" Class="mt-4" GutterBottom="true">@Title</MudText>
-        <MudText Typo="Typo.body1" Class="mb-6">@Message</MudText>
+<div style="max-width:420px;margin:48px auto 0;">
+    <AppCard style="text-align:center;padding:32px;">
+        <div style="font-size:48px;">@Icon</div>
+        <h2 style="margin:16px 0 8px;">@Title</h2>
+        <p class="page-sub" style="margin-bottom:20px;">@Message</p>
         @ChildContent
-    </MudPaper>
-</MudContainer>
+    </AppCard>
+</div>
 
 @code {
     [Parameter, EditorRequired] public string Icon { get; set; } = "";
-    [Parameter] public Color IconColor { get; set; } = Color.Default;
     [Parameter, EditorRequired] public string Title { get; set; } = "";
     [Parameter, EditorRequired] public string Message { get; set; } = "";
     [Parameter] public RenderFragment? ChildContent { get; set; }

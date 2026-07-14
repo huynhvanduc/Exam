@@ -19,10 +19,12 @@ public class AuditLogController : ControllerBase
     }
 
     [HttpGet]
-    public async Task<IActionResult> GetRecent([FromQuery] int page, [FromQuery] int pageSize, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetRecent([FromQuery] int page, [FromQuery] int pageSize,
+        [FromQuery] string? actor, [FromQuery] string? action, [FromQuery] DateTime? from, [FromQuery] DateTime? to,
+        CancellationToken cancellationToken)
     {
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 50);
-        var query = new GetAuditLogQuery(normalizedPage, normalizedPageSize);
+        var query = new GetAuditLogQuery(normalizedPage, normalizedPageSize, actor, action, from, to);
         var result = await _mediator.Send(query, cancellationToken);
         return Ok(result);
     }

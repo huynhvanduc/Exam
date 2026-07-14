@@ -1,6 +1,9 @@
+using System.Text.RegularExpressions;
+using Exam.Contracts;
 using Exam.Domain.AggregateModels.UserAggregate;
 using MediatR;
 using Microsoft.Extensions.Logging;
+using MongoDB.Bson;
 using MongoDB.Driver;
 
 namespace Exam.Infrastructure.Persistence.Mongo.Repositories;
@@ -41,4 +44,33 @@ public class UserRepository : MongoRepositoryBase<User>, IUserRepository
 
     public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
         CountFilteredAsync(FilterDefinition<User>.Empty, cancellationToken);
+
+    public Task<IReadOnlyCollection<User>> GetPagedAsync(int skip, int take, string? search, UserRole? role, bool? isActive,
+        CancellationToken cancellationToken = default) =>
+        FindPagedAsync(BuildFilter(search, role, isActive), Builders<User>.Sort.Ascending(x => x.Id), skip, take, cancellationToken);
+
+    public Task<long> CountAsync(string? search, UserRole? role, bool? isActive, CancellationToken cancellationToken = default) =>
+        CountFilteredAsync(BuildFilter(search, role, isActive), cancellationToken);
+
+    private static FilterDefinition<User> BuildFilter(string? search, UserRole? role, bool? isActive)
+    {
+        var filter = FilterDefinition<User>.Empty;
+
+        if (!string.IsNullOrWhiteSpace(search))
+        {
+            var pattern = new BsonRegularExpression(Regex.Escape(search), "i");
+            filter &= Builders<User>.Filter.Or(
+                Builders<User>.Filter.Regex(x => x.FirstName, pattern),
+                Builders<User>.Filter.Regex(x => x.LastName, pattern),
+                Builders<User>.Filter.Regex(x => x.Email, pattern));
+        }
+
+        if (role.HasValue)
+            filter &= Builders<User>.Filter.Eq(x => x.Role, role.Value);
+
+        if (isActive.HasValue)
+            filter &= Builders<User>.Filter.Eq(x => x.IsActive, isActive.Value);
+
+        return filter;
+    }
 }

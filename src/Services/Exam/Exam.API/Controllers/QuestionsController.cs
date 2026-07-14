@@ -2,6 +2,7 @@ using Exam.API.Extensions;
 using Exam.Application.QuestionAggregate.Commands.CreateQuestion;
 using Exam.Application.QuestionAggregate.Commands.DeleteQuestion;
 using Exam.Application.QuestionAggregate.Commands.ImportQuestions;
+using Exam.Application.QuestionAggregate.Commands.MoveQuestions;
 using Exam.Application.QuestionAggregate.Commands.UpdateQuestion;
 using Exam.Application.QuestionAggregate.Queries.ExportQuestions;
 using Exam.Application.QuestionAggregate.Queries.GetQuestionById;
@@ -70,6 +71,14 @@ public class QuestionsController : ControllerBase
             request.CategoryId, request.Answers, request.Explain, request.Points, User.GetActor());
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
+    }
+
+    [HttpPost("move")]
+    [Authorize(Policy = Permissions.Question.Update)]
+    public async Task<IActionResult> Move([FromBody] MoveQuestionsRequest request, CancellationToken cancellationToken)
+    {
+        await _mediator.Send(new MoveQuestionsCommand(request.QuestionIds, request.TargetCategoryId, User.GetActor()), cancellationToken);
+        return NoContent();
     }
 
     [HttpDelete("{id}")]

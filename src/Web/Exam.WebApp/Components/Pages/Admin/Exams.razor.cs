@@ -1,64 +1,181 @@
+using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
-using MudBlazor;
+using Microsoft.AspNetCore.Components;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class Exams : AdminPageBase
 {
+    [Parameter] public string? Id { get; set; }
+
     private IReadOnlyCollection<CategoryDto>? categories;
-    private MudTable<ExamDto>? table;
+    private IReadOnlyCollection<ExamDto>? exams;
     private string? selectedCategoryId;
+    private ExamDto? selected;
+    private UserDto? currentUser;
+
+    // Khớp đúng OwnershipGuard.EnsureOwnerOrAdmin ở backend (Admin luôn được, Instructor chỉ được với đề
+    // thi do chính mình tạo) - tính trước ở UI để ẩn/khoá các hành động chắc chắn sẽ bị 403 thay vì để
+    // người dùng bấm rồi mới thấy toast lỗi.
+    private bool CanManageSelected => currentUser != null && selected != null
+        && (currentUser.Role == UserRole.Admin || currentUser.ExternalId == selected.OwnerUserId);
+
+    private IReadOnlyCollection<QuestionDto>? categoryQuestions;
+    private IReadOnlyCollection<ClassRoomDto> allClasses = [];
+    private DateTime? availableFrom;
+    private DateTime? availableTo;
+    private decimal negativeMarkingRatio;
+    private int poolQuestionCount = 10;
+    private bool limitMaxAttempts;
+    private int maxAttempts = 1;
+    private string? selectedClassId;
+
+    private IReadOnlyCollection<ExamResultAdminListItemDto>? results;
+    private string resultsFilter = "all";
+    private ExamResultAdminListItemDto? drawerResult;
+    private ExamAttemptStatusDto? drawerStatus;
+
+    private IReadOnlyCollection<ClassRoomDto> unassignedClasses =>
+        allClasses.Where(c => selected != null && !selected.AssignedClassIds.Contains(c.Id)).ToList();
 
     protected override async Task OnInitializedAsync() =>
-        await ExecuteAsync(async () => categories = await Api.GetCategoriesAsync(), "Không tải được danh sách môn học");
+        await ExecuteAsync(async () =>
+        {
+            currentUser = await Api.GetMeAsync();
+            categories = await Api.GetCategoriesAsync();
+        }, "Không tải được danh sách môn học");
 
-    private void NavigateToDetail(string examId) => Navigation.NavigateTo($"/admin/exams/{examId}");
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(Id))
+        {
+            selected = null;
+            return;
+        }
+
+        if (selected?.Id == Id)
+            return;
+
+        await LoadSelectedAsync(Id);
+    }
+
+    private Task LoadSelectedAsync(string id) => ExecuteAsync(async () =>
+    {
+        selected = await Api.GetExamByIdAsync(id);
+        selectedCategoryId ??= selected.CategoryId;
+        availableFrom = selected.AvailableFrom;
+        availableTo = selected.AvailableTo;
+        negativeMarkingRatio = selected.NegativeMarkingRatio;
+        poolQuestionCount = selected.PoolQuestionCount > 0 ? selected.PoolQuestionCount : 10;
+        limitMaxAttempts = selected.MaxAttempts.HasValue;
+        maxAttempts = selected.MaxAttempts ?? 1;
+        allClasses = await Api.GetClassesAsync();
+        selectedClassId = null;
+
+        categoryQuestions = selected.QuestionSelectionMode == QuestionSelectionMode.Fixed
+            ? await Api.GetQuestionsByCategoryAsync(selected.CategoryId)
+            : null;
+
+        resultsFilter = "all";
+        drawerResult = null;
+        drawerStatus = null;
+        results = null;
+        // Kết quả thi cũng bị OwnershipGuard chặn ở backend giống Sửa/Xuất bản/Lưu trữ - không gọi API
+        // này khi chắc chắn sẽ bị 403 (Instructor xem đề thi của người khác), tránh toast lỗi vô nghĩa.
+        if (CanManageSelected)
+            await LoadResultsAsync();
+    }, "Không tải được đề thi");
+
+    private Task LoadResultsAsync() => ExecuteAsync(async () =>
+    {
+        var result = await Api.GetExamResultsByExamAsync(selected!.Id, 1, 100);
+        results = result.Items;
+    }, "Không tải được kết quả thi");
+
+    private void SetResultsFilter(string filter) => resultsFilter = filter;
+
+    private IEnumerable<ExamResultAdminListItemDto> FilteredResults() => resultsFilter switch
+    {
+        "doing" => results!.Where(r => !r.Finished),
+        "done" => results!.Where(r => r.Finished),
+        _ => results!
+    };
+
+    private async Task OpenDrawerAsync(ExamResultAdminListItemDto result)
+    {
+        drawerResult = result;
+        drawerStatus = null;
+        await ExecuteAsync(async () => drawerStatus = await Api.GetExamAttemptAdminStatusAsync(result.Id), "Không tải được tiến độ bài thi");
+    }
+
+    private bool IsAnswered(string questionId) =>
+        drawerStatus?.Attempt?.SelectedAnswers.Any(a => a.QuestionId == questionId && a.SelectedAnswerIds.Count > 0) == true;
+
+    private void CloseDrawer()
+    {
+        drawerResult = null;
+        drawerStatus = null;
+    }
+
+    private Task ForceSubmitAsync() => ConfirmAndExecuteAsync(
+        "Xác nhận buộc nộp bài", $"Buộc nộp bài của \"{drawerResult!.FullName}\"? Học viên sẽ không thể trả lời thêm.",
+        async () =>
+        {
+            await Api.AdminForceFinishExamAsync(drawerResult.Id);
+            CloseDrawer();
+            await LoadResultsAsync();
+        }, "Buộc nộp bài thất bại", $"Đã buộc nộp bài của {drawerResult!.FullName}", yesText: "Buộc nộp");
 
     private async Task OnCategoryChangedAsync(string categoryId)
     {
         selectedCategoryId = categoryId;
-        if (table != null)
-            await table.ReloadServerData();
+        await LoadListAsync();
     }
 
-    private Task<TableData<ExamDto>> LoadServerData(TableState state, CancellationToken cancellationToken)
+    private Task LoadListAsync()
     {
         if (string.IsNullOrEmpty(selectedCategoryId))
-            return Task.FromResult(new TableData<ExamDto> { Items = [], TotalItems = 0 });
-
-        return LoadTableDataAsync(async () =>
         {
-            var result = await Api.GetExamsByCategoryAsync(selectedCategoryId, state.Page + 1, state.PageSize, cancellationToken);
-            return new TableData<ExamDto> { Items = result.Items, TotalItems = (int)result.TotalCount };
+            exams = [];
+            return Task.CompletedTask;
+        }
+
+        return ExecuteAsync(async () =>
+        {
+            var result = await Api.GetExamsByCategoryAsync(selectedCategoryId, 1, 100);
+            exams = result.Items;
         }, "Không tải được danh sách đề thi");
     }
 
+    private void SelectExam(string id) => Navigation.NavigateTo($"/admin/exams/{id}");
+
     private async Task OpenCreateDialog()
     {
-        var parameters = new DialogParameters<ExamFormDialog> { { x => x.CategoryId, selectedCategoryId! } };
-        var data = await ShowFormDialogAsync<ExamFormDialog, ExamFormResult>("Thêm đề thi", parameters,
-            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var parameters = new Dictionary<string, object> { ["CategoryId"] = selectedCategoryId! };
+        var data = await ShowFormDialogAsync<ExamFormDialog, ExamFormResult>("Thêm đề thi", parameters, new AppDialogOptions { Wide = true });
         if (data == null)
             return;
 
+        string? createdId = null;
         await ExecuteAsync(async () =>
         {
             var created = await Api.CreateExamAsync(data.Exam);
+            createdId = created.Id;
             await ApplyAdvancedConfigAsync(created.Id, data);
         }, "Tạo thất bại", "Đã thêm đề thi.");
-        if (table != null)
-            await table.ReloadServerData();
+        await LoadListAsync();
+        if (createdId != null)
+            SelectExam(createdId);
     }
 
     private async Task OpenEditDialog(ExamDto exam)
     {
-        var parameters = new DialogParameters<ExamFormDialog>
+        var parameters = new Dictionary<string, object>
         {
-            { x => x.CategoryId, exam.CategoryId },
-            { x => x.Model, exam }
+            ["CategoryId"] = exam.CategoryId,
+            ["Model"] = exam
         };
-        var data = await ShowFormDialogAsync<ExamFormDialog, ExamFormResult>("Sửa đề thi", parameters,
-            new DialogOptions { MaxWidth = MaxWidth.Medium, FullWidth = true });
+        var data = await ShowFormDialogAsync<ExamFormDialog, ExamFormResult>("Sửa đề thi", parameters, new AppDialogOptions { Wide = true });
         if (data == null)
             return;
 
@@ -67,8 +184,9 @@ public partial class Exams : AdminPageBase
             await Api.UpdateExamAsync(exam.Id, data.Exam);
             await ApplyAdvancedConfigAsync(exam.Id, data);
         }, "Cập nhật thất bại", "Đã cập nhật.");
-        if (table != null)
-            await table.ReloadServerData();
+        await LoadListAsync();
+        if (selected?.Id == exam.Id)
+            await LoadSelectedAsync(exam.Id);
     }
 
     // Availability/NegativeMarking/Pool vẫn là API riêng ở backend (policy quyền khác nhau: ManageAvailability/
@@ -91,9 +209,68 @@ public partial class Exams : AdminPageBase
         async () =>
         {
             await Api.DeleteExamAsync(exam.Id);
-            if (table != null)
-                await table.ReloadServerData();
+            if (selected?.Id == exam.Id)
+            {
+                selected = null;
+                Navigation.NavigateTo("/admin/exams");
+            }
+            await LoadListAsync();
         },
         "Xoá thất bại", "Đã xoá.");
 
+    private string ClassName(string classId) => allClasses.FirstOrDefault(c => c.Id == classId)?.Name ?? "(Lớp không còn tồn tại)";
+
+    private Task AssignClassAsync() => ExecuteAsync(async () =>
+    {
+        selected = await Api.AssignExamToClassAsync(selected!.Id, selectedClassId!);
+        selectedClassId = null;
+    }, "Gán lớp thất bại", "Đã gán lớp.");
+
+    private Task UnassignClassAsync(string classId) => ExecuteAsync(async () =>
+    {
+        selected = await Api.UnassignExamFromClassAsync(selected!.Id, classId);
+    }, "Bỏ gán thất bại", "Đã bỏ gán lớp.");
+
+    private Task ToggleQuestionAsync(string questionId, bool add) => ExecuteAsync(async () =>
+    {
+        selected = add
+            ? await Api.AddQuestionToExamAsync(selected!.Id, questionId)
+            : await Api.RemoveQuestionFromExamAsync(selected!.Id, questionId);
+    }, "Thao tác thất bại", add ? "Đã thêm câu hỏi." : "Đã bỏ câu hỏi.");
+
+    private Task SavePoolAsync() => ExecuteAsync(async () =>
+    {
+        selected = await Api.ConfigureQuestionPoolAsync(selected!.Id, new ConfigureQuestionPoolRequest(selected.CategoryId, poolQuestionCount));
+    }, "Lưu thất bại", "Đã lưu cấu hình pool.");
+
+    private Task SaveAvailabilityAsync() => ExecuteAsync(async () =>
+    {
+        selected = await Api.ScheduleExamAvailabilityAsync(selected!.Id, new ScheduleExamAvailabilityRequest(availableFrom, availableTo));
+    }, "Lưu thất bại", "Đã lưu lịch phát hành.");
+
+    private Task SaveNegativeMarkingAsync() => ExecuteAsync(async () =>
+    {
+        selected = await Api.ConfigureNegativeMarkingAsync(selected!.Id, new ConfigureNegativeMarkingRequest(negativeMarkingRatio));
+    }, "Lưu thất bại", "Đã lưu.");
+
+    private Task SaveMaxAttemptsAsync() => ExecuteAsync(async () =>
+    {
+        selected = await Api.ConfigureMaxAttemptsAsync(selected!.Id, new ConfigureMaxAttemptsRequest(limitMaxAttempts ? maxAttempts : null));
+    }, "Lưu thất bại", "Đã lưu.");
+
+    private Task TogglePublishAsync() => ExecuteAsync(async () =>
+    {
+        selected = selected!.Status == ExamStatus.Published
+            ? await Api.UnpublishExamAsync(selected.Id)
+            : await Api.PublishExamAsync(selected.Id);
+    }, "Thao tác thất bại", "Đã cập nhật trạng thái.");
+
+    private Task ArchiveAsync() => ConfirmAndExecuteAsync(
+        "Xác nhận lưu trữ", $"Lưu trữ đề thi '{selected!.Name}'? Không thể hoàn tác.",
+        async () => selected = await Api.ArchiveExamAsync(selected.Id),
+        "Lưu trữ thất bại", "Đã lưu trữ.", yesText: "Lưu trữ");
+
+    private static string Truncate(string content) => content.Length <= 100 ? content : content[..100] + "…";
+
+    private static AppStatusPillVariant StatusVariant(ExamStatus status) => status.ToPillVariant();
 }
