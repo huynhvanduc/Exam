@@ -20,15 +20,21 @@ public partial class Exams : AdminPageBase
     private bool CanManageSelected => currentUser != null && selected != null
         && (currentUser.Role == UserRole.Admin || currentUser.ExternalId == selected.OwnerUserId);
 
-    private IReadOnlyCollection<QuestionDto>? categoryQuestions;
     private IReadOnlyCollection<ClassRoomDto> allClasses = [];
     private DateTime? availableFrom;
     private DateTime? availableTo;
-    private decimal negativeMarkingRatio;
-    private int poolQuestionCount = 10;
     private bool limitMaxAttempts;
     private int maxAttempts = 1;
     private string? selectedClassId;
+
+    private int easySingle;
+    private int easyMulti;
+    private int mediumSingle;
+    private int mediumMulti;
+    private int difficultSingle;
+    private int difficultMulti;
+
+    private int CompositionTotal => easySingle + easyMulti + mediumSingle + mediumMulti + difficultSingle + difficultMulti;
 
     private IReadOnlyCollection<ExamResultAdminListItemDto>? results;
     private string resultsFilter = "all";
@@ -65,16 +71,17 @@ public partial class Exams : AdminPageBase
         selectedCategoryId ??= selected.CategoryId;
         availableFrom = selected.AvailableFrom;
         availableTo = selected.AvailableTo;
-        negativeMarkingRatio = selected.NegativeMarkingRatio;
-        poolQuestionCount = selected.PoolQuestionCount > 0 ? selected.PoolQuestionCount : 10;
         limitMaxAttempts = selected.MaxAttempts.HasValue;
         maxAttempts = selected.MaxAttempts ?? 1;
         allClasses = await Api.GetClassesAsync();
         selectedClassId = null;
 
-        categoryQuestions = selected.QuestionSelectionMode == QuestionSelectionMode.Fixed
-            ? await Api.GetQuestionsByCategoryAsync(selected.CategoryId)
-            : null;
+        easySingle = CompositionCountOf(Level.Easy, QuestionType.SingleSelection);
+        easyMulti = CompositionCountOf(Level.Easy, QuestionType.MultipleSelection);
+        mediumSingle = CompositionCountOf(Level.Medium, QuestionType.SingleSelection);
+        mediumMulti = CompositionCountOf(Level.Medium, QuestionType.MultipleSelection);
+        difficultSingle = CompositionCountOf(Level.Difficult, QuestionType.SingleSelection);
+        difficultMulti = CompositionCountOf(Level.Difficult, QuestionType.MultipleSelection);
 
         resultsFilter = "all";
         drawerResult = null;
@@ -85,6 +92,9 @@ public partial class Exams : AdminPageBase
         if (CanManageSelected)
             await LoadResultsAsync();
     }, "Không tải được đề thi");
+
+    private int CompositionCountOf(Level level, QuestionType questionType) =>
+        selected!.Composition.FirstOrDefault(c => c.Level == level && c.QuestionType == questionType)?.Count ?? 0;
 
     private Task LoadResultsAsync() => ExecuteAsync(async () =>
     {
@@ -189,17 +199,14 @@ public partial class Exams : AdminPageBase
             await LoadSelectedAsync(exam.Id);
     }
 
-    // Availability/NegativeMarking/Pool vẫn là API riêng ở backend (policy quyền khác nhau: ManageAvailability/
-    // ManageNegativeMarking/ManagePool so với Exam.Create) - chỉ gộp ở UI bằng cách gọi tuần tự sau khi tạo/sửa
-    // xong đề thi, thay vì bắt admin phải mở lại Chi tiết đề thi để cấu hình từng phần.
+    // Availability/Composition/MaxAttempts vẫn là API riêng ở backend (policy quyền khác nhau) - gọi tuần
+    // tự sau khi tạo/sửa đề thi thay vì bắt admin mở lại Chi tiết đề thi để cấu hình từng phần.
     private async Task ApplyAdvancedConfigAsync(string examId, ExamFormResult data)
     {
         if (data.Availability != null)
             await Api.ScheduleExamAvailabilityAsync(examId, data.Availability);
-        if (data.NegativeMarking != null)
-            await Api.ConfigureNegativeMarkingAsync(examId, data.NegativeMarking);
-        if (data.Pool != null)
-            await Api.ConfigureQuestionPoolAsync(examId, data.Pool);
+        if (data.Composition != null)
+            await Api.ConfigureExamCompositionAsync(examId, data.Composition);
         if (data.MaxAttempts != null)
             await Api.ConfigureMaxAttemptsAsync(examId, data.MaxAttempts);
     }
@@ -231,27 +238,41 @@ public partial class Exams : AdminPageBase
         selected = await Api.UnassignExamFromClassAsync(selected!.Id, classId);
     }, "Bỏ gán thất bại", "Đã bỏ gán lớp.");
 
-    private Task ToggleQuestionAsync(string questionId, bool add) => ExecuteAsync(async () =>
+    private Task SaveCompositionAsync()
     {
-        selected = add
-            ? await Api.AddQuestionToExamAsync(selected!.Id, questionId)
-            : await Api.RemoveQuestionFromExamAsync(selected!.Id, questionId);
-    }, "Thao tác thất bại", add ? "Đã thêm câu hỏi." : "Đã bỏ câu hỏi.");
+        if (CompositionTotal == 0)
+        {
+            Toast.Add("Ma trận phải có tổng số câu lớn hơn 0.", AppSeverity.Error);
+            return Task.CompletedTask;
+        }
 
-    private Task SavePoolAsync() => ExecuteAsync(async () =>
+        return ExecuteAsync(async () =>
+        {
+            selected = await Api.ConfigureExamCompositionAsync(selected!.Id, BuildCompositionRequest());
+        }, "Lưu thất bại", "Đã lưu ma trận cấu trúc.");
+    }
+
+    private ConfigureExamCompositionRequest BuildCompositionRequest()
     {
-        selected = await Api.ConfigureQuestionPoolAsync(selected!.Id, new ConfigureQuestionPoolRequest(selected.CategoryId, poolQuestionCount));
-    }, "Lưu thất bại", "Đã lưu cấu hình pool.");
+        var cells = new List<ExamCompositionCellDto>();
+        void Add(Level l, QuestionType t, int n)
+        {
+            if (n > 0)
+                cells.Add(new ExamCompositionCellDto(l, t, n));
+        }
+        Add(Level.Easy, QuestionType.SingleSelection, easySingle);
+        Add(Level.Easy, QuestionType.MultipleSelection, easyMulti);
+        Add(Level.Medium, QuestionType.SingleSelection, mediumSingle);
+        Add(Level.Medium, QuestionType.MultipleSelection, mediumMulti);
+        Add(Level.Difficult, QuestionType.SingleSelection, difficultSingle);
+        Add(Level.Difficult, QuestionType.MultipleSelection, difficultMulti);
+        return new ConfigureExamCompositionRequest(cells);
+    }
 
     private Task SaveAvailabilityAsync() => ExecuteAsync(async () =>
     {
         selected = await Api.ScheduleExamAvailabilityAsync(selected!.Id, new ScheduleExamAvailabilityRequest(availableFrom, availableTo));
     }, "Lưu thất bại", "Đã lưu lịch phát hành.");
-
-    private Task SaveNegativeMarkingAsync() => ExecuteAsync(async () =>
-    {
-        selected = await Api.ConfigureNegativeMarkingAsync(selected!.Id, new ConfigureNegativeMarkingRequest(negativeMarkingRatio));
-    }, "Lưu thất bại", "Đã lưu.");
 
     private Task SaveMaxAttemptsAsync() => ExecuteAsync(async () =>
     {

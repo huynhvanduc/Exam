@@ -40,12 +40,6 @@ public class ExamRepository : MongoRepositoryBase<ExamEntity>, IExamRepository
         return await Collection.Find(x => x.CategoryId == categoryId).AnyAsync(cancellationToken);
     }
 
-    public async Task<bool> ExistsByQuestionIdAsync(string questionId, CancellationToken cancellationToken = default)
-    {
-        Logger.LogDebug("Checking Exam existence by QuestionId {QuestionId}.", questionId);
-        return await Collection.Find(Builders<ExamEntity>.Filter.AnyEq(x => x.QuestionIds, questionId)).AnyAsync(cancellationToken);
-    }
-
     public Task<long> CountAsync(CancellationToken cancellationToken = default) =>
         CountFilteredAsync(Builders<ExamEntity>.Filter.Empty, cancellationToken);
 

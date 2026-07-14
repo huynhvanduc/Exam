@@ -108,6 +108,15 @@ public static class MongoClassMaps
             });
         }
 
+        if (!BsonClassMap.IsClassMapRegistered(typeof(Domain.AggregateModels.ExamAggregate.ExamCompositionCell)))
+        {
+            BsonClassMap.RegisterClassMap<Domain.AggregateModels.ExamAggregate.ExamCompositionCell>(cm =>
+            {
+                cm.AutoMap();
+                cm.MapCreator(c => new Domain.AggregateModels.ExamAggregate.ExamCompositionCell(c.Level, c.QuestionType, c.Count));
+            });
+        }
+
         if (!BsonClassMap.IsClassMapRegistered(typeof(ExamEntity)))
         {
             BsonClassMap.RegisterClassMap<ExamEntity>(cm =>
@@ -116,7 +125,6 @@ public static class MongoClassMaps
                 cm.MapCreator(e => new ExamEntity(e.Name, e.ShortDesc, e.Content, e.Duration, e.Level,
                     e.OwnerUserId, e.CategoryId, e.CategoryName, e.IsTimeRestricted, e.MinimumPassingScore));
                 cm.MapMember(e => e.MinimumPassingScore).SetSerializer(new DecimalSerializer(BsonType.Decimal128));
-                cm.MapMember(e => e.NegativeMarkingRatio).SetSerializer(new DecimalSerializer(BsonType.Decimal128));
             });
         }
 

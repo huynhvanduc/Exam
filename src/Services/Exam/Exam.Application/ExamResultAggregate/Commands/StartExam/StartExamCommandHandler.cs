@@ -66,9 +66,7 @@ public class StartExamCommandHandler : IRequestHandler<StartExamCommand, ExamAtt
                 throw new ForbiddenException("You are not assigned to take this exam.");
         }
 
-        var questionIds = exam.QuestionSelectionMode == QuestionSelectionMode.Pool
-            ? await _examQuestionPoolService.DrawQuestionIdsAsync(exam, cancellationToken)
-            : exam.QuestionIds;
+        var questionIds = await _examQuestionPoolService.DrawQuestionIdsAsync(exam, cancellationToken);
 
         var user = await _userRepository.GetByExternalIdAsync(request.UserId, cancellationToken);
         var fullName = user == null ? string.Empty : $"{user.FirstName} {user.LastName}".Trim();

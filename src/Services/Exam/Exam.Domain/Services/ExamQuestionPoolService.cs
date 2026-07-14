@@ -1,5 +1,5 @@
-using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Contracts;
+using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.Exceptions;
 using ExamEntity = Exam.Domain.AggregateModels.ExamAggregate.Exam;
 
@@ -16,18 +16,41 @@ public class ExamQuestionPoolService
 
     public async Task<IReadOnlyCollection<string>> DrawQuestionIdsAsync(ExamEntity exam, CancellationToken cancellationToken = default)
     {
-        if (exam.QuestionSelectionMode != QuestionSelectionMode.Pool)
-            throw new ExamDomainException("Exam is not configured to use a question pool.");
+        var drawn = new List<string>();
 
-        var candidates = await _questionRepository.GetByCategoryAsync(exam.PoolCategoryId, cancellationToken);
+        foreach (var cell in exam.Composition)
+        {
+            if (cell.Count == 0)
+                continue;
 
-        if (candidates.Count < exam.PoolQuestionCount)
-            throw new ExamDomainException(
-                $"Not enough questions in category '{exam.PoolCategoryId}' to draw {exam.PoolQuestionCount} questions (found {candidates.Count}).");
+            var candidates = await _questionRepository.GetByCategoryLevelTypeAsync(
+                exam.CategoryId, cell.Level, cell.QuestionType, cancellationToken);
 
-        var pool = candidates.Select(q => q.Id).ToArray();
-        Random.Shared.Shuffle(pool);
+            if (candidates.Count < cell.Count)
+                throw new ExamDomainException(
+                    $"Không đủ câu hỏi mức '{LevelLabel(cell.Level)}' loại '{QuestionTypeLabel(cell.QuestionType)}' " +
+                    $"trong ngân hàng để rút {cell.Count} câu (chỉ có {candidates.Count}).");
 
-        return pool.Take(exam.PoolQuestionCount).ToList();
+            var pool = candidates.Select(q => q.Id).ToArray();
+            Random.Shared.Shuffle(pool);
+            drawn.AddRange(pool.Take(cell.Count));
+        }
+
+        return drawn;
     }
+
+    private static string LevelLabel(Level level) => level switch
+    {
+        Level.Easy => "Dễ",
+        Level.Medium => "Trung bình",
+        Level.Difficult => "Khó",
+        _ => level.ToString()
+    };
+
+    private static string QuestionTypeLabel(QuestionType questionType) => questionType switch
+    {
+        QuestionType.SingleSelection => "Một đáp án",
+        QuestionType.MultipleSelection => "Nhiều đáp án",
+        _ => questionType.ToString()
+    };
 }

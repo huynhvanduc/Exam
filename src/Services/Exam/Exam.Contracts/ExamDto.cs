@@ -1,5 +1,7 @@
 namespace Exam.Contracts;
 
+public record ExamCompositionCellDto(Level Level, QuestionType QuestionType, int Count);
+
 public record ExamDto(
     string Id,
     string Name,
@@ -14,13 +16,9 @@ public record ExamDto(
     string CategoryId,
     string CategoryName,
     ExamStatus Status,
-    QuestionSelectionMode QuestionSelectionMode,
-    string PoolCategoryId,
-    int PoolQuestionCount,
+    IReadOnlyCollection<ExamCompositionCellDto> Composition,
     DateTime? AvailableFrom,
     DateTime? AvailableTo,
-    decimal NegativeMarkingRatio,
-    IReadOnlyCollection<string> QuestionIds,
     int NumberOfQuestions,
     IReadOnlyCollection<string> AssignedClassIds,
     bool IsPublic,

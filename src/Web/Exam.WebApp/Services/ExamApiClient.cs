@@ -89,20 +89,11 @@ public class ExamApiClient
     public Task DeleteExamAsync(string id, CancellationToken cancellationToken = default) =>
         SendAsync(HttpMethod.Delete, ApiRoutes.Exams.ById(id), cancellationToken: cancellationToken);
 
-    public Task<ExamDto> AddQuestionToExamAsync(string examId, string questionId, CancellationToken cancellationToken = default) =>
-        SendAsync<ExamDto>(HttpMethod.Post, ApiRoutes.Exams.Question(examId, questionId), cancellationToken: cancellationToken);
-
-    public Task<ExamDto> RemoveQuestionFromExamAsync(string examId, string questionId, CancellationToken cancellationToken = default) =>
-        SendAsync<ExamDto>(HttpMethod.Delete, ApiRoutes.Exams.Question(examId, questionId), cancellationToken: cancellationToken);
-
-    public Task<ExamDto> ConfigureQuestionPoolAsync(string examId, ConfigureQuestionPoolRequest body, CancellationToken cancellationToken = default) =>
-        SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.QuestionPool(examId), body, cancellationToken);
+    public Task<ExamDto> ConfigureExamCompositionAsync(string examId, ConfigureExamCompositionRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.Composition(examId), body, cancellationToken);
 
     public Task<ExamDto> ScheduleExamAvailabilityAsync(string examId, ScheduleExamAvailabilityRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.Availability(examId), body, cancellationToken);
-
-    public Task<ExamDto> ConfigureNegativeMarkingAsync(string examId, ConfigureNegativeMarkingRequest body, CancellationToken cancellationToken = default) =>
-        SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.NegativeMarking(examId), body, cancellationToken);
 
     public Task<ExamDto> ConfigureMaxAttemptsAsync(string examId, ConfigureMaxAttemptsRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<ExamDto>(HttpMethod.Put, ApiRoutes.Exams.MaxAttempts(examId), body, cancellationToken);

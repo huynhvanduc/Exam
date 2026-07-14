@@ -72,7 +72,7 @@
             }
             else if (selected.Status != ExamStatus.Draft)
             {
-                <AppAlert Severity="AppAlertSeverity.Info">Chỉ có thể sửa câu hỏi / pool / trừ điểm khi đề thi ở trạng thái Nháp.</AppAlert>
+                <AppAlert Severity="AppAlertSeverity.Info">Chỉ có thể sửa ma trận cấu trúc khi đề thi ở trạng thái Nháp.</AppAlert>
             }
 
             <div class="exam-grid2">
@@ -97,12 +97,6 @@
                     </AppCard>
 
                     <AppCard>
-                        <h3>Trừ điểm khi chọn sai</h3>
-                        <AppNumericField TValue="decimal" Label="Tỉ lệ trừ điểm (0–1)" @bind-Value="negativeMarkingRatio" Min="0" Max="1" Step="0.05" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" />
-                        <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" OnClick="SaveNegativeMarkingAsync">Lưu</AppButton>
-                    </AppCard>
-
-                    <AppCard>
                         <h3>Giới hạn số lần thi lại</h3>
                         <AppSwitch Value="limitMaxAttempts" ValueChanged="v => limitMaxAttempts = v" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft">Giới hạn số lần thi</AppSwitch>
                         @if (limitMaxAttempts)
@@ -115,45 +109,32 @@
 
                 <div style="display:flex;flex-direction:column;gap:14px;">
                     <AppCard>
-                        <h3>Câu hỏi</h3>
-                        <p class="page-sub">
-                            Chế độ hiện tại: <b>@(selected.QuestionSelectionMode == QuestionSelectionMode.Pool ? "Chọn ngẫu nhiên theo pool" : "Danh sách cố định")</b>
-                        </p>
-
-                        @if (selected.QuestionSelectionMode == QuestionSelectionMode.Pool)
-                        {
-                            <AppNumericField TValue="int" Label="Số câu hỏi lấy ngẫu nhiên" @bind-Value="poolQuestionCount" Min="1" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" />
-                            <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" OnClick="SavePoolAsync">Lưu cấu hình pool</AppButton>
-                        }
-                        else
-                        {
-                            @if (categoryQuestions == null)
-                            {
-                                <AppSpinner Size="AppSpinnerSize.Small" />
-                            }
-                            else if (categoryQuestions.Count == 0)
-                            {
-                                <AppAlert Severity="AppAlertSeverity.Info">Môn học này chưa có câu hỏi nào trong ngân hàng câu hỏi.</AppAlert>
-                            }
-                            else
-                            {
-                                @foreach (var question in categoryQuestions)
-                                {
-                                    var inExam = selected.QuestionIds.Contains(question.Id);
-                                    <div class="class-row">
-                                        <AppCheckbox Value="inExam" ValueChanged="v => ToggleQuestionAsync(question.Id, v)" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft">
-                                            @TextUtils.Truncate(question.Content, 100)
-                                        </AppCheckbox>
-                                    </div>
-                                }
-                            }
-
-                            <hr style="border:none;border-top:1px solid var(--line);margin:14px 0;" />
-                            <p class="page-sub">Hoặc chuyển sang chọn ngẫu nhiên theo pool (chỉ khi chưa thêm câu hỏi cố định):</p>
-                            <AppNumericField TValue="int" Label="Số câu hỏi lấy ngẫu nhiên" @bind-Value="poolQuestionCount" Min="1"
-                                             Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft || selected.QuestionIds.Count > 0" />
-                            <AppButton Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft || selected.QuestionIds.Count > 0" OnClick="SavePoolAsync">Chuyển sang pool</AppButton>
-                        }
+                        <h3>Ma trận cấu trúc đề thi</h3>
+                        <p class="page-sub">Số câu rút ngẫu nhiên cho từng mức độ × loại câu hỏi (trong đúng môn học của đề).</p>
+                        <table class="data">
+                            <thead>
+                                <tr><th>Mức độ</th><th>Một đáp án</th><th>Nhiều đáp án</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>Dễ</td>
+                                    <td><AppNumericField TValue="int" @bind-Value="easySingle" Min="0" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" /></td>
+                                    <td><AppNumericField TValue="int" @bind-Value="easyMulti" Min="0" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Trung bình</td>
+                                    <td><AppNumericField TValue="int" @bind-Value="mediumSingle" Min="0" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" /></td>
+                                    <td><AppNumericField TValue="int" @bind-Value="mediumMulti" Min="0" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" /></td>
+                                </tr>
+                                <tr>
+                                    <td>Khó</td>
+                                    <td><AppNumericField TValue="int" @bind-Value="difficultSingle" Min="0" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" /></td>
+                                    <td><AppNumericField TValue="int" @bind-Value="difficultMulti" Min="0" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" /></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p class="page-sub">Tổng số câu: <b>@CompositionTotal</b></p>
+                        <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManageSelected || selected.Status != ExamStatus.Draft" OnClick="SaveCompositionAsync">Lưu ma trận</AppButton>
                     </AppCard>
 
                     <AppCard>

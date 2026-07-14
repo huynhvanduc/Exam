@@ -61,6 +61,19 @@ public static class DataSeeder
 
         ExamEntity? firstPublishedExam = null;
 
+        var publishedComposition = new List<ExamCompositionCell>
+        {
+            new(Level.Easy, QuestionType.SingleSelection, 1),
+            new(Level.Medium, QuestionType.SingleSelection, 1),
+            new(Level.Medium, QuestionType.MultipleSelection, 1),
+            new(Level.Difficult, QuestionType.SingleSelection, 1),
+        };
+        var draftComposition = new List<ExamCompositionCell>
+        {
+            new(Level.Easy, QuestionType.SingleSelection, 1),
+            new(Level.Medium, QuestionType.SingleSelection, 1),
+        };
+
         foreach (var seedCategory in GetSeedCategories())
         {
             var category = Category.Create(seedCategory.Name, seedCategory.UrlPath);
@@ -91,12 +104,10 @@ public static class DataSeeder
 
             var publishedExam = new ExamEntity(
                 $"Bài kiểm tra {seedCategory.Name}", $"Đề kiểm tra tổng hợp - {seedCategory.Name}",
-                $"Bài thi gồm {questionIds.Count} câu hỏi thuộc danh mục {seedCategory.Name}.",
+                $"Bài thi gồm {publishedComposition.Sum(c => c.Count)} câu hỏi thuộc danh mục {seedCategory.Name}.",
                 TimeSpan.FromMinutes(45), Level.Medium, instructor.ExternalId, category.Id, category.Name,
                 isTimeRestricted: true, minimumPassingScore: 6.0m);
-            foreach (var questionId in questionIds)
-                publishedExam.AddQuestion(questionId);
-            publishedExam.ConfigureNegativeMarking(0.25m);
+            publishedExam.ConfigureComposition(publishedComposition);
             publishedExam.ScheduleAvailability(DateTime.UtcNow.AddDays(-1), DateTime.UtcNow.AddDays(30));
             publishedExam.Publish();
 
@@ -115,8 +126,7 @@ public static class DataSeeder
                 $"Bản nháp đề thi thuộc danh mục {seedCategory.Name}, chưa xuất bản.",
                 TimeSpan.FromMinutes(30), Level.Easy, instructor.ExternalId, category.Id, category.Name,
                 isTimeRestricted: false, minimumPassingScore: 6.0m);
-            foreach (var questionId in questionIds.Take(2))
-                draftExam.AddQuestion(questionId);
+            draftExam.ConfigureComposition(draftComposition);
             await examRepository.InsertAsync(draftExam, cancellationToken);
         }
     }

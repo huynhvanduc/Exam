@@ -55,10 +55,8 @@ public static class ApiRoutes
         public const string Base = "/api/exams";
         public static string ById(string id) => $"{Base}/{id}";
         public static string ByCategory(string categoryId, int page, int pageSize) => $"{Base}/by-category/{categoryId}?page={page}&pageSize={pageSize}";
-        public static string Question(string examId, string questionId) => $"{Base}/{examId}/questions/{questionId}";
-        public static string QuestionPool(string examId) => $"{Base}/{examId}/question-pool";
+        public static string Composition(string examId) => $"{Base}/{examId}/composition";
         public static string Availability(string examId) => $"{Base}/{examId}/availability";
-        public static string NegativeMarking(string examId) => $"{Base}/{examId}/negative-marking";
         public static string MaxAttempts(string examId) => $"{Base}/{examId}/max-attempts";
         public static string Publish(string examId) => $"{Base}/{examId}/publish";
         public static string Unpublish(string examId) => $"{Base}/{examId}/unpublish";

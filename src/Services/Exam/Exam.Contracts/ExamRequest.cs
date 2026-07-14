@@ -10,10 +10,8 @@ public record ExamRequest(
     bool IsTimeRestricted,
     decimal MinimumPassingScore);
 
-public record ConfigureQuestionPoolRequest(string PoolCategoryId, int PoolQuestionCount);
+public record ConfigureExamCompositionRequest(IReadOnlyCollection<ExamCompositionCellDto> Cells);
 
 public record ScheduleExamAvailabilityRequest(DateTime? AvailableFrom, DateTime? AvailableTo);
-
-public record ConfigureNegativeMarkingRequest(decimal Ratio);
 
 public record ConfigureMaxAttemptsRequest(int? MaxAttempts);

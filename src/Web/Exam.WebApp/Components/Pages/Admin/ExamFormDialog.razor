@@ -22,6 +22,36 @@
     </div>
 </AppForm>
 
+<div style="font-size:13px;font-weight:700;margin:14px 0 6px;">Ma trận cấu trúc đề thi</div>
+<p class="page-sub">Nhập số câu cần rút ngẫu nhiên cho từng mức độ × loại câu hỏi (trong đúng môn học của đề).</p>
+<table class="data">
+    <thead>
+        <tr><th>Mức độ</th><th>Một đáp án</th><th>Nhiều đáp án</th></tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Dễ</td>
+            <td><AppNumericField TValue="int" @bind-Value="easySingle" Min="0" Disabled="isLocked" /></td>
+            <td><AppNumericField TValue="int" @bind-Value="easyMulti" Min="0" Disabled="isLocked" /></td>
+        </tr>
+        <tr>
+            <td>Trung bình</td>
+            <td><AppNumericField TValue="int" @bind-Value="mediumSingle" Min="0" Disabled="isLocked" /></td>
+            <td><AppNumericField TValue="int" @bind-Value="mediumMulti" Min="0" Disabled="isLocked" /></td>
+        </tr>
+        <tr>
+            <td>Khó</td>
+            <td><AppNumericField TValue="int" @bind-Value="difficultSingle" Min="0" Disabled="isLocked" /></td>
+            <td><AppNumericField TValue="int" @bind-Value="difficultMulti" Min="0" Disabled="isLocked" /></td>
+        </tr>
+    </tbody>
+</table>
+<p class="page-sub">Tổng số câu: <b>@CompositionTotal</b></p>
+@if (compositionError != null)
+{
+    <AppAlert Severity="AppAlertSeverity.Warning">@compositionError</AppAlert>
+}
+
 <details class="advanced-panel">
     <summary>Cấu hình nâng cao (tuỳ chọn)</summary>
     <div class="body">
@@ -32,29 +62,6 @@
                 <AppDateField Label="Mở từ ngày" @bind-Value="availableFrom" Disabled="isArchived" />
                 <AppDateField Label="Đóng vào ngày" @bind-Value="availableTo" Disabled="isArchived" />
             </div>
-        }
-
-        <AppSwitch Value="enableNegativeMarking" ValueChanged="v => enableNegativeMarking = v" Disabled="isLocked">Trừ điểm khi chọn sai</AppSwitch>
-        @if (enableNegativeMarking)
-        {
-            <div style="max-width:220px;">
-                <AppNumericField TValue="decimal" Label="Tỉ lệ trừ điểm (0–1)" @bind-Value="negativeMarkingRatio" Min="0" Max="1" Step="0.05" Disabled="isLocked" />
-            </div>
-        }
-
-        @if (!hasFixedQuestions)
-        {
-            <AppSwitch Value="enablePool" ValueChanged="v => enablePool = v" Disabled="isLocked">Chọn câu hỏi ngẫu nhiên theo pool</AppSwitch>
-            @if (enablePool)
-            {
-                <div style="max-width:260px;">
-                    <AppNumericField TValue="int" Label="Số câu hỏi lấy ngẫu nhiên từ môn học" @bind-Value="poolQuestionCount" Min="1" Disabled="isLocked" />
-                </div>
-            }
-        }
-        else
-        {
-            <p class="page-sub">Đề thi đã có câu hỏi cố định - vào Chi tiết đề thi nếu muốn chuyển sang chế độ pool.</p>
         }
 
         <AppSwitch Value="enableMaxAttempts" ValueChanged="v => enableMaxAttempts = v" Disabled="isLocked">Giới hạn số lần thi lại</AppSwitch>

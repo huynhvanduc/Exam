@@ -1,13 +1,10 @@
-using Exam.Application.ExamAggregate.Commands.AddQuestionToExam;
 using Exam.Application.ExamAggregate.Commands.ArchiveExam;
 using Exam.Application.ExamAggregate.Commands.AssignExamToClass;
+using Exam.Application.ExamAggregate.Commands.ConfigureExamComposition;
 using Exam.Application.ExamAggregate.Commands.ConfigureMaxAttempts;
-using Exam.Application.ExamAggregate.Commands.ConfigureNegativeMarking;
-using Exam.Application.ExamAggregate.Commands.ConfigureQuestionPool;
 using Exam.Application.ExamAggregate.Commands.CreateExam;
 using Exam.Application.ExamAggregate.Commands.DeleteExam;
 using Exam.Application.ExamAggregate.Commands.PublishExam;
-using Exam.Application.ExamAggregate.Commands.RemoveQuestionFromExam;
 using Exam.Application.ExamAggregate.Commands.ScheduleExamAvailability;
 using Exam.Application.ExamAggregate.Commands.UnassignExamFromClass;
 using Exam.Application.ExamAggregate.Commands.UnpublishExam;
@@ -88,27 +85,11 @@ public class ExamsController : ControllerBase
         return NoContent();
     }
 
-    [HttpPost("{id}/questions/{questionId}")]
-    [Authorize(Policy = Permissions.Exam.ManageQuestions)]
-    public async Task<IActionResult> AddQuestion(string id, string questionId, CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(new AddQuestionToExamCommand(id, questionId, User.GetActor()), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpDelete("{id}/questions/{questionId}")]
-    [Authorize(Policy = Permissions.Exam.ManageQuestions)]
-    public async Task<IActionResult> RemoveQuestion(string id, string questionId, CancellationToken cancellationToken)
-    {
-        var result = await _mediator.Send(new RemoveQuestionFromExamCommand(id, questionId, User.GetActor()), cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpPut("{id}/question-pool")]
+    [HttpPut("{id}/composition")]
     [Authorize(Policy = Permissions.Exam.ManagePool)]
-    public async Task<IActionResult> ConfigureQuestionPool(string id, [FromBody] ConfigureQuestionPoolRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> ConfigureComposition(string id, [FromBody] ConfigureExamCompositionRequest request, CancellationToken cancellationToken)
     {
-        var command = new ConfigureQuestionPoolCommand(id, request.PoolCategoryId, request.PoolQuestionCount, User.GetActor());
+        var command = new ConfigureExamCompositionCommand(id, request.Cells, User.GetActor());
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }
@@ -118,15 +99,6 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> ScheduleAvailability(string id, [FromBody] ScheduleExamAvailabilityRequest request, CancellationToken cancellationToken)
     {
         var command = new ScheduleExamAvailabilityCommand(id, request.AvailableFrom, request.AvailableTo, User.GetActor());
-        var result = await _mediator.Send(command, cancellationToken);
-        return Ok(result);
-    }
-
-    [HttpPut("{id}/negative-marking")]
-    [Authorize(Policy = Permissions.Exam.ManageNegativeMarking)]
-    public async Task<IActionResult> ConfigureNegativeMarking(string id, [FromBody] ConfigureNegativeMarkingRequest request, CancellationToken cancellationToken)
-    {
-        var command = new ConfigureNegativeMarkingCommand(id, request.Ratio, User.GetActor());
         var result = await _mediator.Send(command, cancellationToken);
         return Ok(result);
     }

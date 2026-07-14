@@ -17,6 +17,9 @@ public interface IQuestionRepository : IRepositoryBase<Question>
     Task<long> CountByCategoryAsync(string categoryId, Level? level, QuestionType? questionType, string? keyword,
         CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyCollection<Question>> GetByCategoryLevelTypeAsync(string categoryId, Level level,
+        QuestionType questionType, CancellationToken cancellationToken = default);
+
     Task<IReadOnlyCollection<Question>> GetByIdsAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default);
 
     Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default);

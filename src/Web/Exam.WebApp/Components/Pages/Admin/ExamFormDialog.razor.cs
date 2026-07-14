@@ -19,24 +19,26 @@ public partial class ExamFormDialog : FormDialogBase
     private decimal minimumPassingScore = 5m;
     private bool isTimeRestricted = true;
 
+    private int easySingle;
+    private int easyMulti;
+    private int mediumSingle;
+    private int mediumMulti;
+    private int difficultSingle;
+    private int difficultMulti;
+    private string? compositionError;
+
     private bool enableAvailability;
     private DateTime? availableFrom;
     private DateTime? availableTo;
 
-    private bool enableNegativeMarking;
-    private decimal negativeMarkingRatio = 0.25M;
-
-    private bool enablePool;
-    private int poolQuestionCount = 10;
-
     private bool enableMaxAttempts;
     private int maxAttempts = 1;
 
-    // Chỉ liên quan khi sửa đề thi đã tồn tại (Model != null) - đề mới tạo luôn Draft, chưa có câu hỏi.
+    // Chỉ khoá cấu hình khi sửa đề thi đã rời trạng thái Nháp - đề mới tạo luôn Draft.
     private bool isLocked => Model != null && Model.Status != ExamStatus.Draft;
     private bool isArchived => Model != null && Model.Status == ExamStatus.Archived;
-    private bool hasFixedQuestions => Model != null
-        && Model.QuestionSelectionMode != QuestionSelectionMode.Pool && Model.QuestionIds.Count > 0;
+
+    private int CompositionTotal => easySingle + easyMulti + mediumSingle + mediumMulti + difficultSingle + difficultMulti;
 
     protected override void OnInitialized()
     {
@@ -50,17 +52,16 @@ public partial class ExamFormDialog : FormDialogBase
             minimumPassingScore = Model.MinimumPassingScore;
             isTimeRestricted = Model.IsTimeRestricted;
 
+            easySingle = CountOf(Level.Easy, QuestionType.SingleSelection);
+            easyMulti = CountOf(Level.Easy, QuestionType.MultipleSelection);
+            mediumSingle = CountOf(Level.Medium, QuestionType.SingleSelection);
+            mediumMulti = CountOf(Level.Medium, QuestionType.MultipleSelection);
+            difficultSingle = CountOf(Level.Difficult, QuestionType.SingleSelection);
+            difficultMulti = CountOf(Level.Difficult, QuestionType.MultipleSelection);
+
             enableAvailability = Model.AvailableFrom.HasValue || Model.AvailableTo.HasValue;
             availableFrom = Model.AvailableFrom;
             availableTo = Model.AvailableTo;
-
-            enableNegativeMarking = Model.NegativeMarkingRatio > 0;
-            if (Model.NegativeMarkingRatio > 0)
-                negativeMarkingRatio = Model.NegativeMarkingRatio;
-
-            enablePool = Model.QuestionSelectionMode == QuestionSelectionMode.Pool;
-            if (Model.PoolQuestionCount > 0)
-                poolQuestionCount = Model.PoolQuestionCount;
 
             enableMaxAttempts = Model.MaxAttempts.HasValue;
             if (Model.MaxAttempts.HasValue)
@@ -68,10 +69,40 @@ public partial class ExamFormDialog : FormDialogBase
         }
     }
 
+    private int CountOf(Level level, QuestionType questionType) =>
+        Model!.Composition.FirstOrDefault(c => c.Level == level && c.QuestionType == questionType)?.Count ?? 0;
+
+    private ConfigureExamCompositionRequest BuildCompositionRequest()
+    {
+        var cells = new List<ExamCompositionCellDto>();
+        void Add(Level l, QuestionType t, int n)
+        {
+            if (n > 0)
+                cells.Add(new ExamCompositionCellDto(l, t, n));
+        }
+        Add(Level.Easy, QuestionType.SingleSelection, easySingle);
+        Add(Level.Easy, QuestionType.MultipleSelection, easyMulti);
+        Add(Level.Medium, QuestionType.SingleSelection, mediumSingle);
+        Add(Level.Medium, QuestionType.MultipleSelection, mediumMulti);
+        Add(Level.Difficult, QuestionType.SingleSelection, difficultSingle);
+        Add(Level.Difficult, QuestionType.MultipleSelection, difficultMulti);
+        return new ConfigureExamCompositionRequest(cells);
+    }
+
     private async Task Submit()
     {
+        compositionError = null;
+
         if (!await ValidateAsync())
             return;
+
+        // Ma trận rỗng chỉ chấp nhận khi ĐANG sửa đề đã khoá (không đụng tới cấu hình cũ). Với đề mới hoặc
+        // đề Draft đang sửa, phải có ít nhất 1 câu - nếu không, đề không thể publish (NumberOfQuestions == 0).
+        if (!isLocked && CompositionTotal == 0)
+        {
+            compositionError = "Ma trận phải có tổng số câu lớn hơn 0.";
+            return;
+        }
 
         var request = new ExamRequest(
             name,
@@ -83,13 +114,10 @@ public partial class ExamFormDialog : FormDialogBase
             isTimeRestricted,
             minimumPassingScore);
 
-        // Bỏ chọn (tắt switch) nghĩa là "không đổi gì" ở đây, không tự xóa cấu hình đã có khi sửa -
-        // muốn xóa hẳn Lịch phát hành / trừ điểm thì vẫn có thể vào Chi tiết đề thi.
         var availability = enableAvailability ? new ScheduleExamAvailabilityRequest(availableFrom, availableTo) : null;
-        var negativeMarking = enableNegativeMarking ? new ConfigureNegativeMarkingRequest(negativeMarkingRatio) : null;
-        var pool = enablePool && !hasFixedQuestions ? new ConfigureQuestionPoolRequest(CategoryId, poolQuestionCount) : null;
+        var composition = !isLocked && CompositionTotal > 0 ? BuildCompositionRequest() : null;
         var maxAttemptsRequest = enableMaxAttempts ? new ConfigureMaxAttemptsRequest(maxAttempts) : null;
 
-        Dialog.Close(AppDialogResult.Ok(new ExamFormResult(request, availability, negativeMarking, pool, maxAttemptsRequest)));
+        Dialog.Close(AppDialogResult.Ok(new ExamFormResult(request, availability, composition, maxAttemptsRequest)));
     }
 }

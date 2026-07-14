@@ -6,7 +6,7 @@ namespace Exam.Domain.AggregateModels.ExamAggregate;
 
 public class Exam : Entity, IAggregateRoot
 {
-    private List<string> _questionIds = new();
+    private List<ExamCompositionCell> _composition = new();
     private List<string> _assignedClassIds = new();
 
     public string Name { get; private set; }
@@ -33,25 +33,18 @@ public class Exam : Entity, IAggregateRoot
 
     public ExamStatus Status { get; private set; }
 
-    public QuestionSelectionMode QuestionSelectionMode { get; private set; } = QuestionSelectionMode.Fixed;
-
-    public string PoolCategoryId { get; private set; }
-
-    public int PoolQuestionCount { get; private set; }
-
     public DateTime? AvailableFrom { get; private set; }
 
     public DateTime? AvailableTo { get; private set; }
 
-    public decimal NegativeMarkingRatio { get; private set; }
-
     // null = không giới hạn số lần thi lại.
     public int? MaxAttempts { get; private set; }
 
-    public IReadOnlyCollection<string> QuestionIds
+    // Ma trận cấu trúc đề thi: hệ thống tự rút ngẫu nhiên theo từng ô khi học viên bắt đầu làm bài.
+    public IReadOnlyCollection<ExamCompositionCell> Composition
     {
-        get => _questionIds;
-        private set => _questionIds = value?.ToList() ?? new List<string>();
+        get => _composition;
+        private set => _composition = value?.ToList() ?? new List<ExamCompositionCell>();
     }
 
     public IReadOnlyCollection<string> AssignedClassIds
@@ -63,9 +56,7 @@ public class Exam : Entity, IAggregateRoot
     // Đề không giao cho lớp nào là đề công khai - mọi user đăng nhập đều thi được.
     public bool IsPublic => _assignedClassIds.Count == 0;
 
-    public int NumberOfQuestions => QuestionSelectionMode == QuestionSelectionMode.Pool
-        ? PoolQuestionCount
-        : _questionIds.Count;
+    public int NumberOfQuestions => _composition.Sum(c => c.Count);
 
     private Exam()
     {
@@ -122,45 +113,20 @@ public class Exam : Entity, IAggregateRoot
         MinimumPassingScore = minimumPassingScore;
     }
 
-    public void AddQuestion(string questionId)
+    public void ConfigureComposition(IReadOnlyCollection<ExamCompositionCell> cells)
     {
         EnsureEditable();
 
-        if (QuestionSelectionMode == QuestionSelectionMode.Pool)
-            throw new ExamDomainException("Cannot add a fixed question while the exam uses a question pool.");
+        if (cells == null || cells.Count == 0)
+            throw new ExamDomainException("Exam composition must have at least one cell.");
 
-        if (string.IsNullOrWhiteSpace(questionId))
-            throw new ExamDomainException("Question id is required.");
+        if (cells.Any(c => c.Count < 0))
+            throw new ExamDomainException("Composition cell count must not be negative.");
 
-        if (_questionIds.Contains(questionId))
-            throw new ExamDomainException("Question already added to this exam.");
+        if (cells.Sum(c => c.Count) <= 0)
+            throw new ExamDomainException("Exam composition total question count must be greater than zero.");
 
-        _questionIds.Add(questionId);
-    }
-
-    public void RemoveQuestion(string questionId)
-    {
-        EnsureEditable();
-
-        _questionIds.Remove(questionId);
-    }
-
-    public void ConfigureQuestionPool(string poolCategoryId, int questionCount)
-    {
-        EnsureEditable();
-
-        if (string.IsNullOrWhiteSpace(poolCategoryId))
-            throw new ExamDomainException("Pool category id is required.");
-
-        if (questionCount <= 0)
-            throw new ExamDomainException("Pool question count must be greater than zero.");
-
-        if (_questionIds.Count > 0)
-            throw new ExamDomainException("Cannot configure a question pool when fixed questions have already been added.");
-
-        QuestionSelectionMode = QuestionSelectionMode.Pool;
-        PoolCategoryId = poolCategoryId;
-        PoolQuestionCount = questionCount;
+        _composition = cells.ToList();
     }
 
     public void ScheduleAvailability(DateTime? availableFrom, DateTime? availableTo)
@@ -187,16 +153,6 @@ public class Exam : Entity, IAggregateRoot
             return false;
 
         return true;
-    }
-
-    public void ConfigureNegativeMarking(decimal ratio)
-    {
-        EnsureEditable();
-
-        if (ratio < 0 || ratio > 1)
-            throw new ExamDomainException("Negative marking ratio must be between 0 and 1.");
-
-        NegativeMarkingRatio = ratio;
     }
 
     public void ConfigureMaxAttempts(int? maxAttempts)
@@ -256,6 +212,6 @@ public class Exam : Entity, IAggregateRoot
     private void EnsureEditable()
     {
         if (Status != ExamStatus.Draft)
-            throw new ExamDomainException("Questions can only be modified while the exam is in draft status.");
+            throw new ExamDomainException("Exam configuration can only be modified while the exam is in draft status.");
     }
 }

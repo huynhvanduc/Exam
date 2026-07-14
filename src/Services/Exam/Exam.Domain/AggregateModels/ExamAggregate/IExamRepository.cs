@@ -16,10 +16,6 @@ public interface IExamRepository : IRepositoryBase<Exam>
 
     Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default);
 
-    // Chỉ tính đề thi ở chế độ Fixed (danh sách câu hỏi cố định) - đề Pool tham chiếu câu hỏi gián tiếp
-    // qua category nên không cần chặn xoá từng câu hỏi lẻ (pool tự thích ứng khi ngân hàng câu hỏi thay đổi).
-    Task<bool> ExistsByQuestionIdAsync(string questionId, CancellationToken cancellationToken = default);
-
     Task<long> CountAsync(CancellationToken cancellationToken = default);
 
     Task<long> CountByStatusAsync(ExamStatus status, CancellationToken cancellationToken = default);

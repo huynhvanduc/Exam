@@ -49,6 +49,16 @@ public class QuestionRepository : MongoRepositoryBase<Question>, IQuestionReposi
         return filter;
     }
 
+    public async Task<IReadOnlyCollection<Question>> GetByCategoryLevelTypeAsync(string categoryId, Level level,
+        QuestionType questionType, CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("Getting Questions by CategoryId {CategoryId}, Level {Level}, Type {Type}.", categoryId, level, questionType);
+        var filter = Builders<Question>.Filter.Eq(x => x.CategoryId, categoryId)
+                     & Builders<Question>.Filter.Eq(x => x.Level, level)
+                     & Builders<Question>.Filter.Eq(x => x.QuestionType, questionType);
+        return await Collection.Find(filter).ToListAsync(cancellationToken);
+    }
+
     public async Task<IReadOnlyCollection<Question>> GetByIdsAsync(IEnumerable<string> ids, CancellationToken cancellationToken = default)
     {
         var idList = ids?.ToList() ?? new List<string>();
