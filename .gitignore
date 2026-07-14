@@ -399,3 +399,6 @@ efbundle*
 /superpowers/docs/superpowers
 /superpowers
 /CLAUDE.md
+
+# Local git worktrees used for isolated subagent-driven-development execution
+/.worktrees
