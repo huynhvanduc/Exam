@@ -18,6 +18,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddScoped<IAppToastService, AppToastService>();
 builder.Services.AddScoped<IAppDialogService, AppDialogService>();
+builder.Services.AddScoped<IApiErrorHandler, ApiErrorHandler>();
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddHealthChecks();
