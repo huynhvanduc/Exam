@@ -43,6 +43,12 @@
         else
         {
             <h2 style="font-size:18px;margin:0 0 14px;">@selected.Name</h2>
+            @* Nhánh này hiện không thể chạm tới trong thực tế: GetAllClassRoomsQueryHandler đã lọc danh
+               sách chỉ còn lớp do actor sở hữu (với non-Admin), và GetClassRoomByIdQueryHandler chặn
+               OwnershipGuard ngay trên READ (khác Exams/Questions - chỉ chặn ở lệnh ghi) - non-owner
+               không bao giờ có được "selected" của lớp người khác để nhánh else này render. Giữ lại làm
+               phòng thủ nhiều lớp (defense-in-depth) nếu sau này backend nới lỏng, và để nhất quán với
+               pattern CanManage đã dùng ở Exams/Questions - không phải lỗi, không cần xoá. *@
             @if (!CanManage(currentUser, selected.OwnerUserId))
             {
                 <AppAlert Severity="AppAlertSeverity.Warning">Bạn không phải người tạo lớp học này nên chỉ có thể xem, không thể chỉnh sửa.</AppAlert>
