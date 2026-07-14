@@ -7,11 +7,6 @@ namespace Exam.WebApp.Components.Pages.Admin;
 public abstract class AdminPageBase : PageBase
 {
     [Inject] protected IAppDialogService DialogService { get; set; } = null!;
-
-    // Khớp đúng OwnershipGuard.EnsureOwnerOrAdmin ở backend (Admin luôn được, Instructor chỉ được với
-    // tài nguyên do chính mình tạo) - tính trước ở UI để ẩn/khoá các hành động chắc chắn sẽ bị 403 thay
-    // vì để người dùng bấm rồi mới thấy toast lỗi. Questions/Classes dùng trực tiếp method này; Exams
-    // hiện vẫn có property CanManageSelected riêng (logic giống hệt, viết trước khi có helper này).
     protected static bool CanManage(UserDto? currentUser, string ownerUserId) =>
         currentUser != null && (currentUser.Role == UserRole.Admin || currentUser.ExternalId == ownerUserId);
 

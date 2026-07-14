@@ -401,7 +401,7 @@ tr.changed td { background:#fdf6e8; }
 /* Users (users.html) */
 .users-toolbar { display:flex; gap:10px; margin-bottom:12px; flex-wrap:wrap; align-items:center; }
 .search { border:1px solid var(--line-strong); border-radius:8px; padding:7px 11px; font-size:13px; width:260px; color:var(--ink); }
-.role-select { border:1px solid var(--line-strong); border-radius:6px; padding:4px 8px; font-size:12.5px; color:var(--ink); background:var(--panel); }
+.role-select { border:0px solid var(--line-strong); border-radius:6px; padding:4px 8px; font-size:12.5px; color:var(--ink); background:transparent; }
 .lock-btn { cursor:pointer; background:none; border:none; font-size:15px; padding:2px; }
 .lock-btn:disabled { opacity:.35; cursor:not-allowed; }
 .row-self { background:#f4f2fc; }

@@ -11,9 +11,6 @@ public partial class MainLayout
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        // Gọi mỗi lần render (không chỉ firstRender) vì AuthorizeView có thể resolve bất đồng bộ -
-        // sidebar/toggle chỉ thực sự có trong DOM sau khi Authorized render xong. shell.js tự chống
-        // gắn listener trùng qua dataset.wired nên gọi lại nhiều lần vẫn an toàn.
         await JS.InvokeVoidAsync("appShell.initSidebarToggle");
     }
 
