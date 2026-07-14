@@ -8,10 +8,15 @@ public partial class Classes : AdminPageBase
     [Parameter] public string? Id { get; set; }
 
     private IReadOnlyCollection<ClassRoomDto>? classes;
+    private UserDto? currentUser;
     private ClassRoomDetailDto? selected;
     private string renameValue = "";
 
-    protected override async Task OnInitializedAsync() => await LoadListAsync();
+    protected override async Task OnInitializedAsync() => await ExecuteAsync(async () =>
+    {
+        currentUser = await Api.GetMeAsync();
+        classes = await Api.GetClassesAsync();
+    }, "Không tải được danh sách lớp");
 
     protected override async Task OnParametersSetAsync()
     {

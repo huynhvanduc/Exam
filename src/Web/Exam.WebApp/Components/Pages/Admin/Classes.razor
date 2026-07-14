@@ -43,15 +43,19 @@
         else
         {
             <h2 style="font-size:18px;margin:0 0 14px;">@selected.Name</h2>
+            @if (!CanManage(currentUser, selected.OwnerUserId))
+            {
+                <AppAlert Severity="AppAlertSeverity.Warning">Bạn không phải người tạo lớp học này nên chỉ có thể xem, không thể chỉnh sửa.</AppAlert>
+            }
             <div class="grid2">
                 <AppCard>
                     <h3>Thông tin chung</h3>
-                    <AppTextField Label="Tên lớp" @bind-Value="renameValue" />
-                    <AppButton Variant="AppButtonVariant.Primary" OnClick="RenameAsync">Lưu tên lớp</AppButton>
+                    <AppTextField Label="Tên lớp" @bind-Value="renameValue" Disabled="!CanManage(currentUser, selected.OwnerUserId)" />
+                    <AppButton Variant="AppButtonVariant.Primary" Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="RenameAsync">Lưu tên lớp</AppButton>
                     <hr style="border:none;border-top:1px solid var(--line);margin:16px 0;" />
                     <div style="font-size:12px;color:var(--ink-soft);">Mã lớp (học viên nhập mã này để tham gia):</div>
                     <div class="join-code-display">@selected.JoinCode</div>
-                    <AppButton OnClick="RegenerateCodeAsync">Tạo mã mới</AppButton>
+                    <AppButton Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="RegenerateCodeAsync">Tạo mã mới</AppButton>
                 </AppCard>
                 <AppCard>
                     <h3>Thành viên (@selected.Members.Count)</h3>
@@ -65,14 +69,14 @@
                         {
                             <div class="member-row">
                                 <span>@member.FullName (@member.Email)</span>
-                                <AppButton Variant="AppButtonVariant.Danger" Class="p-2" OnClick="() => RemoveMemberAsync(member)">Xoá</AppButton>
+                                <AppButton Variant="AppButtonVariant.Danger" Class="p-2" Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="() => RemoveMemberAsync(member)">Xoá</AppButton>
                             </div>
                         }
                     }
                 </AppCard>
             </div>
             <div style="margin-top:14px;">
-                <AppButton Variant="AppButtonVariant.Danger" OnClick="() => DeleteAsync(classes!.First(c => c.Id == selected.Id))">Xoá lớp học</AppButton>
+                <AppButton Variant="AppButtonVariant.Danger" Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="() => DeleteAsync(classes!.First(c => c.Id == selected.Id))">Xoá lớp học</AppButton>
             </div>
         }
     </section>
