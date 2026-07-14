@@ -284,11 +284,18 @@ public partial class Exams : AdminPageBase
         selected = selected!.Status == ExamStatus.Published
             ? await Api.UnpublishExamAsync(selected.Id)
             : await Api.PublishExamAsync(selected.Id);
+        // Badge trạng thái ở danh sách bên trái đọc từ collection "exams", không phải "selected" -
+        // phải tải lại danh sách để badge cập nhật ngay, tránh hiện sai trạng thái tới khi chọn lại đề.
+        await LoadListAsync();
     }, "Thao tác thất bại", "Đã cập nhật trạng thái.");
 
     private Task ArchiveAsync() => ConfirmAndExecuteAsync(
         "Xác nhận lưu trữ", $"Lưu trữ đề thi '{selected!.Name}'? Không thể hoàn tác.",
-        async () => selected = await Api.ArchiveExamAsync(selected.Id),
+        async () =>
+        {
+            selected = await Api.ArchiveExamAsync(selected.Id);
+            await LoadListAsync();
+        },
         "Lưu trữ thất bại", "Đã lưu trữ.", yesText: "Lưu trữ");
 
     private static AppStatusPillVariant StatusVariant(ExamStatus status) => status.ToPillVariant();

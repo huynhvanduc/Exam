@@ -1,5 +1,6 @@
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
+using System.Text.Json;
 using Microsoft.AspNetCore.Authentication;
 
 namespace Exam.WebApp.Services;
@@ -238,8 +239,35 @@ public class ExamApiClient
             return;
 
         var problem = await response.Content.ReadAsStringAsync();
-        throw new ExamApiException(response.StatusCode, problem);
+        throw new ExamApiException(response.StatusCode, ExtractMessage(problem));
     }
+
+    // Backend (GlobalExceptionHandler) luôn trả lỗi dạng ProblemDetails JSON - lấy đúng "detail" (hoặc
+    // "errors" cho lỗi validate, hoặc "title" khi không có gì khác) thay vì để nguyên JSON thô rơi thẳng
+    // vào toast, khiến người dùng thấy cả {"title":...,"status":...} thay vì câu message dễ hiểu.
+    private static string ExtractMessage(string problemJson)
+    {
+        try
+        {
+            var problem = JsonSerializer.Deserialize<ApiProblemDetails>(problemJson, new JsonSerializerOptions(JsonSerializerDefaults.Web));
+            if (problem == null)
+                return problemJson;
+
+            if (!string.IsNullOrWhiteSpace(problem.Detail))
+                return problem.Detail;
+
+            if (problem.Errors is { Count: > 0 })
+                return string.Join(" ", problem.Errors.SelectMany(e => e.Value));
+
+            return !string.IsNullOrWhiteSpace(problem.Title) ? problem.Title : problemJson;
+        }
+        catch (JsonException)
+        {
+            return problemJson;
+        }
+    }
+
+    private sealed record ApiProblemDetails(string? Title, string? Detail, Dictionary<string, string[]>? Errors);
 }
 
 public class ExamApiException : Exception
