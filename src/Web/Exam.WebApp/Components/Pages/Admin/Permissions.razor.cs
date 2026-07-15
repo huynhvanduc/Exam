@@ -58,11 +58,28 @@ public partial class Permissions : AdminPageBase
             : new PermissionRow(p, p, "Khác"))
         .ToList();
 
+    // Icon hiển thị trên rail bên trái - chỉ trang trí, phải khớp key với GroupName trong Labels ở trên.
+    private static readonly Dictionary<string, string> GroupIcons = new()
+    {
+        ["Môn học"] = "📚",
+        ["Câu hỏi"] = "❓",
+        ["Đề thi"] = "📄",
+        ["Lớp học"] = "🏫",
+        ["Người dùng"] = "🧑‍🤝‍🧑",
+        ["Khác"] = "⚙️",
+    };
+
+    private readonly record struct RoleCoverage(int On, int Total);
+
     private IReadOnlyList<PermissionRow>? rows;
     private Dictionary<string, bool> studentChecks = new();
     private Dictionary<string, bool> instructorChecks = new();
     private Dictionary<string, bool> savedStudentChecks = new();
     private Dictionary<string, bool> savedInstructorChecks = new();
+
+    // Nhóm đang được chọn ở rail bên trái (bố cục master-detail, giống trang Lớp học).
+    private string? activeGroup;
+    private string searchQuery = "";
 
     protected override async Task OnInitializedAsync() =>
         await ExecuteAsync(async () =>
@@ -76,7 +93,40 @@ public partial class Permissions : AdminPageBase
             savedStudentChecks = new Dictionary<string, bool>(studentChecks);
             savedInstructorChecks = new Dictionary<string, bool>(instructorChecks);
             rows = AllRows;
+            activeGroup = AllRows.Select(r => r.GroupName).FirstOrDefault();
         }, "Không tải được danh sách quyền");
+
+    private string GroupIcon(string groupName) => GroupIcons.TryGetValue(groupName, out var icon) ? icon : "🔧";
+
+    private void SelectGroup(string groupName) => activeGroup = groupName;
+
+    private void OnSearchChanged(string? value) => searchQuery = value ?? "";
+
+    private bool RowMatchesSearch(PermissionRow row) =>
+        string.IsNullOrWhiteSpace(searchQuery) || row.Label.Contains(searchQuery, StringComparison.OrdinalIgnoreCase);
+
+    private RoleCoverage Coverage(string groupName, Dictionary<string, bool> checks)
+    {
+        var keys = AllRows.Where(r => r.GroupName == groupName).Select(r => r.Key).ToList();
+        return new RoleCoverage(keys.Count(k => checks[k]), keys.Count);
+    }
+
+    private static int CoveragePercent(RoleCoverage coverage) => coverage.Total == 0 ? 0 : coverage.On * 100 / coverage.Total;
+
+    private bool AllOn(string groupName, Dictionary<string, bool> checks) =>
+        AllRows.Where(r => r.GroupName == groupName).All(r => checks[r.Key]);
+
+    private async Task ToggleAllAsync(string groupName, bool isStudent)
+    {
+        var checks = isStudent ? studentChecks : instructorChecks;
+        var turnOn = !AllOn(groupName, checks);
+        foreach (var key in AllRows.Where(r => r.GroupName == groupName).Select(r => r.Key))
+            checks[key] = turnOn;
+        await SyncDirtyGuardAsync();
+    }
+
+    private bool GroupHasChanges(string groupName) =>
+        AllRows.Where(r => r.GroupName == groupName).Any(r => IsRowChanged(r.Key));
 
     private IReadOnlyList<string> DirtyKeys() =>
         AllRows.Select(r => r.Key).Where(IsRowChanged).ToList();

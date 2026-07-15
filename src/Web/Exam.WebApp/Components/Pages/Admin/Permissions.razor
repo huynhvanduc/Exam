@@ -13,43 +13,103 @@
 }
 else
 {
-    <AppCard>
-        <div class="toolbar-row">
-            @if (DirtyKeys().Count > 0)
+    <div class="toolbar-row">
+        <AppTextField Value="@searchQuery" ValueChanged="OnSearchChanged" Placeholder="Tìm quyền theo tên…" Class="perm-search" />
+        <span class="spacer"></span>
+        @if (DirtyKeys().Count > 0)
+        {
+            <span class="dirty-chip"><span class="dot"></span>Có @DirtyKeys().Count thay đổi chưa lưu</span>
+        }
+        <AppButton OnClick="RevertAsync">Huỷ thay đổi</AppButton>
+        <AppButton Variant="AppButtonVariant.Primary" OnClick="SaveAsync">Lưu thay đổi</AppButton>
+    </div>
+
+    <div class="perm-layout">
+        <aside class="perm-rail">
+            @foreach (var group in rows.GroupBy(r => r.GroupName))
             {
-                <span class="dirty-chip"><span class="dot"></span>Có @DirtyKeys().Count thay đổi chưa lưu</span>
+                var groupName = group.Key;
+                var studentCoverage = Coverage(groupName, studentChecks);
+                var instructorCoverage = Coverage(groupName, instructorChecks);
+                <div class="perm-rail-item @(activeGroup == groupName ? "active" : "")" @onclick="() => SelectGroup(groupName)">
+                    <span class="ic">@GroupIcon(groupName)</span>
+                    <div class="meta">
+                        <div class="name">
+                            @groupName
+                            @if (GroupHasChanges(groupName))
+                            {
+                                <span class="dot" title="Có thay đổi chưa lưu"></span>
+                            }
+                        </div>
+                        <div class="bars">
+                            <div class="bar-line">
+                                <span class="lbl">S</span>
+                                <span class="bar-track"><span class="bar-fill" style="width:@(CoveragePercent(studentCoverage))%"></span></span>
+                                <span class="frac">@studentCoverage.On/@studentCoverage.Total</span>
+                            </div>
+                            <div class="bar-line">
+                                <span class="lbl">I</span>
+                                <span class="bar-track"><span class="bar-fill" style="width:@(CoveragePercent(instructorCoverage))%"></span></span>
+                                <span class="frac">@instructorCoverage.On/@instructorCoverage.Total</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             }
-            <span class="spacer"></span>
-            <AppButton OnClick="RevertAsync">Huỷ thay đổi</AppButton>
-            <AppButton Variant="AppButtonVariant.Primary" OnClick="SaveAsync">Lưu thay đổi</AppButton>
-        </div>
-        <table class="perm">
-            <thead>
-                <tr><th>Quyền</th><th class="c">Student</th><th class="c">Instructor</th><th class="c">Admin</th></tr>
-            </thead>
-            <tbody>
-                @foreach (var group in rows.GroupBy(r => r.GroupName))
-                {
-                    <tr><td colspan="4"><b>@group.Key</b></td></tr>
-                    @foreach (var row in group)
-                    {
-                        <tr class="@(IsRowChanged(row.Key) ? "changed" : "")">
-                            <td>@row.Label</td>
-                            <td class="c">
-                                <AppCb Value="studentChecks[row.Key]" Changed="studentChecks[row.Key] != savedStudentChecks[row.Key]"
-                                       Class="perm-cb" CheckedClass="on" OnClick="() => ToggleStudentAsync(row.Key)" />
-                            </td>
-                            <td class="c">
-                                <AppCb Value="instructorChecks[row.Key]" Changed="instructorChecks[row.Key] != savedInstructorChecks[row.Key]"
-                                       Class="perm-cb" CheckedClass="on" OnClick="() => ToggleInstructorAsync(row.Key)" />
-                            </td>
-                            <td class="c">
-                                <AppCb Value="true" Class="perm-cb" CheckedClass="on" Disabled="true" Title="Admin luôn có toàn quyền" />
-                            </td>
+        </aside>
+
+        <section class="perm-detail">
+            @{
+                var activeRows = rows.Where(r => r.GroupName == activeGroup).ToList();
+                var visibleRows = activeRows.Where(RowMatchesSearch).ToList();
+            }
+            <div class="perm-detail-head">
+                <h2>@GroupIcon(activeGroup!) @activeGroup</h2>
+                <span class="count">@activeRows.Count quyền</span>
+            </div>
+
+            @if (visibleRows.Count == 0)
+            {
+                <div class="empty-state">Không có quyền nào khớp với "@searchQuery" trong nhóm này.</div>
+            }
+            else
+            {
+                <table class="perm">
+                    <thead>
+                        <tr>
+                            <th>Quyền</th>
+                            <th class="c">
+                                Student
+                                <button type="button" class="perm-allbtn" @onclick="() => ToggleAllAsync(activeGroup!, isStudent: true)">
+                                    @(AllOn(activeGroup!, studentChecks) ? "Bỏ hết" : "Chọn tất cả")
+                                </button>
+                            </th>
+                            <th class="c">
+                                Instructor
+                                <button type="button" class="perm-allbtn" @onclick="() => ToggleAllAsync(activeGroup!, isStudent: false)">
+                                    @(AllOn(activeGroup!, instructorChecks) ? "Bỏ hết" : "Chọn tất cả")
+                                </button>
+                            </th>
                         </tr>
-                    }
-                }
-            </tbody>
-        </table>
-    </AppCard>
+                    </thead>
+                    <tbody>
+                        @foreach (var row in visibleRows)
+                        {
+                            <tr class="@(IsRowChanged(row.Key) ? "changed" : "")">
+                                <td>@row.Label</td>
+                                <td class="c">
+                                    <AppCb Value="studentChecks[row.Key]" Changed="studentChecks[row.Key] != savedStudentChecks[row.Key]"
+                                           Class="perm-cb" CheckedClass="on" OnClick="() => ToggleStudentAsync(row.Key)" />
+                                </td>
+                                <td class="c">
+                                    <AppCb Value="instructorChecks[row.Key]" Changed="instructorChecks[row.Key] != savedInstructorChecks[row.Key]"
+                                           Class="perm-cb" CheckedClass="on" OnClick="() => ToggleInstructorAsync(row.Key)" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            }
+        </section>
+    </div>
 }

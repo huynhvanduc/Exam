@@ -372,6 +372,31 @@ table.data tbody tr:last-child td { border-bottom:none; }
 .toolbar-row { display:flex; align-items:center; gap:10px; margin-bottom:14px; flex-wrap:wrap; }
 .dirty-chip { display:flex; align-items:center; gap:6px; background:var(--warning-soft); color:var(--warning); font-size:12px; font-weight:700; padding:4px 10px; border-radius:999px; }
 .dirty-chip .dot { width:6px; height:6px; border-radius:50%; background:var(--warning); }
+.perm-search { width:230px; margin:0; }
+.perm-search input { padding:7px 10px; font-size:12.5px; }
+.perm-layout { display:flex; border:1px solid var(--line); border-radius:10px; overflow:hidden; background:var(--panel); min-height:520px; }
+.perm-rail { width:260px; flex:none; border-right:1px solid var(--line); background:var(--paper); overflow-y:auto; }
+.perm-rail-item { display:flex; align-items:center; gap:10px; padding:11px 13px; cursor:pointer; border-left:3px solid transparent; border-bottom:1px solid var(--line); }
+.perm-rail-item:last-child { border-bottom:none; }
+.perm-rail-item:hover { background:var(--panel); }
+.perm-rail-item.active { background:var(--accent-soft); border-left-color:var(--accent); }
+.perm-rail-item .ic { font-size:15px; width:20px; text-align:center; flex:none; }
+.perm-rail-item .meta { min-width:0; flex:1; }
+.perm-rail-item .name { font-size:13px; font-weight:700; display:flex; align-items:center; gap:6px; }
+.perm-rail-item.active .name { color:var(--accent); }
+.perm-rail-item .name .dot { width:6px; height:6px; border-radius:50%; background:var(--warning); flex:none; }
+.perm-rail-item .bars { display:flex; flex-direction:column; gap:3px; margin-top:5px; }
+.perm-rail-item .bar-line { display:flex; align-items:center; gap:5px; }
+.perm-rail-item .bar-line .lbl { font-size:9.5px; font-weight:700; color:var(--ink-soft); width:11px; }
+.perm-rail-item .bar-track { flex:1; height:4px; border-radius:99px; background:var(--line); overflow:hidden; }
+.perm-rail-item .bar-fill { display:block; height:100%; background:var(--accent); border-radius:99px; }
+.perm-rail-item .bar-line .frac { font-size:9.5px; color:var(--ink-soft); width:24px; text-align:right; }
+.perm-detail { flex:1; min-width:0; padding:16px 18px; overflow-y:auto; }
+.perm-detail-head { display:flex; align-items:baseline; gap:10px; margin-bottom:14px; }
+.perm-detail-head h2 { font-size:15px; margin:0; }
+.perm-detail-head .count { font-size:11.5px; color:var(--ink-soft); }
+.perm-allbtn { display:block; margin:2px auto 0; font-size:10px; font-weight:700; color:var(--accent); background:none; border:none; cursor:pointer; text-transform:none; letter-spacing:0; padding:0; }
+.perm-allbtn:hover { text-decoration:underline; }
 table.perm { width:100%; border-collapse:collapse; font-size:12.5px; }
 table.perm th { text-align:left; padding:7px 8px; border-bottom:2px solid var(--line); color:var(--ink-soft); font-size:11px; text-transform:uppercase; }
 table.perm th.c { text-align:center; }
