@@ -136,6 +136,16 @@ public partial class Exams : AdminPageBase
             await LoadResultsAsync();
         }, "Buộc nộp bài thất bại", $"Đã buộc nộp bài của {drawerResult!.FullName}", yesText: "Buộc nộp");
 
+    // Chấm lại bằng dữ liệu câu hỏi HIỆN TẠI trong ngân hàng - dùng khi phát hiện 1 câu bị đánh sai đáp án
+    // đúng sau khi học viên đã thi xong (trước đây không có cách nào sửa điểm 1 bài cụ thể).
+    private Task RegradeAsync(ExamResultAdminListItemDto result) => ConfirmAndExecuteAsync(
+        "Xác nhận chấm lại", $"Chấm lại bài thi của \"{result.FullName}\" theo đáp án hiện tại trong ngân hàng câu hỏi?",
+        async () =>
+        {
+            await Api.AdminRegradeExamAsync(result.Id);
+            await LoadResultsAsync();
+        }, "Chấm lại thất bại", $"Đã chấm lại bài của {result.FullName}", yesText: "Chấm lại");
+
     private async Task OnCategoryChangedAsync(string categoryId)
     {
         selectedCategoryId = categoryId;

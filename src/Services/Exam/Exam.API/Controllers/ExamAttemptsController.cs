@@ -2,6 +2,7 @@ using Exam.API.Extensions;
 using Exam.Application.ExamResultAggregate.Commands.AdminForceFinishExam;
 using Exam.Application.ExamResultAggregate.Commands.FinishExam;
 using Exam.Application.ExamResultAggregate.Commands.RecordAnswer;
+using Exam.Application.ExamResultAggregate.Commands.RegradeExamResult;
 using Exam.Application.ExamResultAggregate.Commands.StartExam;
 using Exam.Application.ExamResultAggregate.Queries.GetExamAttempt;
 using Exam.Application.ExamResultAggregate.Queries.GetExamAttemptAdminStatus;
@@ -74,6 +75,14 @@ public class ExamAttemptsController : ControllerBase
     public async Task<IActionResult> AdminForceFinish(string id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new AdminForceFinishExamCommand(id), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{id}/admin-regrade")]
+    [Authorize(Policy = Permissions.Exam.Regrade)]
+    public async Task<IActionResult> AdminRegrade(string id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new RegradeExamResultCommand(id), cancellationToken);
         return Ok(result);
     }
 

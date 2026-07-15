@@ -89,6 +89,7 @@ public static class ApiRoutes
         public static string History(int page, int pageSize) => $"{Base}/history?page={page}&pageSize={pageSize}";
         public static string AdminStatus(string id) => $"{Base}/{id}/admin-status";
         public static string AdminForceFinish(string id) => $"{Base}/{id}/admin-force-finish";
+        public static string AdminRegrade(string id) => $"{Base}/{id}/admin-regrade";
     }
 
     public static class Dashboard

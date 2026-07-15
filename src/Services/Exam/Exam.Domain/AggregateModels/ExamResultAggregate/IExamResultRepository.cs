@@ -16,4 +16,8 @@ public interface IExamResultRepository : IRepositoryBase<ExamResult>
 
     // Đếm MỌI attempt (kể cả bỏ dở chưa nộp) - mỗi lần StartExam tạo mới đã tính 1 lượt.
     Task<long> CountByUserIdAndExamIdAsync(string userId, string examId, CancellationToken cancellationToken = default);
+
+    // Toàn bộ attempt đang làm dở (Finished = false), bất kể user/exam nào - dùng cho tiến trình nền quét
+    // và tự nộp hộ các bài đã quá hạn nhưng học viên bỏ ngang không quay lại (xem ExpiredExamAttemptSweeperService).
+    Task<IReadOnlyCollection<ExamResult>> GetAllInProgressAsync(CancellationToken cancellationToken = default);
 }

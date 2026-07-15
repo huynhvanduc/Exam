@@ -158,6 +158,9 @@ public class ExamApiClient
     public Task<ExamResultDto> AdminForceFinishExamAsync(string attemptId, CancellationToken cancellationToken = default) =>
         SendAsync<ExamResultDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.AdminForceFinish(attemptId), cancellationToken: cancellationToken);
 
+    public Task<ExamResultDto> AdminRegradeExamAsync(string attemptId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamResultDto>(HttpMethod.Post, ApiRoutes.ExamAttempts.AdminRegrade(attemptId), cancellationToken: cancellationToken);
+
     public Task<ExamResultDto> GetExamResultAsync(string attemptId, CancellationToken cancellationToken = default) =>
         SendAsync<ExamResultDto>(HttpMethod.Get, ApiRoutes.ExamAttempts.Result(attemptId), cancellationToken: cancellationToken);
 

@@ -1,4 +1,5 @@
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Exam.WebApp.Components.Pages;
 
@@ -7,6 +8,7 @@ public partial class TakeExam : PageBase, IDisposable
     [Parameter] public string AttemptId { get; set; } = "";
 
     [Inject] private NavigationManager Navigation { get; set; } = null!;
+    [Inject] private IJSRuntime JS { get; set; } = null!;
 
     private ExamAttemptDto? attempt;
     private List<ExamAttemptQuestionDto> questions = [];
@@ -17,6 +19,7 @@ public partial class TakeExam : PageBase, IDisposable
     private bool navigatorOpen;
     private System.Timers.Timer? timer;
     private TimeSpan? remaining;
+    private bool dirtyGuardOn;
 
     private int AnsweredCount => selections.Count(kvp => kvp.Value.Count > 0);
 
@@ -41,6 +44,27 @@ public partial class TakeExam : PageBase, IDisposable
             StartTimer(attempt.Deadline.Value);
     }, "Không tải được đề thi");
 
+    // JS interop chỉ được phép gọi từ OnAfterRenderAsync trở đi (component đã interactive, có circuit
+    // SignalR) - gọi trong OnInitializedAsync/LoadAsync ném InvalidOperationException vì lúc đó trang còn
+    // đang ở giai đoạn prerender tĩnh (xảy ra với MỌI lần F5 reload). Bật cờ đúng 1 lần khi đã có attempt.
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!dirtyGuardOn && attempt != null)
+        {
+            dirtyGuardOn = true;
+            // Cảnh báo trước khi đóng tab/refresh giữa lúc đang thi - trước đây học viên có thể vô tình
+            // đóng tab mà không được nhắc gì, mất phiên làm bài đang xem (đáp án đã lưu vẫn còn).
+            await JS.InvokeVoidAsync("appShell.setDirtyGuard", true);
+        }
+    }
+
+    private async Task LeaveExamAsync(string url)
+    {
+        dirtyGuardOn = false;
+        await JS.InvokeVoidAsync("appShell.setDirtyGuard", false);
+        Navigation.NavigateTo(url, replace: true);
+    }
+
     private void StartTimer(DateTime deadline)
     {
         UpdateRemaining(deadline);
@@ -63,7 +87,7 @@ public partial class TakeExam : PageBase, IDisposable
     private async Task AutoSubmitAsync()
     {
         await ExecuteAsync(() => Api.FinishExamAsync(AttemptId), "Hết giờ, tự động nộp bài thất bại");
-        Navigation.NavigateTo($"/exams/result/{AttemptId}", replace: true);
+        await LeaveExamAsync($"/exams/result/{AttemptId}");
     }
 
     private bool IsAnswered(string questionId) => selections.TryGetValue(questionId, out var set) && set.Count > 0;
@@ -97,7 +121,7 @@ public partial class TakeExam : PageBase, IDisposable
         var ids = selections.TryGetValue(questionId, out var set) ? set.ToList() : [];
         var result = await Api.RecordAnswerAsync(AttemptId, questionId, ids);
         if (result.Finished)
-            Navigation.NavigateTo($"/exams/result/{AttemptId}", replace: true);
+            await LeaveExamAsync($"/exams/result/{AttemptId}");
     }, "Không lưu được câu trả lời");
 
     private void GoTo(int index)
@@ -142,12 +166,28 @@ public partial class TakeExam : PageBase, IDisposable
         await ExecuteAsync(async () =>
         {
             await Api.FinishExamAsync(AttemptId);
-            Navigation.NavigateTo($"/exams/result/{AttemptId}", replace: true);
+            await LeaveExamAsync($"/exams/result/{AttemptId}");
         }, "Nộp bài thất bại");
     }
 
     private static string FormatRemaining(TimeSpan ts) =>
         ts.TotalHours >= 1 ? ts.ToString(@"hh\:mm\:ss") : ts.ToString(@"mm\:ss");
 
-    public void Dispose() => timer?.Dispose();
+    public void Dispose()
+    {
+        timer?.Dispose();
+
+        if (!dirtyGuardOn)
+            return;
+
+        dirtyGuardOn = false;
+
+        // Dọn guard khi rời trang bằng bất kỳ cách nào (kể cả điều hướng nội bộ trong app) - tránh guard còn
+        // sót "true" làm cảnh báo nhầm khi người dùng đóng tab ở một trang khác về sau. Dispose() không thể
+        // await, và lúc này circuit SignalR có thể đã ngắt (JSDisconnectedException) - "quan sát" lỗi qua
+        // ContinueWith thay vì try/catch quanh call fire-and-forget (try/catch ở đây sẽ không bắt được gì,
+        // vì exception xảy ra bên trong Task chứ không phải ngay tại lệnh gọi).
+        _ = JS.InvokeVoidAsync("appShell.setDirtyGuard", false).AsTask()
+            .ContinueWith(_ => { }, TaskContinuationOptions.OnlyOnFaulted);
+    }
 }

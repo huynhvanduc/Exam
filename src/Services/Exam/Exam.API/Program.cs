@@ -59,6 +59,7 @@ builder.Services.AddProblemDetails();
 
 builder.Services.AddInfrastructure(builder.Configuration);
 builder.Services.AddApplication();
+builder.Services.AddHostedService<Exam.API.BackgroundServices.ExpiredExamAttemptSweeperService>();
 
 builder.Services.AddHealthChecksUI(setup =>
 {

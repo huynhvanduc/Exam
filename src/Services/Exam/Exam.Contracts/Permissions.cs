@@ -31,6 +31,7 @@ public static class Permissions
         public const string ViewResults = "Exam.ViewResults";
         public const string ManageClassAssignment = "Exam.ManageClassAssignment";
         public const string ForceFinishAttempt = "Exam.ForceFinishAttempt";
+        public const string Regrade = "Exam.Regrade";
     }
 
     public static class Class
@@ -60,7 +61,7 @@ public static class Permissions
         Question.View, Question.Create, Question.Update, Question.Delete,
         Exam.Create, Exam.Update, Exam.Delete, Exam.ManagePool,
         Exam.ManageAvailability, Exam.ManageMaxAttempts, Exam.Publish, Exam.Unpublish, Exam.Archive,
-        Exam.ViewResults, Exam.ManageClassAssignment, Exam.ForceFinishAttempt,
+        Exam.ViewResults, Exam.ManageClassAssignment, Exam.ForceFinishAttempt, Exam.Regrade,
         Class.View, Class.Create, Class.Update, Class.Delete, Class.ManageMembers,
         User.View, User.PromoteRole, User.ToggleActive,
         Dashboard.View

@@ -1,5 +1,6 @@
 using ClosedXML.Excel;
 using Exam.Contracts;
+using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using MediatR;
@@ -13,11 +14,14 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
 
     private readonly IQuestionRepository _questionRepository;
     private readonly ICategoryRepository _categoryRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
 
-    public ImportQuestionsCommandHandler(IQuestionRepository questionRepository, ICategoryRepository categoryRepository)
+    public ImportQuestionsCommandHandler(IQuestionRepository questionRepository, ICategoryRepository categoryRepository,
+        IAuditLogRepository auditLogRepository)
     {
         _questionRepository = questionRepository;
         _categoryRepository = categoryRepository;
+        _auditLogRepository = auditLogRepository;
     }
 
     public async Task<ImportQuestionsResultDto> Handle(ImportQuestionsCommand request, CancellationToken cancellationToken)
@@ -117,6 +121,20 @@ public class ImportQuestionsCommandHandler : IRequestHandler<ImportQuestionsComm
         {
             foreach (var question in questionsToInsert)
                 await _questionRepository.InsertAsync(question, cancellationToken);
+
+            // ImportQuestionsCommand tự khai ISkipAutoAuditLog (FileContent quá nặng để log tự động) nên
+            // phải tự ghi log thủ công ở đây - trước đây import hàng loạt hoàn toàn không có dấu vết, không
+            // truy được "ai đã thêm N câu hỏi này" nếu sau này phát sinh tranh chấp/cần rà soát.
+            if (questionsToInsert.Count > 0)
+            {
+                var categorySummary = string.Join(", ", questionsToInsert
+                    .GroupBy(q => q.CategoryName)
+                    .Select(g => $"{g.Key} ({g.Count()})"));
+                await _auditLogRepository.InsertAsync(
+                    new AuditLogEntry(request.OwnerUserId, "Question.Import", string.Empty,
+                        $"Import {questionsToInsert.Count} câu hỏi từ Excel ({errors.Count} dòng lỗi bị bỏ qua) vào: {categorySummary}."),
+                    cancellationToken);
+            }
         }
 
         return new ImportQuestionsResultDto(totalRows, questionsToInsert.Count, errors, validRows);

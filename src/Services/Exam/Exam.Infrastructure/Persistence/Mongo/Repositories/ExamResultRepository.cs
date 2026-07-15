@@ -35,4 +35,10 @@ public class ExamResultRepository : MongoRepositoryBase<ExamResult>, IExamResult
         CountFilteredAsync(
             Builders<ExamResult>.Filter.Eq(x => x.UserId, userId) & Builders<ExamResult>.Filter.Eq(x => x.ExamId, examId),
             cancellationToken);
+
+    public async Task<IReadOnlyCollection<ExamResult>> GetAllInProgressAsync(CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("Getting all in-progress ExamResults.");
+        return await Collection.Find(x => !x.Finished).ToListAsync(cancellationToken);
+    }
 }

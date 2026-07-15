@@ -2,6 +2,7 @@ using ClosedXML.Excel;
 using Exam.Application.Common;
 using Exam.Application.Exceptions;
 using Exam.Contracts;
+using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using MediatR;
@@ -14,11 +15,14 @@ public class ImportClassMembersCommandHandler : IRequestHandler<ImportClassMembe
 
     private readonly IClassRoomRepository _classRoomRepository;
     private readonly IUserRepository _userRepository;
+    private readonly IAuditLogRepository _auditLogRepository;
 
-    public ImportClassMembersCommandHandler(IClassRoomRepository classRoomRepository, IUserRepository userRepository)
+    public ImportClassMembersCommandHandler(IClassRoomRepository classRoomRepository, IUserRepository userRepository,
+        IAuditLogRepository auditLogRepository)
     {
         _classRoomRepository = classRoomRepository;
         _userRepository = userRepository;
+        _auditLogRepository = auditLogRepository;
     }
 
     public async Task<ImportClassMembersResultDto> Handle(ImportClassMembersCommand request, CancellationToken cancellationToken)
@@ -82,6 +86,13 @@ public class ImportClassMembersCommandHandler : IRequestHandler<ImportClassMembe
                 classRoom.AddMember(user.ExternalId);
 
             await _classRoomRepository.UpdateAsync(classRoom, cancellationToken);
+
+            // ImportClassMembersCommand tự khai ISkipAutoAuditLog (FileContent quá nặng để log tự động) nên
+            // phải tự ghi log thủ công ở đây - trước đây import roster hàng loạt hoàn toàn không có dấu vết.
+            await _auditLogRepository.InsertAsync(
+                new AuditLogEntry(request.Actor.UserId, "Class.ImportMembers", classRoom.Id,
+                    $"Import {usersToAdd.Count} học viên từ Excel vào lớp \"{classRoom.Name}\"."),
+                cancellationToken);
         }
 
         var alreadyMemberCount = validRows.Count(r => r.AlreadyMember);

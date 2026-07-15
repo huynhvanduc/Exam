@@ -194,11 +194,11 @@
                         <button class="tab @(resultsFilter == "done" ? "active" : "")" @onclick='() => SetResultsFilter("done")'>Đã nộp (@results.Count(r => r.Finished))</button>
                     </div>
                     <table class="data">
-                        <thead><tr><th>Thí sinh</th><th>Điểm</th><th>Kết quả</th><th>Bắt đầu</th><th>Nộp bài</th><th>Trạng thái</th></tr></thead>
+                        <thead><tr><th>Thí sinh</th><th>Điểm</th><th>Kết quả</th><th>Bắt đầu</th><th>Nộp bài</th><th>Trạng thái</th><th></th></tr></thead>
                         <tbody>
                             @if (!FilteredResults().Any())
                             {
-                                <tr><td colspan="6"><div class="empty-state">Chưa có thí sinh nào làm đề thi này.</div></td></tr>
+                                <tr><td colspan="7"><div class="empty-state">Chưa có thí sinh nào làm đề thi này.</div></td></tr>
                             }
                             else
                             {
@@ -227,6 +227,12 @@
                                             else
                                             {
                                                 <AppStatusPill Variant="AppStatusPillVariant.Info"><span class="live-dot"></span>Đang làm</AppStatusPill>
+                                            }
+                                        </td>
+                                        <td @onclick:stopPropagation="true">
+                                            @if (result.Finished)
+                                            {
+                                                <AppButton OnClick="() => RegradeAsync(result)">Chấm lại</AppButton>
                                             }
                                         </td>
                                     </tr>

@@ -392,6 +392,13 @@ public static class DataSeeder
         foreach (var question in drawnQuestions)
         {
             var chosenIds = ChooseSimulatedAnswerIds(question, correctRatio);
+
+            // Ghi lại đúng câu trả lời đã "chọn" vào DraftAnswers (không chỉ AddQuestionResult) - nếu bỏ qua
+            // bước này, tính năng Chấm lại (Regrade) sau này sẽ không biết học viên đã chọn gì và tính lại
+            // ra 0 điểm cho mọi bài seed, dù đáp án ngân hàng câu hỏi không hề đổi. Đúng thứ tự với luồng
+            // thi thật: RecordAnswer trước, AddQuestionResult sau (mirror ExamResultGradingService).
+            examResult.RecordAnswer(question.Id, chosenIds);
+
             var answerResults = question.Answers
                 .Select(a => new AnswerResult(a.Id, a.Content, chosenIds.Contains(a.Id), a.IsCorrect))
                 .ToList();

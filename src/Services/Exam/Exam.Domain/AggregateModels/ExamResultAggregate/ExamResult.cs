@@ -147,4 +147,18 @@ public class ExamResult : Entity, IAggregateRoot
         ExamFinishDate = DateTime.UtcNow;
         Finished = true;
     }
+
+    // Chấm lại 1 bài đã nộp bằng dữ liệu câu hỏi HIỆN TẠI (vd sau khi sửa lại đáp án đúng bị nhập sai) -
+    // khác Finish() ở chỗ KHÔNG đổi ExamFinishDate/Finished (giữ nguyên mốc thời gian nộp bài gốc), chỉ
+    // thay QuestionResults + điểm số. Chỉ áp dụng cho bài ĐÃ hoàn thành - bài đang làm dở phải tự nộp bình
+    // thường qua Finish().
+    public void Regrade(IReadOnlyCollection<QuestionResult> questionResults, decimal minimumPassingScore)
+    {
+        if (!Finished)
+            throw new ExamDomainException("Only a finished exam result can be regraded.");
+
+        _questionResults = questionResults?.ToList() ?? new List<QuestionResult>();
+        CorrectQuestionCount = _questionResults.Count(x => x.Result);
+        Passed = TotalScore >= minimumPassingScore;
+    }
 }
