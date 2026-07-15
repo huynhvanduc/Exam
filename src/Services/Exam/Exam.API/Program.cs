@@ -8,6 +8,7 @@ using Exam.Domain.AggregateModels.AuditAggregate;
 using Exam.Domain.AggregateModels.CategoryAggregate;
 using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.ExamAggregate;
+using Exam.Domain.AggregateModels.ExamResultAggregate;
 using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
@@ -80,7 +81,8 @@ using (var scope = app.Services.CreateScope())
             scope.ServiceProvider.GetRequiredService<IExamRepository>(),
             scope.ServiceProvider.GetRequiredService<IUserRepository>(),
             scope.ServiceProvider.GetRequiredService<IAuditLogRepository>(),
-            scope.ServiceProvider.GetRequiredService<IClassRoomRepository>());
+            scope.ServiceProvider.GetRequiredService<IClassRoomRepository>(),
+            scope.ServiceProvider.GetRequiredService<IExamResultRepository>());
     }
 }
 
