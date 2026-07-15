@@ -39,9 +39,6 @@ builder.Services.AddAuthentication(options =>
 })
 .AddCookie(options =>
 {
-    // Mặc định ASP.NET Core trả về response trắng (403/404 rỗng) khi ForbidAsync/ChallengeAsync
-    // được gọi mà không cấu hình đường dẫn - xảy ra ở lần load trang tĩnh đầu tiên (gõ thẳng URL),
-    // trước khi Blazor Router kịp render NotAuthorized. Set 2 path này để luôn có redirect rõ ràng.
     options.AccessDeniedPath = "/access-denied";
     options.LoginPath = "/account/login";
 })
@@ -54,9 +51,6 @@ builder.Services.AddAuthentication(options =>
     options.RequireHttpsMetadata = !builder.Environment.IsDevelopment();
     options.SaveTokens = true;
 
-    // IdentityServer4 chỉ trả về id_token tối giản (sub/sid/auth_time...) cho response_type=code -
-    // name/given_name/family_name/email nằm ở /connect/userinfo, không tự động có trong HttpContext.User
-    // nếu không bật cờ này (mặc định false).
     options.GetClaimsFromUserInfoEndpoint = true;
 
     options.Scope.Clear();
@@ -137,11 +131,6 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStaticFiles();
 
-// Bắt buộc UseRouting tường minh và đặt SAU UseStaticFiles: nếu không có UseRouting tường minh,
-// ASP.NET Core tự chèn routing lên NGAY ĐẦU pipeline (trước UseStaticFiles) để phục vụ UseAuthorization/
-// UseAntiforgery bên dưới - khi đó route catch-all "/{*pathInfo}" sẽ khớp và "chiếm" luôn các request
-// file tĩnh (app.css, css/app-ui.css, js/shell.js...) trước khi StaticFileMiddleware kịp phục vụ, vì middleware
-// này bỏ qua request đã có endpoint được gán. Đặt UseRouting ở đây đảm bảo static files luôn được ưu tiên.
 app.UseRouting();
 
 app.UseAuthentication();

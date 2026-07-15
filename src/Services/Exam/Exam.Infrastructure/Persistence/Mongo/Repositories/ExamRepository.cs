@@ -9,12 +9,13 @@ namespace Exam.Infrastructure.Persistence.Mongo.Repositories;
 
 public class ExamRepository : MongoRepositoryBase<ExamEntity>, IExamRepository
 {
+    private const string CollectionName = "exams";
+    private static readonly SortDefinition<ExamEntity> ByDateCreatedDesc = Builders<ExamEntity>.Sort.Descending(x => x.DateCreated);
+
     public ExamRepository(MongoDbContext context, ILogger<ExamRepository> logger, IMediator mediator)
-        : base(context, "exams", logger, mediator)
+        : base(context, CollectionName, logger, mediator)
     {
     }
-
-    private static readonly SortDefinition<ExamEntity> ByDateCreatedDesc = Builders<ExamEntity>.Sort.Descending(x => x.DateCreated);
 
     public Task<IReadOnlyCollection<ExamEntity>> GetByCategoryAsync(string categoryId, int skip, int take, CancellationToken cancellationToken = default) =>
         FindPagedAsync(Builders<ExamEntity>.Filter.Eq(x => x.CategoryId, categoryId), ByDateCreatedDesc, skip, take, cancellationToken);
@@ -22,22 +23,37 @@ public class ExamRepository : MongoRepositoryBase<ExamEntity>, IExamRepository
     public Task<long> CountByCategoryAsync(string categoryId, CancellationToken cancellationToken = default) =>
         CountFilteredAsync(Builders<ExamEntity>.Filter.Eq(x => x.CategoryId, categoryId), cancellationToken);
 
-    public Task<IReadOnlyCollection<ExamEntity>> GetAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, int skip, int take, CancellationToken cancellationToken = default) =>
-        FindPagedAsync(AvailableForUserFilter(at, classIds), ByDateCreatedDesc, skip, take, cancellationToken);
+    public Task<IReadOnlyCollection<ExamEntity>> GetAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, int skip, int take, CancellationToken cancellationToken = default)
+    {
+        var utcAt = at.Kind == DateTimeKind.Utc ? at : at.ToUniversalTime();
+        return FindPagedAsync(AvailableForUserFilter(utcAt, classIds), ByDateCreatedDesc, skip, take, cancellationToken);
+    }
 
-    public Task<long> CountAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, CancellationToken cancellationToken = default) =>
-        CountFilteredAsync(AvailableForUserFilter(at, classIds), cancellationToken);
+    public Task<long> CountAvailableForUserAsync(DateTime at, IReadOnlyCollection<string> classIds, CancellationToken cancellationToken = default)
+    {
+        var utcAt = at.Kind == DateTimeKind.Utc ? at : at.ToUniversalTime();
+        return CountFilteredAsync(AvailableForUserFilter(utcAt, classIds), cancellationToken);
+    }
 
-    private static FilterDefinition<ExamEntity> AvailableForUserFilter(DateTime at, IReadOnlyCollection<string> classIds) =>
-        Builders<ExamEntity>.Filter.Eq(x => x.Status, ExamStatus.Published) &
-        (Builders<ExamEntity>.Filter.Eq(x => x.AvailableFrom, null) | Builders<ExamEntity>.Filter.Lte(x => x.AvailableFrom, at)) &
-        (Builders<ExamEntity>.Filter.Eq(x => x.AvailableTo, null) | Builders<ExamEntity>.Filter.Gte(x => x.AvailableTo, at)) &
-        (Builders<ExamEntity>.Filter.Size(x => x.AssignedClassIds, 0) | Builders<ExamEntity>.Filter.AnyIn(x => x.AssignedClassIds, classIds));
+    private static FilterDefinition<ExamEntity> AvailableForUserFilter(DateTime utcAt, IReadOnlyCollection<string> classIds)
+    {
+        var filterBuilder = Builders<ExamEntity>.Filter;
+
+        return filterBuilder.Eq(x => x.Status, ExamStatus.Published) &
+
+               (filterBuilder.Eq(x => x.AvailableFrom, null) | filterBuilder.Lte(x => x.AvailableFrom, utcAt)) &
+               (filterBuilder.Eq(x => x.AvailableTo, null) | filterBuilder.Gte(x => x.AvailableTo, utcAt)) &
+               (filterBuilder.Eq(x => x.AssignedClassIds, Array.Empty<string>()) |
+                filterBuilder.Eq(x => x.AssignedClassIds, null) |
+                filterBuilder.AnyIn(x => x.AssignedClassIds, classIds));
+    }
 
     public async Task<bool> ExistsByCategoryIdAsync(string categoryId, CancellationToken cancellationToken = default)
     {
         Logger.LogDebug("Checking Exam existence by CategoryId {CategoryId}.", categoryId);
-        return await Collection.Find(x => x.CategoryId == categoryId).AnyAsync(cancellationToken);
+
+        var filter = Builders<ExamEntity>.Filter.Eq(x => x.CategoryId, categoryId);
+        return await Collection.Find(filter).AnyAsync(cancellationToken);
     }
 
     public Task<long> CountAsync(CancellationToken cancellationToken = default) =>

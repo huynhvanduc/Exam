@@ -27,9 +27,6 @@ public class AuditLogRepository : MongoRepositoryBase<AuditLogEntry>, IAuditLogR
     public Task<long> CountAsync(string? actor, string? action, DateTime? from, DateTime? to, CancellationToken cancellationToken = default) =>
         CountFilteredAsync(BuildFilter(actor, action, from, to), cancellationToken);
 
-    // "from"/"to" đến từ <input type="date"> phía WebApp, tức chỉ có ngày (local), không có giờ/timezone.
-    // Coi ngày đó là ngày theo giờ local của server (nhất quán với cách Timestamp.ToLocalTime() đang
-    // được dùng để hiển thị ở mọi nơi khác trong app) rồi quy đổi sang UTC để so khớp với Timestamp (UTC).
     private static FilterDefinition<AuditLogEntry> BuildFilter(string? actor, string? action, DateTime? from, DateTime? to)
     {
         var filter = FilterDefinition<AuditLogEntry>.Empty;

@@ -12,9 +12,6 @@ namespace Exam.Infrastructure.Persistence.Mongo;
 
 public static class DataSeeder
 {
-    // Phải khớp với Id cố định của tài khoản "admin" seed trong Identity.Server/Persistence/SeedData.cs,
-    // để lần đăng nhập đầu tiên của admin thật không bị EnsureUserProvisionedCommandHandler coi là
-    // "first user" (Users collection ở đây không còn rỗng sau khi seed) và gán nhầm role Student.
     private const string AdminExternalId = "528ac9b1-20ff-4d42-bd6d-e85300acde89";
     private const string InstructorExternalId = "22222222-2222-2222-2222-222222222222";
     private const string Student1ExternalId = "33333333-3333-3333-3333-333333333333";

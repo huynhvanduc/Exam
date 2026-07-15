@@ -1,8 +1,3 @@
-/* Design system tự viết thay MudBlazor - port nguyên vẹn từ
-   docs/requirements/mockups/app/assets/shell.css. Phần bổ sung (mockup chưa có,
-   hoặc chỉ định nghĩa cục bộ ở 1 trang mockup rồi được đưa lên đây để dùng chung)
-   nằm ở cuối file, có ghi chú rõ nguồn tham khảo. */
-
 :root {
   --ink:#211b3d; --ink-soft:#5b5578; --paper:#f5f3fb; --panel:#ffffff;
   --accent:#5b4fe0; --accent-soft:#ede9fb; --accent-ring:#c9c2f5;
@@ -350,17 +345,6 @@ table.data tbody tr:last-child td { border-bottom:none; }
 
 /* =====================================================================
    Admin pages (ported from docs/requirements/mockups/app/admin/*.html)
-
-   Ownership note: a few mockups reused a bare class name with different
-   rules across pages (each mockup used to be an isolated static file, so
-   no collision existed until they all landed in this one stylesheet).
-   Renamed on port to avoid one page's CSS silently overriding another's:
-     .filters  -> Questions keeps bare ".filters"; Audit Log uses ".audit-filters".
-     .cb       -> Questions keeps bare ".cb"/".cb.checked"; Permissions uses
-                  ".perm-cb"/".perm-cb.on"/".perm-cb.on.changed".
-     .grid2    -> Classes keeps bare ".grid2"; Exams (Admin) uses ".exam-grid2".
-   If you port a 9th admin page, check this list before reusing any of
-   these three names bare.
    ===================================================================== */
 
 /* Dashboard (dashboard.html) */

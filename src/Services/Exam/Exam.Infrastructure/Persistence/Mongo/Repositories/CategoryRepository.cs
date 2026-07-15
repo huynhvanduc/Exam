@@ -7,8 +7,10 @@ namespace Exam.Infrastructure.Persistence.Mongo.Repositories;
 
 public class CategoryRepository : MongoRepositoryBase<Category>, ICategoryRepository
 {
+    private const string CollectionName = "categories";
+
     public CategoryRepository(MongoDbContext context, ILogger<CategoryRepository> logger, IMediator mediator)
-        : base(context, "categories", logger, mediator)
+        : base(context, CollectionName, logger, mediator)
     {
     }
 
