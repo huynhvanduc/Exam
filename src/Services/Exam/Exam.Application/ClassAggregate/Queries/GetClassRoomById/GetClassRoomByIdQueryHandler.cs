@@ -1,3 +1,4 @@
+using Exam.Application.Exceptions;
 using Exam.Domain.AggregateModels.ClassAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using MediatR;
@@ -21,7 +22,15 @@ public class GetClassRoomByIdQueryHandler : IRequestHandler<GetClassRoomByIdQuer
         if (classRoom == null)
             return null;
 
-        OwnershipGuard.EnsureOwnerOrAdmin(request.Actor, classRoom.OwnerUserId, nameof(ClassRoom), classRoom.Id);
+        // Trước đây chỉ chủ lớp/Admin xem được chi tiết lớp (kể cả danh sách thành viên) - học viên là
+        // thành viên lớp không có cách nào thấy mình đang học cùng ai. Cho phép thêm: bất kỳ thành viên nào
+        // của lớp cũng xem được (chỉ xem, các API sửa/xoá/quản lý thành viên khác vẫn yêu cầu chủ lớp/Admin).
+        var isAllowed = request.Actor.Role == UserRole.Admin
+            || request.Actor.UserId == classRoom.OwnerUserId
+            || classRoom.HasMember(request.Actor.UserId);
+
+        if (!isAllowed)
+            throw ForbiddenException.NotOwner(nameof(ClassRoom), classRoom.Id);
 
         var members = await _userRepository.GetByExternalIdsAsync(classRoom.MemberUserIds, cancellationToken);
 

@@ -51,8 +51,10 @@ public class ClassesController : ControllerBase
         return Ok(result);
     }
 
+    // Không gắn policy Class.View ở đây (khác GetAll) - quyền xem thật sự do handler tự quyết định:
+    // Admin, chủ lớp, hoặc BẤT KỲ thành viên nào của lớp đó đều xem được (học viên không có Class.View
+    // theo mặc định nhưng vẫn cần xem được lớp mình đang học), giống cách GetMine/Join không gắn policy.
     [HttpGet("{id}")]
-    [Authorize(Policy = Permissions.Class.View)]
     public async Task<IActionResult> GetById(string id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetClassRoomByIdQuery(id, User.GetActor()), cancellationToken);
