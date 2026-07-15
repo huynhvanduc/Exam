@@ -1,10 +1,12 @@
 using Exam.API.Extensions;
 using Exam.Application.ClassAggregate.Commands.CreateClassRoom;
 using Exam.Application.ClassAggregate.Commands.DeleteClassRoom;
+using Exam.Application.ClassAggregate.Commands.ImportClassMembers;
 using Exam.Application.ClassAggregate.Commands.JoinClass;
 using Exam.Application.ClassAggregate.Commands.RegenerateJoinCode;
 using Exam.Application.ClassAggregate.Commands.RemoveMember;
 using Exam.Application.ClassAggregate.Commands.RenameClassRoom;
+using Exam.Application.ClassAggregate.Queries.ExportClassMembers;
 using Exam.Application.ClassAggregate.Queries.GetAllClassRooms;
 using Exam.Application.ClassAggregate.Queries.GetClassRoomById;
 using Exam.Application.ClassAggregate.Queries.GetMyClassRooms;
@@ -87,6 +89,29 @@ public class ClassesController : ControllerBase
     {
         var result = await _mediator.Send(new RemoveMemberCommand(id, userId, User.GetActor()), cancellationToken);
         return Ok(result);
+    }
+
+    [HttpPost("{id}/members/import")]
+    [Authorize(Policy = Permissions.Class.ManageMembers)]
+    [RequestSizeLimit(10_000_000)]
+    public async Task<IActionResult> ImportMembers(string id, IFormFile file, [FromQuery] bool dryRun, CancellationToken cancellationToken)
+    {
+        if (file.Length == 0)
+            return BadRequest("File is required.");
+
+        using var stream = new MemoryStream();
+        await file.CopyToAsync(stream, cancellationToken);
+
+        var result = await _mediator.Send(new ImportClassMembersCommand(id, stream.ToArray(), User.GetActor(), dryRun), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/members/export")]
+    [Authorize(Policy = Permissions.Class.ManageMembers)]
+    public async Task<IActionResult> ExportMembers(string id, CancellationToken cancellationToken)
+    {
+        var bytes = await _mediator.Send(new ExportClassMembersQuery(id, User.GetActor()), cancellationToken);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "thanh-vien-lop.xlsx");
     }
 
     [HttpPost("join")]

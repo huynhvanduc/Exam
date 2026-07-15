@@ -28,6 +28,25 @@ public class UserRepository : MongoRepositoryBase<User>, IUserRepository
         return await Collection.Find(x => idList.Contains(x.ExternalId)).ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyCollection<User>> GetByEmailsAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default)
+    {
+        var normalizedEmails = (emails ?? Enumerable.Empty<string>())
+            .Select(e => e?.Trim())
+            .Where(e => !string.IsNullOrWhiteSpace(e))
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
+
+        if (normalizedEmails.Count == 0)
+            return Array.Empty<User>();
+
+        Logger.LogDebug("Getting Users by Emails {Emails}.", normalizedEmails);
+
+        var filter = Builders<User>.Filter.Or(normalizedEmails
+            .Select(email => Builders<User>.Filter.Regex(x => x.Email, new BsonRegularExpression($"^{Regex.Escape(email!)}$", "i"))));
+
+        return await Collection.Find(filter).ToListAsync(cancellationToken);
+    }
+
     public Task<bool> AnyAsync(CancellationToken cancellationToken = default)
     {
         return Collection.Find(FilterDefinition<User>.Empty).AnyAsync(cancellationToken);

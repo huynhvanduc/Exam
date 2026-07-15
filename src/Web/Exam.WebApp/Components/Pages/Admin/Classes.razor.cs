@@ -1,10 +1,14 @@
+using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class Classes : AdminPageBase
 {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
     [Parameter] public string? Id { get; set; }
 
     private IReadOnlyCollection<ClassRoomDto>? classes;
@@ -93,4 +97,31 @@ public partial class Classes : AdminPageBase
             await LoadListAsync();
         },
         "Gỡ thất bại", "Đã gỡ.", yesText: "Gỡ");
+
+    private async Task OpenImportMembersDialogAsync()
+    {
+        // Dialog tự lo bước Xem trước (dry-run) + Xác nhận nhập bên trong nó, chỉ đóng lại và trả về
+        // kết quả cuối cùng SAU KHI admin đã xác nhận (Cancel nếu admin bỏ ngang ở bất kỳ bước nào).
+        var parameters = new Dictionary<string, object> { ["ClassId"] = selected!.Id };
+        var result = await ShowFormDialogAsync<ImportClassMembersDialog, ImportClassMembersResultDto>("Nhập danh sách học viên từ Excel", parameters);
+        if (result == null)
+            return;
+
+        var message = result.AddedCount > 0
+            ? $"Đã thêm {result.AddedCount} học viên, {result.AlreadyMemberCount} đã là thành viên sẵn, {result.Errors.Count} lỗi."
+            : $"Không có học viên nào được thêm ({result.TotalRows} dòng, {result.AlreadyMemberCount} đã là thành viên, {result.Errors.Count} lỗi).";
+
+        Toast.Add(message, result.Errors.Count == 0 ? AppSeverity.Success : AppSeverity.Warning);
+
+        selected = await Api.GetClassByIdAsync(selected.Id);
+        await LoadListAsync();
+    }
+
+    private Task ExportMembersAsync() => ExecuteAsync(async () =>
+    {
+        var bytes = await Api.ExportClassMembersAsync(selected!.Id);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", $"thanh-vien-lop-{selected.Id}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+    }, "Xuất Excel thất bại");
 }

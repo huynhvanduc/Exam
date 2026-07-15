@@ -18,6 +18,9 @@ public static class DataSeeder
     private const string Student2ExternalId = "44444444-4444-4444-4444-444444444444";
     private const string Student3ExternalId = "55555555-5555-5555-5555-555555555555";
     private const string Instructor2ExternalId = "66666666-6666-6666-6666-666666666666";
+    private const string Student4ExternalId = "77777777-7777-7777-7777-777777777777";
+    private const string Student5ExternalId = "88888888-8888-8888-8888-888888888888";
+    private const string Student6ExternalId = "99999999-9999-9999-9999-999999999999";
 
     private sealed record SeedAnswer(string Content, bool IsCorrect);
 
@@ -44,6 +47,12 @@ public static class DataSeeder
         var student2 = await SeedUserAsync(userRepository, Student2ExternalId, "hung.pham@exam-platform.vn", "Hùng", "Phạm", UserRole.Student, cancellationToken);
         await SeedUserAsync(userRepository, Student3ExternalId, "hoa.le@exam-platform.vn", "Hoa", "Lê", UserRole.Student, cancellationToken);
         var instructor2 = await SeedUserAsync(userRepository, Instructor2ExternalId, "tuan.le@exam-platform.vn", "Tuấn", "Lê", UserRole.Instructor, cancellationToken);
+
+        // Học viên chưa thuộc lớp nào - dùng để test tính năng Import Excel danh sách lớp
+        // (khớp vào tài khoản đã có sẵn theo email, không tạo tài khoản mới).
+        await SeedUserAsync(userRepository, Student4ExternalId, "duong.vo@exam-platform.vn", "Dương", "Võ", UserRole.Student, cancellationToken);
+        await SeedUserAsync(userRepository, Student5ExternalId, "mai.dang@exam-platform.vn", "Mai", "Đặng", UserRole.Student, cancellationToken);
+        await SeedUserAsync(userRepository, Student6ExternalId, "khanh.bui@exam-platform.vn", "Khánh", "Bùi", UserRole.Student, cancellationToken);
 
         // Lớp demo: minh hoạ đề thi giao riêng cho lớp cụ thể (chỉ thành viên mới thi được), song song với
         // các đề công khai khác được seed bên dưới - để phân biệt rõ 2 chế độ trên UI.

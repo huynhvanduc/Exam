@@ -58,7 +58,12 @@
                     <AppButton Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="RegenerateCodeAsync">Tạo mã mới</AppButton>
                 </AppCard>
                 <AppCard>
-                    <h3>Thành viên (@selected.Members.Count)</h3>
+                    <div class="toolbar" style="margin-bottom:8px;">
+                        <h3 style="margin:0;">Thành viên (@selected.Members.Count)</h3>
+                        <span class="spacer"></span>
+                        <AppButton Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="OpenImportMembersDialogAsync">Import Excel</AppButton>
+                        <AppButton Disabled="!CanManage(currentUser, selected.OwnerUserId)" OnClick="ExportMembersAsync">Export Excel</AppButton>
+                    </div>
                     @if (selected.Members.Count == 0)
                     {
                         <div class="empty-state">Chưa có học viên nào tham gia lớp này.</div>

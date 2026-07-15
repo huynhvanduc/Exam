@@ -9,6 +9,8 @@ public interface IUserRepository : IRepositoryBase<User>
 
     Task<IReadOnlyCollection<User>> GetByExternalIdsAsync(IEnumerable<string> externalIds, CancellationToken cancellationToken = default);
 
+    Task<IReadOnlyCollection<User>> GetByEmailsAsync(IEnumerable<string> emails, CancellationToken cancellationToken = default);
+
     Task<bool> AnyAsync(CancellationToken cancellationToken = default);
 
     Task<IReadOnlyCollection<User>> GetAllAsync(CancellationToken cancellationToken = default);

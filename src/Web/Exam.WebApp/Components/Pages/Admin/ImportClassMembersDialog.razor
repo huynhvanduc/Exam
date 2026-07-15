@@ -1,0 +1,82 @@
+@inherits FormDialogBase
+@using Microsoft.AspNetCore.Components.Forms
+
+<p class="page-sub">
+    Chọn file Excel (.xlsx) chỉ gồm 1 cột Email của các học viên đã có tài khoản trong hệ thống.
+    Dùng nút "Export Excel" ở trang lớp học để lấy file mẫu đúng định dạng.
+</p>
+
+<InputFile OnChange="OnFileSelectedAsync" accept=".xlsx" />
+
+@if (isBusy && previewResult == null)
+{
+    <AppSpinner />
+}
+
+@if (previewResult != null)
+{
+    <p style="margin:12px 0;">
+        Tổng số dòng: <b>@previewResult.TotalRows</b> — Sẽ thêm mới: <b>@previewResult.AddedCount</b> — Đã là thành viên: <b>@previewResult.AlreadyMemberCount</b> — Lỗi: <b>@previewResult.Errors.Count</b>
+    </p>
+
+    @if (previewResult.ValidRows.Count > 0)
+    {
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Danh sách hợp lệ:</div>
+        <div style="max-height:260px;overflow-y:auto;">
+            <table class="data">
+                <thead><tr><th>Dòng</th><th>Email</th><th>Họ tên</th><th>Trạng thái</th></tr></thead>
+                <tbody>
+                    @foreach (var row in previewResult.ValidRows.Take(MaxPreviewRows))
+                    {
+                        <tr>
+                            <td>@row.RowNumber</td>
+                            <td>@row.Email</td>
+                            <td>@row.FullName</td>
+                            <td>@(row.AlreadyMember ? "Đã là thành viên" : "Sẽ thêm")</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (previewResult.ValidRows.Count > MaxPreviewRows)
+        {
+            <p class="page-sub">… và @(previewResult.ValidRows.Count - MaxPreviewRows) dòng hợp lệ khác.</p>
+        }
+    }
+
+    @if (previewResult.Errors.Count > 0)
+    {
+        <AppAlert Severity="AppAlertSeverity.Warning">
+            @previewResult.Errors.Count dòng lỗi sẽ bị BỎ QUA khi xác nhận nhập, các dòng còn lại vẫn được thêm bình thường.
+        </AppAlert>
+        <div style="max-height:200px;overflow-y:auto;">
+            <table class="data">
+                <thead><tr><th>Dòng</th><th>Email</th><th>Lỗi</th></tr></thead>
+                <tbody>
+                    @foreach (var error in previewResult.Errors.Take(MaxPreviewRows))
+                    {
+                        <tr>
+                            <td>@error.RowNumber</td>
+                            <td>@error.Email</td>
+                            <td>@error.Message</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (previewResult.Errors.Count > MaxPreviewRows)
+        {
+            <p class="page-sub">… và @(previewResult.Errors.Count - MaxPreviewRows) lỗi khác.</p>
+        }
+    }
+}
+
+<div class="modal-actions">
+    <AppButton OnClick="Cancel">Huỷ</AppButton>
+    @if (previewResult != null)
+    {
+        <AppButton Variant="AppButtonVariant.Primary" Disabled="previewResult.AddedCount == 0 || isBusy" OnClick="ConfirmAsync">
+            Xác nhận nhập (@previewResult.AddedCount học viên)
+        </AppButton>
+    }
+</div>

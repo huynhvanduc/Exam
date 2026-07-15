@@ -74,6 +74,8 @@ public static class ApiRoutes
         public static string ById(string id) => $"{Base}/{id}";
         public static string RegenerateCode(string id) => $"{Base}/{id}/regenerate-code";
         public static string Member(string id, string userId) => $"{Base}/{id}/members/{userId}";
+        public static string ImportMembers(string id, bool dryRun) => $"{Base}/{id}/members/import?dryRun={dryRun}";
+        public static string ExportMembers(string id) => $"{Base}/{id}/members/export";
     }
 
     public static class ExamAttempts

@@ -188,6 +188,31 @@ public class ExamApiClient
     public Task<ClassRoomDetailDto> RemoveClassMemberAsync(string id, string userId, CancellationToken cancellationToken = default) =>
         SendAsync<ClassRoomDetailDto>(HttpMethod.Delete, ApiRoutes.Classes.Member(id, userId), cancellationToken: cancellationToken);
 
+    public async Task<ImportClassMembersResultDto> ImportClassMembersAsync(string classId, Stream fileStream, string fileName, bool dryRun, CancellationToken cancellationToken = default)
+    {
+        using var content = new MultipartFormDataContent();
+        using var streamContent = new StreamContent(fileStream);
+        streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+        content.Add(streamContent, "file", fileName);
+
+        var request = new HttpRequestMessage(HttpMethod.Post, ApiRoutes.Classes.ImportMembers(classId, dryRun)) { Content = content };
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return (await response.Content.ReadFromJsonAsync<ImportClassMembersResultDto>(cancellationToken: cancellationToken))!;
+    }
+
+    public async Task<byte[]> ExportClassMembersAsync(string classId, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, ApiRoutes.Classes.ExportMembers(classId));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
     public Task<ClassRoomDto> JoinClassAsync(string joinCode, CancellationToken cancellationToken = default) =>
         SendAsync<ClassRoomDto>(HttpMethod.Post, ApiRoutes.Classes.Join, new JoinClassRequest(joinCode), cancellationToken);
 
