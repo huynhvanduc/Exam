@@ -1,0 +1,4 @@
+ExamResultId,UserId,IsValid
+result-1,student-1,true
+,student-1,false
+result-1,,false
