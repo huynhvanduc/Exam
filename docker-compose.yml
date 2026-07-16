@@ -32,6 +32,8 @@ services:
       dockerfile: src/Services/Identity/Identity.Server/Dockerfile
     ports:
         - '5001:8080'
+    volumes:
+        - identity-dataprotection-keys:/app/dataprotection-keys
     networks:
         - exam
     restart: always
@@ -108,3 +110,4 @@ volumes:
     mongo-data:
     sqlserver_data:
     webapp-dataprotection-keys:
+    identity-dataprotection-keys:

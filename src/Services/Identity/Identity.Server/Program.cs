@@ -3,6 +3,7 @@ using Identity.Server.Extensions;
 using Identity.Server.Persistence;
 using Identity.Server.Settings;
 using Microsoft.AspNetCore.Authentication.Cookies;
+using Microsoft.AspNetCore.DataProtection;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Hosting;
@@ -24,6 +25,13 @@ try
         .Enrich.FromLogContext());
 
     // Add services to the container.
+    // Không persist key ring này thì mỗi lần container restart sẽ tự sinh key mới, làm mọi antiforgery
+    // token/cookie đang hiệu lực (kể cả phiên login dở dang) bị vô hiệu ngay lập tức - đã gặp thật trong
+    // lúc dev, xem Exam.WebApp/Program.cs để biết pattern gốc.
+    builder.Services.AddDataProtection()
+        .SetApplicationName("Identity.Server")
+        .PersistKeysToFileSystem(new DirectoryInfo("/app/dataprotection-keys"));
+
     builder.Services.AddRazorComponents();
     builder.Services.AddControllers();
     builder.Services.AddAuthorization();
