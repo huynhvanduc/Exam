@@ -111,6 +111,19 @@ public class ExamApiClient
     public Task<PagedResult<ExamResultAdminListItemDto>> GetExamResultsByExamAsync(string examId, int page, int pageSize, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<ExamResultAdminListItemDto>>(HttpMethod.Get, ApiRoutes.Exams.Results(examId, page, pageSize), cancellationToken: cancellationToken);
 
+    public async Task<byte[]> ExportExamResultsAsync(string examId, CancellationToken cancellationToken = default)
+    {
+        var request = new HttpRequestMessage(HttpMethod.Get, ApiRoutes.Exams.ExportResults(examId));
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await GetAccessTokenAsync());
+
+        var response = await _httpClient.SendAsync(request, cancellationToken);
+        await EnsureSuccessAsync(response);
+        return await response.Content.ReadAsByteArrayAsync(cancellationToken);
+    }
+
+    public Task<IReadOnlyCollection<ClassMemberDto>> GetExamNotAttemptedMembersAsync(string examId, CancellationToken cancellationToken = default) =>
+        SendForCollectionAsync<ClassMemberDto>(HttpMethod.Get, ApiRoutes.Exams.NotAttempted(examId), cancellationToken: cancellationToken);
+
     public Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default) =>
         SendAsync<DashboardSummaryDto>(HttpMethod.Get, ApiRoutes.Dashboard.Summary, cancellationToken: cancellationToken);
 

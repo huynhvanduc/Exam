@@ -62,6 +62,8 @@ public static class ApiRoutes
         public static string Unpublish(string examId) => $"{Base}/{examId}/unpublish";
         public static string Archive(string examId) => $"{Base}/{examId}/archive";
         public static string Results(string examId, int page, int pageSize) => $"{Base}/{examId}/results?page={page}&pageSize={pageSize}";
+        public static string ExportResults(string examId) => $"{Base}/{examId}/results/export";
+        public static string NotAttempted(string examId) => $"{Base}/{examId}/not-attempted";
         public static string Available(int page, int pageSize) => $"{Base}/available?page={page}&pageSize={pageSize}";
         public static string Class(string examId, string classId) => $"{Base}/{examId}/classes/{classId}";
     }

@@ -1,11 +1,14 @@
 using Exam.WebApp.Components.UI;
 using Exam.WebApp.Services;
 using Microsoft.AspNetCore.Components;
+using Microsoft.JSInterop;
 
 namespace Exam.WebApp.Components.Pages.Admin;
 
 public partial class Exams : AdminPageBase
 {
+    [Inject] private IJSRuntime JS { get; set; } = null!;
+
     [Parameter] public string? Id { get; set; }
 
     private IReadOnlyCollection<CategoryDto>? categories;
@@ -40,6 +43,7 @@ public partial class Exams : AdminPageBase
     private string resultsFilter = "all";
     private ExamResultAdminListItemDto? drawerResult;
     private ExamAttemptStatusDto? drawerStatus;
+    private IReadOnlyCollection<ClassMemberDto>? notAttempted;
 
     private IReadOnlyCollection<ClassRoomDto> unassignedClasses =>
         allClasses.Where(c => selected != null && !selected.AssignedClassIds.Contains(c.Id)).ToList();
@@ -87,10 +91,14 @@ public partial class Exams : AdminPageBase
         drawerResult = null;
         drawerStatus = null;
         results = null;
+        notAttempted = null;
         // Kết quả thi cũng bị OwnershipGuard chặn ở backend giống Sửa/Xuất bản/Lưu trữ - không gọi API
         // này khi chắc chắn sẽ bị 403 (Instructor xem đề thi của người khác), tránh toast lỗi vô nghĩa.
         if (CanManageSelected)
+        {
             await LoadResultsAsync();
+            await LoadNotAttemptedAsync();
+        }
     }, "Không tải được đề thi");
 
     private int CompositionCountOf(Level level, QuestionType questionType) =>
@@ -101,6 +109,34 @@ public partial class Exams : AdminPageBase
         var result = await Api.GetExamResultsByExamAsync(selected!.Id, 1, 100);
         results = result.Items;
     }, "Không tải được kết quả thi");
+
+    private Task LoadNotAttemptedAsync() => ExecuteAsync(async () =>
+        notAttempted = await Api.GetExamNotAttemptedMembersAsync(selected!.Id), "Không tải được danh sách chưa làm bài");
+
+    private Task ExportResultsAsync() => ExecuteAsync(async () =>
+    {
+        var bytes = await Api.ExportExamResultsAsync(selected!.Id);
+        var base64 = Convert.ToBase64String(bytes);
+        await JS.InvokeVoidAsync("downloadFileFromBytes", $"ket-qua-thi-{selected.Id}.xlsx",
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", base64);
+    }, "Xuất Excel thất bại");
+
+    // "Sắp đóng đề" - chỉ cảnh báo khi đề có hạn (AvailableTo) và còn trong vòng 48 giờ tới hoặc đã trễ hạn,
+    // để giảng viên biết cần nhắc học viên trong ClosingSoonText hiển thị ở card "Chưa làm bài".
+    private string? ClosingSoonText()
+    {
+        if (selected?.AvailableTo is not { } to)
+            return null;
+
+        var remaining = to - DateTime.UtcNow;
+        if (remaining <= TimeSpan.Zero)
+            return "Đã hết hạn nộp bài";
+
+        return remaining <= TimeSpan.FromHours(48) ? $"Còn {FormatRemaining(remaining)} nữa đóng đề" : null;
+    }
+
+    private static string FormatRemaining(TimeSpan ts) =>
+        ts.TotalDays >= 1 ? $"{(int)ts.TotalDays} ngày {ts.Hours} giờ" : $"{(int)ts.TotalHours} giờ {ts.Minutes} phút";
 
     private void SetResultsFilter(string filter) => resultsFilter = filter;
 

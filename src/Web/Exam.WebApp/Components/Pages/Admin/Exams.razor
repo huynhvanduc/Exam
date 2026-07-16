@@ -170,11 +170,41 @@
                 </div>
             </div>
 
+            @if (CanManageSelected && !selected.IsPublic)
+            {
+                <AppCard Class="results-card">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                        <h3 style="margin:0;">Chưa làm bài</h3><span class="spacer"></span>
+                        @{ var closingSoonText = ClosingSoonText(); }
+                        @if (closingSoonText != null)
+                        {
+                            <AppStatusPill Variant="AppStatusPillVariant.Danger">⏰ @closingSoonText</AppStatusPill>
+                        }
+                    </div>
+                    @if (notAttempted == null)
+                    {
+                        <AppSpinner />
+                    }
+                    else if (notAttempted.Count == 0)
+                    {
+                        <div class="empty-state">Mọi thành viên lớp được giao đề này đã làm bài.</div>
+                    }
+                    else
+                    {
+                        @foreach (var member in notAttempted)
+                        {
+                            <div class="member-row"><span>@member.FullName (@member.Email)</span></div>
+                        }
+                    }
+                </AppCard>
+            }
+
             <AppCard Class="results-card">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
                     <h3 style="margin:0;">Kết quả thi</h3><span class="spacer"></span>
                     @if (CanManageSelected)
                     {
+                        <AppButton OnClick="ExportResultsAsync">Xuất Excel</AppButton>
                         <AppButton OnClick="LoadResultsAsync">↻ Làm mới</AppButton>
                     }
                 </div>

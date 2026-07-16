@@ -13,6 +13,8 @@ using Exam.API.Extensions;
 using Exam.Application.ExamAggregate.Queries.GetAvailableExams;
 using Exam.Application.ExamAggregate.Queries.GetExamById;
 using Exam.Application.ExamAggregate.Queries.GetExamsByCategory;
+using Exam.Application.ExamResultAggregate.Queries.ExportExamResults;
+using Exam.Application.ExamResultAggregate.Queries.GetExamNotAttemptedMembers;
 using Exam.Application.ExamResultAggregate.Queries.GetExamResultsByExam;
 using Exam.Contracts;
 using MediatR;
@@ -158,6 +160,22 @@ public class ExamsController : ControllerBase
     {
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
         var result = await _mediator.Send(new GetExamResultsByExamQuery(id, User.GetActor(), normalizedPage, normalizedPageSize), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/results/export")]
+    [Authorize(Policy = Permissions.Exam.ViewResults)]
+    public async Task<IActionResult> ExportResults(string id, CancellationToken cancellationToken)
+    {
+        var bytes = await _mediator.Send(new ExportExamResultsQuery(id, User.GetActor()), cancellationToken);
+        return File(bytes, "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet", "ket-qua-thi.xlsx");
+    }
+
+    [HttpGet("{id}/not-attempted")]
+    [Authorize(Policy = Permissions.Exam.ViewResults)]
+    public async Task<IActionResult> GetNotAttempted(string id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetExamNotAttemptedMembersQuery(id, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 }

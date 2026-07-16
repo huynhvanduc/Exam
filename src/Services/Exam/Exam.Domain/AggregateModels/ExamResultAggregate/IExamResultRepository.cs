@@ -20,4 +20,8 @@ public interface IExamResultRepository : IRepositoryBase<ExamResult>
     // Toàn bộ attempt đang làm dở (Finished = false), bất kể user/exam nào - dùng cho tiến trình nền quét
     // và tự nộp hộ các bài đã quá hạn nhưng học viên bỏ ngang không quay lại (xem ExpiredExamAttemptSweeperService).
     Task<IReadOnlyCollection<ExamResult>> GetAllInProgressAsync(CancellationToken cancellationToken = default);
+
+    // UserId duy nhất của mọi người đã có ít nhất 1 attempt (kể cả đang làm dở) cho đề thi này - dùng để suy
+    // ra "còn ai trong lớp CHƯA làm bài" (lấy danh sách thành viên lớp trừ đi tập này).
+    Task<IReadOnlyCollection<string>> GetAttemptedUserIdsByExamIdAsync(string examId, CancellationToken cancellationToken = default);
 }

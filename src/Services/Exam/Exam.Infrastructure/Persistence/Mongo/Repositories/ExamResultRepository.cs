@@ -41,4 +41,11 @@ public class ExamResultRepository : MongoRepositoryBase<ExamResult>, IExamResult
         Logger.LogDebug("Getting all in-progress ExamResults.");
         return await Collection.Find(x => !x.Finished).ToListAsync(cancellationToken);
     }
+
+    public async Task<IReadOnlyCollection<string>> GetAttemptedUserIdsByExamIdAsync(string examId, CancellationToken cancellationToken = default)
+    {
+        Logger.LogDebug("Getting distinct attempted UserIds for ExamId {ExamId}.", examId);
+        return await Collection.Distinct(x => x.UserId, x => x.ExamId == examId, cancellationToken: cancellationToken)
+            .ToListAsync(cancellationToken);
+    }
 }
