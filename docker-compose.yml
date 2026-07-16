@@ -108,6 +108,23 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+  caddy:
+    container_name: caddy
+    image: caddy:2-alpine
+    ports:
+        - '80:80'
+        - '443:443'
+    volumes:
+        - ./Caddyfile:/etc/caddy/Caddyfile:ro
+        - caddy-data:/data
+        - caddy-config:/config
+    networks:
+        - exam
+    restart: always
+    depends_on:
+      - exam.webapp
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
 
 networks:
     exam:
@@ -117,3 +134,5 @@ volumes:
     sqlserver_data:
     webapp-dataprotection-keys:
     identity-dataprotection-keys:
+    caddy-data:
+    caddy-config:

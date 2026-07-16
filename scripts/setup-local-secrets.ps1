@@ -33,6 +33,9 @@ function Get-OrCreateSecret([string]$key, [string]$default = $null) {
     return New-Secret
 }
 
+# DOMAIN không phải secret (không sinh ngẫu nhiên) - chỉ giữ lại giá trị đã có, mặc định "localhost".
+$domain = if ($existing.ContainsKey("DOMAIN") -and $existing["DOMAIN"]) { $existing["DOMAIN"] } else { "localhost" }
+
 $sqlSaPassword = Get-OrCreateSecret "SQL_SA_PASSWORD"
 $mongoRootUser = Get-OrCreateSecret "MONGO_ROOT_USER" "admin"
 $mongoRootPassword = Get-OrCreateSecret "MONGO_ROOT_PASSWORD"
@@ -41,6 +44,8 @@ $warehouseClientSecret = Get-OrCreateSecret "IDENTITY_WAREHOUSE_CLIENT_SECRET"
 $testerClientSecret = Get-OrCreateSecret "IDENTITY_TESTER_CLIENT_SECRET"
 
 @"
+DOMAIN=$domain
+
 SQL_SA_PASSWORD=$sqlSaPassword
 
 MONGO_ROOT_USER=$mongoRootUser

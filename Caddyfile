@@ -1,0 +1,11 @@
+# Reverse proxy + TLS termination cho Exam.WebApp (bề mặt người dùng thật - đăng nhập, làm bài thi).
+#
+# {$DOMAIN:localhost} = domain lấy từ biến môi trường DOMAIN, mặc định "localhost" nếu chưa set.
+#   - Chưa có domain thật (DOMAIN=localhost, giá trị mặc định): Caddy tự dùng CA nội bộ, phát cert
+#     self-signed cho "localhost" - chạy HTTPS được ngay, không cần cấu hình gì thêm. Trình duyệt sẽ
+#     cảnh báo "không tin cậy" trừ khi cài root CA nội bộ của Caddy vào máy (xem README).
+#   - Có domain thật + server có IP public trỏ đúng domain: set DOMAIN=exam.truongban.edu.vn trong
+#     .env rồi restart - Caddy tự xin và tự gia hạn cert Let's Encrypt, không cần đổi gì trong file này.
+{$DOMAIN:localhost} {
+    reverse_proxy exam.webapp:8080
+}
