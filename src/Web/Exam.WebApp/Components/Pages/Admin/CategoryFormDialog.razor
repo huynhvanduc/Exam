@@ -1,8 +1,8 @@
 @inherits FormDialogBase
 
 <AppForm @ref="form">
-    <AppTextField Label="Tên môn học" @bind-Value="name" Required="true" RequiredError="Bắt buộc nhập tên." />
-    <AppTextField Label="Url Path" @bind-Value="urlPath" Required="true" RequiredError="Bắt buộc nhập url path."
+    <AppTextField Label="Tên môn học" Value="@name" ValueChanged="OnNameChanged" Required="true" RequiredError="Bắt buộc nhập tên." />
+    <AppTextField Label="Url Path" Value="@urlPath" ValueChanged="OnUrlPathChanged" Required="true" RequiredError="Bắt buộc nhập url path."
                   Hint="Dùng cho đường dẫn, vd: cong-nghe-thong-tin" />
 </AppForm>
 <div class="modal-actions">
