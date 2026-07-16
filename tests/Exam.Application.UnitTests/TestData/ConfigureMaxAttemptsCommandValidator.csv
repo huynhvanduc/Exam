@@ -1,0 +1,6 @@
+ExamId,MaxAttempts,IsValid
+exam-1,3,true
+exam-1,,true
+,3,false
+exam-1,0,false
+exam-1,-1,false

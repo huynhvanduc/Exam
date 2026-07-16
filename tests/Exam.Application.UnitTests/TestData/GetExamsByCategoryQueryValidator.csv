@@ -1,0 +1,7 @@
+CategoryId,Page,PageSize,IsValid
+cat-1,1,20,true
+,1,20,false
+cat-1,0,20,false
+cat-1,1,0,false
+cat-1,1,101,false
+cat-1,1,100,true

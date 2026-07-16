@@ -1,0 +1,5 @@
+Name,ShortDesc,CategoryId,OwnerUserId,IsValid
+Đề kiểm tra 1,Mô tả ngắn,cat-1,teacher-1,true
+,Mô tả ngắn,cat-1,teacher-1,false
+Đề kiểm tra 1,Mô tả ngắn,,teacher-1,false
+Đề kiểm tra 1,Mô tả ngắn,cat-1,,false

@@ -1,0 +1,5 @@
+Id,Name,CategoryId,IsValid
+exam-1,Đề kiểm tra 1,cat-1,true
+,Đề kiểm tra 1,cat-1,false
+exam-1,,cat-1,false
+exam-1,Đề kiểm tra 1,,false
