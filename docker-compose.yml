@@ -10,8 +10,8 @@ services:
         - exam
     restart: always
     environment:
-      MONGO_INITDB_ROOT_USERNAME: admin
-      MONGO_INITDB_ROOT_PASSWORD: Admin@12345
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_ROOT_USER}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_ROOT_PASSWORD}
   sqlserver:
     container_name: sqlserver.db
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -24,7 +24,7 @@ services:
     restart: always
     environment:
       ACCEPT_EULA: "Y"
-      MSSQL_SA_PASSWORD: Admin@12345
+      MSSQL_SA_PASSWORD: ${SQL_SA_PASSWORD}
   identity.server:
     container_name: identity.server
     build:
@@ -42,8 +42,14 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      ConnectionStrings__IdentitySqlConnection: "Server=sqlserver.db,1433;Database=ExamIdentity;User Id=sa;Password=Admin@12345;TrustServerCertificate=True;"
+      ConnectionStrings__IdentitySqlConnection: "Server=sqlserver.db,1433;Database=ExamIdentity;User Id=sa;Password=${SQL_SA_PASSWORD};TrustServerCertificate=True;"
       IdentityServer__SelfAuthority: "http://localhost:8080"
+      # Override ClientSecret theo VỊ TRÍ trong mảng IdentityServer:Clients của appsettings.json
+      # (0=exam.api.internal, 1=exam.warehouse.worker, 2=exam.tester) - đổi thứ tự client trong
+      # appsettings.json thì PHẢI sửa lại index tương ứng ở đây.
+      IdentityServer__Clients__0__ClientSecret: "${IDENTITY_INTERNAL_CLIENT_SECRET}"
+      IdentityServer__Clients__1__ClientSecret: "${IDENTITY_WAREHOUSE_CLIENT_SECRET}"
+      IdentityServer__Clients__2__ClientSecret: "${IDENTITY_TESTER_CLIENT_SECRET}"
   exam.api:
     container_name: exam.api
     build:
@@ -60,12 +66,12 @@ services:
     environment:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
-      MongoDb__ConnectionString: "mongodb://admin:Admin%4012345@mongo.db:27017/?authSource=admin"
+      MongoDb__ConnectionString: "mongodb://${MONGO_ROOT_USER}:${MONGO_ROOT_PASSWORD}@mongo.db:27017/?authSource=admin"
       MongoDb__DatabaseName: "ExamDb"
       IdentityServer__Authority: "http://identity.server:8080"
       IdentityServer__Audience: "exam_api"
       IdentityServer__InternalClientId: "exam.api.internal"
-      IdentityServer__InternalClientSecret: "ExamApiInternal_Secret_2026$"
+      IdentityServer__InternalClientSecret: "${IDENTITY_INTERNAL_CLIENT_SECRET}"
       IdentityServer__InternalScope: "identity_api.manage"
       HealthChecksUI__HealthChecks__0__Uri: "http://localhost:8080/health"
     healthcheck:
