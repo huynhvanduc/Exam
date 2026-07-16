@@ -358,6 +358,11 @@ table.data tbody tr:last-child td { border-bottom:none; }
 .tile .lbl { font-size:12px; color:var(--ink-soft); }
 .tile .val { font-size:24px; font-weight:700; margin-top:2px; }
 .tile .go { position:absolute; top:12px; right:12px; font-size:12px; color:var(--accent); }
+.histogram { display:flex; align-items:flex-end; gap:12px; height:140px; margin:10px 0 20px; padding:20px 4px 0; }
+.histogram-col { flex:1; display:flex; flex-direction:column; align-items:center; height:100%; justify-content:flex-end; }
+.histogram-bar { width:100%; background:var(--accent); border-radius:4px 4px 0 0; min-height:2px; position:relative; }
+.histogram-count { position:absolute; top:-18px; left:0; right:0; text-align:center; font-size:11px; font-weight:600; color:var(--ink-soft); }
+.histogram-label { margin-top:6px; font-size:11px; color:var(--ink-soft); }
 .activity-row { display:flex; justify-content:space-between; padding:8px 0; border-top:1px solid var(--line); font-size:12.5px; }
 .activity-row:first-of-type { border-top:none; }
 .see-all { color:var(--accent); font-size:12.5px; font-weight:600; text-decoration:none; }

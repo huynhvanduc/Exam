@@ -199,6 +199,59 @@
                 </AppCard>
             }
 
+            @if (CanManageSelected)
+            {
+                <AppCard Class="results-card">
+                    <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
+                        <h3 style="margin:0;">Phân tích đề thi</h3><span class="spacer"></span>
+                        <AppButton OnClick="LoadAnalyticsAsync">↻ Làm mới</AppButton>
+                    </div>
+                    @if (analytics == null)
+                    {
+                        <AppSpinner />
+                    }
+                    else if (analytics.TotalAttempts == 0)
+                    {
+                        <div class="empty-state">Chưa có ai nộp bài để phân tích.</div>
+                    }
+                    else
+                    {
+                        <div class="tiles" style="margin-bottom:16px;">
+                            <div class="tile"><div class="lbl">Lượt đã nộp</div><div class="val">@analytics.TotalAttempts</div></div>
+                            <div class="tile"><div class="lbl">Điểm trung bình</div><div class="val">@analytics.AverageScore/10</div></div>
+                            <div class="tile"><div class="lbl">Tỷ lệ đạt</div><div class="val">@analytics.PassRate%</div></div>
+                        </div>
+
+                        <b style="font-size:13px;">Phổ điểm</b>
+                        <div class="histogram">
+                            @foreach (var bucket in analytics.ScoreHistogram)
+                            {
+                                <div class="histogram-col">
+                                    <div class="histogram-bar" style="height:@(HistogramBarHeightPercent(bucket))%">
+                                        <span class="histogram-count">@bucket.Count</span>
+                                    </div>
+                                    <div class="histogram-label">@bucket.RangeLabel</div>
+                                </div>
+                            }
+                        </div>
+
+                        @if (analytics.HardestQuestions.Count > 0)
+                        {
+                            <b style="font-size:13px;">Câu hỏi hay bị sai nhất</b>
+                            <table class="data">
+                                <thead><tr><th>Câu hỏi</th><th>Số lượt trả lời</th><th>Tỷ lệ sai</th></tr></thead>
+                                <tbody>
+                                    @foreach (var q in analytics.HardestQuestions)
+                                    {
+                                        <tr><td>@q.Content</td><td>@q.TotalAnswered</td><td>@q.IncorrectRate%</td></tr>
+                                    }
+                                </tbody>
+                            </table>
+                        }
+                    }
+                </AppCard>
+            }
+
             <AppCard Class="results-card">
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap;">
                     <h3 style="margin:0;">Kết quả thi</h3><span class="spacer"></span>

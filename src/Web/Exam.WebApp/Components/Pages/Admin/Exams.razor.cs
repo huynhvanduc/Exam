@@ -44,6 +44,7 @@ public partial class Exams : AdminPageBase
     private ExamResultAdminListItemDto? drawerResult;
     private ExamAttemptStatusDto? drawerStatus;
     private IReadOnlyCollection<ClassMemberDto>? notAttempted;
+    private ExamAnalyticsDto? analytics;
 
     private IReadOnlyCollection<ClassRoomDto> unassignedClasses =>
         allClasses.Where(c => selected != null && !selected.AssignedClassIds.Contains(c.Id)).ToList();
@@ -92,12 +93,14 @@ public partial class Exams : AdminPageBase
         drawerStatus = null;
         results = null;
         notAttempted = null;
+        analytics = null;
         // Kết quả thi cũng bị OwnershipGuard chặn ở backend giống Sửa/Xuất bản/Lưu trữ - không gọi API
         // này khi chắc chắn sẽ bị 403 (Instructor xem đề thi của người khác), tránh toast lỗi vô nghĩa.
         if (CanManageSelected)
         {
             await LoadResultsAsync();
             await LoadNotAttemptedAsync();
+            await LoadAnalyticsAsync();
         }
     }, "Không tải được đề thi");
 
@@ -112,6 +115,18 @@ public partial class Exams : AdminPageBase
 
     private Task LoadNotAttemptedAsync() => ExecuteAsync(async () =>
         notAttempted = await Api.GetExamNotAttemptedMembersAsync(selected!.Id), "Không tải được danh sách chưa làm bài");
+
+    private Task LoadAnalyticsAsync() => ExecuteAsync(async () =>
+        analytics = await Api.GetExamAnalyticsAsync(selected!.Id), "Không tải được phân tích đề thi");
+
+    private int HistogramBarHeightPercent(ScoreHistogramBucketDto bucket)
+    {
+        if (bucket.Count == 0)
+            return 2;
+
+        var maxCount = analytics!.ScoreHistogram.Max(b => b.Count);
+        return maxCount == 0 ? 2 : bucket.Count * 100 / maxCount;
+    }
 
     private Task ExportResultsAsync() => ExecuteAsync(async () =>
     {

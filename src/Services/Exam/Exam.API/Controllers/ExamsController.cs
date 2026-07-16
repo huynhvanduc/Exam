@@ -14,6 +14,7 @@ using Exam.Application.ExamAggregate.Queries.GetAvailableExams;
 using Exam.Application.ExamAggregate.Queries.GetExamById;
 using Exam.Application.ExamAggregate.Queries.GetExamsByCategory;
 using Exam.Application.ExamResultAggregate.Queries.ExportExamResults;
+using Exam.Application.ExamResultAggregate.Queries.GetExamAnalytics;
 using Exam.Application.ExamResultAggregate.Queries.GetExamNotAttemptedMembers;
 using Exam.Application.ExamResultAggregate.Queries.GetExamResultsByExam;
 using Exam.Contracts;
@@ -176,6 +177,14 @@ public class ExamsController : ControllerBase
     public async Task<IActionResult> GetNotAttempted(string id, CancellationToken cancellationToken)
     {
         var result = await _mediator.Send(new GetExamNotAttemptedMembersQuery(id, User.GetActor()), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpGet("{id}/analytics")]
+    [Authorize(Policy = Permissions.Exam.ViewResults)]
+    public async Task<IActionResult> GetAnalytics(string id, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new GetExamAnalyticsQuery(id, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 }

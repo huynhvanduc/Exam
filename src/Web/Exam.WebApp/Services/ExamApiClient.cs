@@ -124,6 +124,9 @@ public class ExamApiClient
     public Task<IReadOnlyCollection<ClassMemberDto>> GetExamNotAttemptedMembersAsync(string examId, CancellationToken cancellationToken = default) =>
         SendForCollectionAsync<ClassMemberDto>(HttpMethod.Get, ApiRoutes.Exams.NotAttempted(examId), cancellationToken: cancellationToken);
 
+    public Task<ExamAnalyticsDto> GetExamAnalyticsAsync(string examId, CancellationToken cancellationToken = default) =>
+        SendAsync<ExamAnalyticsDto>(HttpMethod.Get, ApiRoutes.Exams.Analytics(examId), cancellationToken: cancellationToken);
+
     public Task<DashboardSummaryDto> GetDashboardSummaryAsync(CancellationToken cancellationToken = default) =>
         SendAsync<DashboardSummaryDto>(HttpMethod.Get, ApiRoutes.Dashboard.Summary, cancellationToken: cancellationToken);
 
