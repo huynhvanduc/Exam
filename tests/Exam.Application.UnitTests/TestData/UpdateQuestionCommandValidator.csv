@@ -1,0 +1,5 @@
+Id,Content,CategoryId,Explain,IsValid
+q-1,Nội dung câu hỏi hợp lệ,cat-1,,true
+,Nội dung câu hỏi hợp lệ,cat-1,,false
+q-1,,cat-1,,false
+q-1,Nội dung câu hỏi hợp lệ,,,false
