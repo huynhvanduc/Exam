@@ -1,0 +1,6 @@
+UserId,ExamId,ShouldThrow
+user-1,exam-1,false
+,exam-1,true
+" ",exam-1,true
+user-1,,true
+user-1," ",true

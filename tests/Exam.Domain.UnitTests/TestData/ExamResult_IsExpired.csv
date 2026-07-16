@@ -1,0 +1,6 @@
+DurationMinutes,MinutesAfterStart,Finished,ExpectedExpired
+60,30,false,false
+60,90,false,true
+,90,false,false
+60,90,true,false
+60,60,false,true

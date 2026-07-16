@@ -1,0 +1,4 @@
+Role,ShouldThrow
+Student,false
+Instructor,false
+Admin,true

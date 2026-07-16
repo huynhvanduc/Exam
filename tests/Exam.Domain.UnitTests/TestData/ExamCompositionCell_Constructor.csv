@@ -1,0 +1,4 @@
+Count,ShouldThrow
+0,false
+5,false
+-1,true

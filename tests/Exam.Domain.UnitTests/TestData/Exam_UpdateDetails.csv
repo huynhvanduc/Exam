@@ -1,0 +1,8 @@
+Name,CategoryId,MinimumPassingScore,ShouldThrow
+Đề kiểm tra sửa,cat-2,6,false
+,cat-2,6,true
+" ",cat-2,6,true
+Đề kiểm tra sửa,,6,true
+Đề kiểm tra sửa," ",6,true
+Đề kiểm tra sửa,cat-2,-1,true
+Đề kiểm tra sửa,cat-2,11,true

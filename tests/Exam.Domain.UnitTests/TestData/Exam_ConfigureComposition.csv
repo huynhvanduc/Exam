@@ -1,0 +1,4 @@
+CellCount,ShouldThrow
+5,false
+1,false
+0,true

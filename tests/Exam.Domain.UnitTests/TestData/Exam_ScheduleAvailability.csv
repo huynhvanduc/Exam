@@ -1,0 +1,7 @@
+FromOffsetDays,ToOffsetDays,ShouldThrow
+1,5,false
+5,1,true
+,5,false
+1,,false
+,,false
+5,5,true

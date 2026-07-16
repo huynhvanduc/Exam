@@ -1,0 +1,5 @@
+UserId,ShouldThrow
+student-1,false
+,true
+" ",true
+teacher-1,true

@@ -1,0 +1,10 @@
+Name,CategoryId,MinimumPassingScore,ShouldThrow
+Đề kiểm tra,cat-1,5,false
+,cat-1,5,true
+" ",cat-1,5,true
+Đề kiểm tra,,5,true
+Đề kiểm tra," ",5,true
+Đề kiểm tra,cat-1,-1,true
+Đề kiểm tra,cat-1,11,true
+Đề kiểm tra,cat-1,0,false
+Đề kiểm tra,cat-1,10,false

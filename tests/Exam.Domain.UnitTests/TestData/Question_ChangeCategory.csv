@@ -1,0 +1,4 @@
+CategoryId,ShouldThrow
+cat-2,false
+,true
+" ",true

@@ -1,0 +1,6 @@
+QuestionType,CorrectCount,TotalCount,ShouldThrow
+SingleSelection,1,4,false
+SingleSelection,2,4,true
+SingleSelection,0,4,false
+MultipleSelection,3,4,false
+MultipleSelection,0,4,false

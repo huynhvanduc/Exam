@@ -1,0 +1,8 @@
+ExternalId,FirstName,LastName,ShouldThrow
+ext-1,Nguyễn,Văn A,false
+,Nguyễn,Văn A,true
+" ",Nguyễn,Văn A,true
+ext-1,,Văn A,true
+ext-1," ",Văn A,true
+ext-1,Nguyễn,,true
+ext-1,Nguyễn," ",true

@@ -1,0 +1,4 @@
+QuestionId,Finished,ShouldThrow
+q1,false,false
+q3,false,true
+q1,true,true

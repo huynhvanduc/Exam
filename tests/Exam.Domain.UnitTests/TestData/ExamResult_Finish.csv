@@ -1,0 +1,5 @@
+CorrectCount,TotalCount,MinimumPassingScore,ExpectedPassed,ExpectedTotalScore
+2,4,5,true,5.0
+1,4,5,false,2.5
+4,4,10,true,10.0
+0,4,0,true,0.0

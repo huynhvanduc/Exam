@@ -1,0 +1,6 @@
+FirstName,LastName,ShouldThrow
+Trần,Thị B,false
+,Thị B,true
+" ",Thị B,true
+Trần,,true
+Trần," ",true

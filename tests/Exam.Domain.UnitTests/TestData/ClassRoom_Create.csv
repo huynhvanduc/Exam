@@ -1,0 +1,6 @@
+Name,OwnerUserId,ShouldThrow
+Lớp 10A1,teacher-1,false
+,teacher-1,true
+" ",teacher-1,true
+Lớp 10A1,,true
+Lớp 10A1," ",true
