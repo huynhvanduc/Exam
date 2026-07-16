@@ -49,6 +49,26 @@ public class IdentityAccountProvisioningService : IIdentityAccountProvisioningSe
         return new ProvisionedAccount(result.ExternalId, result.GeneratedPassword);
     }
 
+    public async Task<string> ResetPasswordAsync(string externalId, CancellationToken cancellationToken = default)
+    {
+        var accessToken = await RequestAccessTokenAsync(cancellationToken);
+
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"internal/accounts/{externalId}/reset-password");
+        request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
+
+        using var response = await _httpClient.SendAsync(request, cancellationToken);
+
+        if (response.StatusCode == HttpStatusCode.NotFound)
+            throw new ExamDomainException("Không tìm thấy tài khoản đăng nhập tương ứng bên Identity Server.");
+
+        response.EnsureSuccessStatusCode();
+
+        var result = await response.Content.ReadFromJsonAsync<ResetPasswordResponse>(JsonOptions, cancellationToken)
+            ?? throw new InvalidOperationException("Identity.Server trả về phản hồi rỗng khi đặt lại mật khẩu.");
+
+        return result.GeneratedPassword;
+    }
+
     private async Task<string> RequestAccessTokenAsync(CancellationToken cancellationToken)
     {
         using var tokenRequest = new HttpRequestMessage(HttpMethod.Post, "connect/token")
@@ -73,4 +93,5 @@ public class IdentityAccountProvisioningService : IIdentityAccountProvisioningSe
 
     private record TokenResponse([property: JsonPropertyName("access_token")] string AccessToken);
     private record AccountCreatedResponse(string ExternalId, string GeneratedPassword);
+    private record ResetPasswordResponse(string GeneratedPassword);
 }

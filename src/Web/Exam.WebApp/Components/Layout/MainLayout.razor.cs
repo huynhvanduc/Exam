@@ -9,6 +9,11 @@ public partial class MainLayout
 
     private void GoToLogin() => Navigation.GoToLogin();
 
+    // forceLoad: true bắt buộc - "/idp/Account/ChangePassword" được YARP proxy sang Identity.Server,
+    // không thuộc route của Blazor Router; nếu để Blazor tự điều hướng (client-side interactive routing),
+    // nó sẽ không khớp route nào và rơi vào CatchAllNotFound thay vì tải trang thật từ server.
+    private void GoToChangePassword() => Navigation.NavigateTo("/idp/Account/ChangePassword", forceLoad: true);
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         await JS.InvokeVoidAsync("appShell.initSidebarToggle");

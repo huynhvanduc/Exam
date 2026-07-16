@@ -47,6 +47,31 @@ public class InternalAccountsController : ControllerBase
         return Ok(new CreateAccountResponse(user.Id, password));
     }
 
+    public record ResetPasswordResponse(string GeneratedPassword);
+
+    [HttpPost("{externalId}/reset-password")]
+    public async Task<IActionResult> ResetPassword(string externalId)
+    {
+        var user = await _userManager.FindByIdAsync(externalId);
+        if (user is null)
+            return NotFound();
+
+        var password = GeneratePassword();
+        var removeResult = await _userManager.RemovePasswordAsync(user);
+        if (!removeResult.Succeeded)
+            return BadRequest(new { errors = removeResult.Errors.Select(e => e.Description) });
+
+        var addResult = await _userManager.AddPasswordAsync(user, password);
+        if (!addResult.Succeeded)
+            return BadRequest(new { errors = addResult.Errors.Select(e => e.Description) });
+
+        // Admin reset mật khẩu hộ người bị khoá do đăng nhập sai quá nhiều lần thì nên mở khoá luôn -
+        // nếu không, họ vẫn không đăng nhập được bằng mật khẩu mới cho tới khi hết 15 phút khoá.
+        await _userManager.SetLockoutEndDateAsync(user, null);
+
+        return Ok(new ResetPasswordResponse(password));
+    }
+
     // Sinh mật khẩu ngẫu nhiên đáp ứng chính sách mật khẩu hiện tại (RequiredLength=8, RequireDigit=true,
     // RequireLowercase/RequireNonAlphanumeric mặc định true) - đảm bảo có đủ mỗi loại ký tự bắt buộc rồi
     // trộn ngẫu nhiên vị trí, dùng RandomNumberGenerator (crypto-secure) thay vì Random.

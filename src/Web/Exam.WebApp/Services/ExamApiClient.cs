@@ -143,6 +143,9 @@ public class ExamApiClient
     public Task<CreateUserResponse> CreateUserAsync(CreateUserRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<CreateUserResponse>(HttpMethod.Post, ApiRoutes.Users.Create, body, cancellationToken);
 
+    public Task<ResetUserPasswordResponse> ResetUserPasswordAsync(string externalId, CancellationToken cancellationToken = default) =>
+        SendAsync<ResetUserPasswordResponse>(HttpMethod.Post, ApiRoutes.Users.ResetPassword(externalId), cancellationToken: cancellationToken);
+
     public Task<UserDto> PromoteUserRoleAsync(string externalId, PromoteUserRoleRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<UserDto>(HttpMethod.Put, ApiRoutes.Users.Role(externalId), body, cancellationToken);
 

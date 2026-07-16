@@ -1,6 +1,7 @@
 using Exam.API.Extensions;
 using Exam.Application.UserAggregate.Commands.CreateUser;
 using Exam.Application.UserAggregate.Commands.PromoteUserRole;
+using Exam.Application.UserAggregate.Commands.ResetUserPassword;
 using Exam.Application.UserAggregate.Commands.ToggleUserActive;
 using Exam.Application.UserAggregate.Queries.GetUserByExternalId;
 using Exam.Application.UserAggregate.Queries.GetUsers;
@@ -46,6 +47,14 @@ public class UsersController : ControllerBase
     {
         var result = await _mediator.Send(
             new CreateUserCommand(request.Email, request.FirstName, request.LastName, request.Role, User.GetActor()), cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost("{externalId}/reset-password")]
+    [Authorize(Policy = Permissions.User.ResetPassword)]
+    public async Task<IActionResult> ResetPassword(string externalId, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(new ResetUserPasswordCommand(externalId, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 

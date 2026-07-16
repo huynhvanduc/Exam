@@ -8,4 +8,6 @@ public record ProvisionedAccount(string ExternalId, string GeneratedPassword);
 public interface IIdentityAccountProvisioningService
 {
     Task<ProvisionedAccount> CreateAccountAsync(string email, string firstName, string lastName, CancellationToken cancellationToken = default);
+
+    Task<string> ResetPasswordAsync(string externalId, CancellationToken cancellationToken = default);
 }

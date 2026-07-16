@@ -71,6 +71,11 @@
                             @onclick="() => ToggleActiveAsync(user, !user.IsActive)">
                         @(user.IsActive ? "🔒" : "🔓")
                     </button>
+                    <button class="lock-btn" disabled="@IsSelf(user)"
+                            title="@(IsSelf(user) ? "Dùng chức năng Đổi mật khẩu cho tài khoản của chính mình" : "Đặt lại mật khẩu")"
+                            @onclick="() => OpenResetPasswordDialog(user)">
+                        🔑
+                    </button>
                 </td>
             </tr>
         </RowTemplate>

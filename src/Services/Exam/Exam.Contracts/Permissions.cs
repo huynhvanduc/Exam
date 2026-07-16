@@ -52,6 +52,7 @@ public static class Permissions
     {
         public const string View = "User.View";
         public const string Create = "User.Create";
+        public const string ResetPassword = "User.ResetPassword";
         public const string PromoteRole = "User.PromoteRole";
         public const string ToggleActive = "User.ToggleActive";
     }
@@ -64,7 +65,7 @@ public static class Permissions
         Exam.ManageAvailability, Exam.ManageMaxAttempts, Exam.Publish, Exam.Unpublish, Exam.Archive,
         Exam.ViewResults, Exam.ManageClassAssignment, Exam.ForceFinishAttempt, Exam.Regrade,
         Class.View, Class.Create, Class.Update, Class.Delete, Class.ManageMembers,
-        User.View, User.Create, User.PromoteRole, User.ToggleActive,
+        User.View, User.Create, User.ResetPassword, User.PromoteRole, User.ToggleActive,
         Dashboard.View
     ];
 }

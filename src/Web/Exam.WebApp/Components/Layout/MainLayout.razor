@@ -11,6 +11,7 @@
                     <div class="user-avatar">@Initials(context.User.Identity?.Name)</div>
                     <span>@context.User.Identity?.Name</span>
                 </div>
+                <button type="button" class="logout-btn" @onclick="GoToChangePassword">Đổi mật khẩu</button>
                 <form action="/account/logout" method="post" data-enhance="false">
                     <button type="submit" class="logout-btn">Đăng xuất</button>
                 </form>

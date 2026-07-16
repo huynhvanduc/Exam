@@ -6,3 +6,8 @@ public record CreateUserResponse(UserDto User, string GeneratedPassword)
 {
     public string Id => User.Id;
 }
+
+public record ResetUserPasswordResponse(string ExternalId, string GeneratedPassword)
+{
+    public string Id => ExternalId;
+}

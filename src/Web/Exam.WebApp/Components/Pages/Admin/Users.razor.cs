@@ -52,6 +52,17 @@ public partial class Users : AdminPageBase
 
     private bool IsSelf(UserDto user) => user.Email == currentUserEmail;
 
+    private async Task OpenResetPasswordDialog(UserDto user)
+    {
+        var parameters = new Dictionary<string, object>
+        {
+            ["ExternalId"] = user.ExternalId,
+            ["FullName"] = $"{user.FirstName} {user.LastName}",
+            ["Email"] = user.Email
+        };
+        await ShowFormDialogAsync<ResetPasswordDialog, ResetUserPasswordResponse>("Đặt lại mật khẩu", parameters);
+    }
+
     private Task ChangeRoleAsync(UserDto user, UserRole role)
     {
         if (role == user.Role)
