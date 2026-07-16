@@ -4,7 +4,7 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Đăng nhập — Exam Platform</title>
-    <base href="/" />
+    <base href="@(HttpContext.Request.PathBase)/" />
     <style>
         :root {
             --bg: #f1f3f8;
@@ -195,3 +195,8 @@
     <script src="_framework/blazor.web.js"></script>
 </body>
 </html>
+
+@code {
+    [CascadingParameter]
+    private HttpContext HttpContext { get; set; } = default!;
+}

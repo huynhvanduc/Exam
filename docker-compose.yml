@@ -87,7 +87,8 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       IdentityServer__Authority: "http://identity.server:8080"
-      IdentityServer__PublicAuthority: "http://localhost:5001"
+      IdentityServer__PublicAuthority: "http://localhost:6004/idp"
+      ReverseProxy__Clusters__identity-cluster__Destinations__destination1__Address: "http://identity.server:8080/"
       ExamApi__BaseUrl: "http://exam.api:8080"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

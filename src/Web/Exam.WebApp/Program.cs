@@ -122,6 +122,9 @@ builder.Services.AddHttpClient<ExamApiClient>(client =>
     client.BaseAddress = new Uri(examApiBaseUrl);
 });
 
+builder.Services.AddReverseProxy()
+    .LoadFromConfig(builder.Configuration.GetSection("ReverseProxy"));
+
 var app = builder.Build();
 
 if (!app.Environment.IsDevelopment())
@@ -136,6 +139,8 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 app.UseAntiforgery();
+
+app.MapReverseProxy();
 
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
@@ -156,10 +161,15 @@ static void RewriteHost(Microsoft.IdentityModel.Protocols.OpenIdConnect.OpenIdCo
 {
     var publicUri = new Uri(publicAuthority);
     var target = new Uri(message.IssuerAddress);
+
+    var prefix = publicUri.AbsolutePath.TrimEnd('/');
+    var path = prefix + target.AbsolutePath;
+
     message.IssuerAddress = new UriBuilder(target)
     {
         Scheme = publicUri.Scheme,
         Host = publicUri.Host,
-        Port = publicUri.Port
+        Port = publicUri.Port,
+        Path = path
     }.Uri.ToString();
 }
