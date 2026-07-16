@@ -1,0 +1,4 @@
+ClassId,UserId,IsValid
+class-1,student-1,true
+,student-1,false
+class-1,,false

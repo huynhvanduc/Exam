@@ -1,0 +1,4 @@
+JoinCode,UserId,IsValid
+ABC123,student-1,true
+,student-1,false
+ABC123,,false

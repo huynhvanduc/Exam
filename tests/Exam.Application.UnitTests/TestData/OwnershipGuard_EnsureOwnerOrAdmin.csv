@@ -1,0 +1,5 @@
+ActorRole,ActorUserId,OwnerUserId,ShouldThrow
+Admin,admin-1,owner-1,false
+Instructor,owner-1,owner-1,false
+Instructor,other-1,owner-1,true
+Student,other-1,owner-1,true
