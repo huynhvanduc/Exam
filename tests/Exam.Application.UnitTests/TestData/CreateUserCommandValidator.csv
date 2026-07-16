@@ -1,0 +1,6 @@
+Email,FirstName,LastName,IsValid
+user@example.com,Nguyễn,Văn A,true
+not-an-email,Nguyễn,Văn A,false
+,Nguyễn,Văn A,false
+user@example.com,,Văn A,false
+user@example.com,Nguyễn,,false
