@@ -25,11 +25,13 @@ try
 
     // Add services to the container.
     builder.Services.AddRazorComponents();
+    builder.Services.AddControllers();
     builder.Services.AddAuthorization();
     builder.Services.Configure<AppSettings>(builder.Configuration.GetSection("AppSettings"));
     builder.Services.Configure<IdentityServerSettings>(builder.Configuration.GetSection("IdentityServer"));
     builder.Services.ConfigureIdentity(builder.Configuration);
     builder.Services.ConfigureIdentityServer(builder.Configuration);
+    builder.Services.ConfigureInternalApiAuthentication(builder.Configuration);
 
     // PostConfigure luôn chạy sau mọi Configure khác (bất kể thứ tự đăng ký), đảm bảo SameSite=Lax
     // thắng dù AddAspNetIdentity()/AddIdentityServer() có tự đặt lại None ở đâu đó bên trong.
@@ -65,10 +67,12 @@ try
     app.UseStaticFiles();
 
     app.UseIdentityServer();
+    app.UseAuthentication();
     app.UseAuthorization();
     app.UseAntiforgery();
 
     app.MapRazorComponents<App>();
+    app.MapControllers();
 
     app.Run();
 }

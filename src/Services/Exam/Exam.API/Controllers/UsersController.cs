@@ -1,4 +1,5 @@
 using Exam.API.Extensions;
+using Exam.Application.UserAggregate.Commands.CreateUser;
 using Exam.Application.UserAggregate.Commands.PromoteUserRole;
 using Exam.Application.UserAggregate.Commands.ToggleUserActive;
 using Exam.Application.UserAggregate.Queries.GetUserByExternalId;
@@ -36,6 +37,15 @@ public class UsersController : ControllerBase
         var (normalizedPage, normalizedPageSize) = PagingDefaults.Normalize(page, pageSize, 20);
         var query = new GetUsersQuery(normalizedPage, normalizedPageSize, search, role, isActive);
         var result = await _mediator.Send(query, cancellationToken);
+        return Ok(result);
+    }
+
+    [HttpPost]
+    [Authorize(Policy = Permissions.User.Create)]
+    public async Task<IActionResult> Create([FromBody] CreateUserRequest request, CancellationToken cancellationToken)
+    {
+        var result = await _mediator.Send(
+            new CreateUserCommand(request.Email, request.FirstName, request.LastName, request.Role, User.GetActor()), cancellationToken);
         return Ok(result);
     }
 

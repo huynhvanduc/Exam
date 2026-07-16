@@ -167,6 +167,9 @@ table.data tbody tr:last-child td { border-bottom:none; }
 .field textarea { resize:vertical; }
 .field-row { display:flex; gap:12px; }
 .field-row .field { flex:1; }
+.alert-success { background:var(--success-soft); color:var(--success); border:1px solid var(--success); border-radius:8px; padding:10px 12px; margin-bottom:14px; font-size:13.5px; }
+.password-copy-row { display:flex; gap:8px; }
+.password-copy-row input { flex:1; font-family:monospace; }
 .switch-row { display:flex; align-items:center; gap:10px; margin-bottom:12px; font-size:13px; }
 .switch { position:relative; width:36px; height:20px; flex:none; }
 .switch input { opacity:0; width:0; height:0; }

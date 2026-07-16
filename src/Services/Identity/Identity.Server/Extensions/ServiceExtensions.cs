@@ -1,6 +1,7 @@
 ﻿using Identity.Server.Persistence;
 using Identity.Server.Models;
 using Identity.Server.Services;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
@@ -75,5 +76,28 @@ public static class ServiceExtensions
             options.TokenCleanupInterval = 3600;
         })
         .AddConfigurationStoreCache();
+    }
+
+    // Bảo vệ endpoint nội bộ /internal/accounts bằng chính token do Identity.Server tự phát hành (scope
+    // "identity_api.manage") - đăng ký thêm scheme "Bearer" riêng, KHÔNG đổi DefaultScheme (vẫn là cookie
+    // Identity.Application dùng cho trang đăng nhập), nên không ảnh hưởng luồng login hiện có.
+    public static void ConfigureInternalApiAuthentication(this IServiceCollection services, IConfiguration configuration)
+    {
+        var selfAuthority = configuration["IdentityServer:SelfAuthority"]!;
+
+        services.AddAuthentication()
+            .AddJwtBearer("Bearer", options =>
+            {
+                options.Authority = selfAuthority;
+                options.RequireHttpsMetadata = false;
+                options.TokenValidationParameters.ValidateAudience = false;
+            });
+
+        services.AddAuthorization(options =>
+        {
+            options.AddPolicy("IdentityApiManage", policy => policy
+                .AddAuthenticationSchemes("Bearer")
+                .RequireClaim("scope", "identity_api.manage"));
+        });
     }
 }

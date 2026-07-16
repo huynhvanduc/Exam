@@ -41,6 +41,7 @@ services:
       ASPNETCORE_ENVIRONMENT: Development
       ASPNETCORE_URLS: http://+:8080
       ConnectionStrings__IdentitySqlConnection: "Server=sqlserver.db,1433;Database=ExamIdentity;User Id=sa;Password=Admin@12345;TrustServerCertificate=True;"
+      IdentityServer__SelfAuthority: "http://localhost:8080"
   exam.api:
     container_name: exam.api
     build:
@@ -61,6 +62,9 @@ services:
       MongoDb__DatabaseName: "ExamDb"
       IdentityServer__Authority: "http://identity.server:8080"
       IdentityServer__Audience: "exam_api"
+      IdentityServer__InternalClientId: "exam.api.internal"
+      IdentityServer__InternalClientSecret: "ExamApiInternal_Secret_2026$"
+      IdentityServer__InternalScope: "identity_api.manage"
       HealthChecksUI__HealthChecks__0__Uri: "http://localhost:8080/health"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080/health"]

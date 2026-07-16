@@ -7,6 +7,7 @@ using Exam.Domain.AggregateModels.QuestionAggregate;
 using Exam.Domain.AggregateModels.RoleAggregate;
 using Exam.Domain.AggregateModels.UserAggregate;
 using Exam.Domain.Services;
+using Exam.Infrastructure.ExternalServices;
 using Exam.Infrastructure.Persistence.Mongo;
 using Exam.Infrastructure.Persistence.Mongo.Repositories;
 using Microsoft.Extensions.Configuration;
@@ -45,6 +46,9 @@ public static class InfrastructureServiceCollectionExtensions
         services.AddScoped<ExamQuestionPoolService>();
         services.AddScoped<CategoryDeletionGuard>();
         services.AddScoped<ExamResultGradingService>();
+
+        services.AddHttpClient<IIdentityAccountProvisioningService, IdentityAccountProvisioningService>(client =>
+            client.BaseAddress = new Uri(configuration["IdentityServer:Authority"]!));
 
         services.AddHealthChecks()
             .AddCheck<MongoDbHealthCheck>("mongodb");

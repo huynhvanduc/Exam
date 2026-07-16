@@ -1,0 +1,37 @@
+@inherits FormDialogBase
+
+@if (createdResponse == null)
+{
+    <AppForm @ref="form">
+        <AppTextField Label="Họ" Value="@firstName" ValueChanged="OnFirstNameChanged" Required="true" RequiredError="Bắt buộc nhập họ." />
+        <AppTextField Label="Tên" Value="@lastName" ValueChanged="OnLastNameChanged" Required="true" RequiredError="Bắt buộc nhập tên." />
+        <AppTextField Label="Email" Value="@email" ValueChanged="OnEmailChanged" Required="true" RequiredError="Bắt buộc nhập email."
+                      Hint="Dùng để đăng nhập - hệ thống chưa gửi email tự động, hãy gửi mật khẩu cho người dùng qua kênh riêng." />
+        <AppSelect TValue="UserRole" Label="Vai trò" Value="role" ValueChanged="v => role = v">
+            <option value="@UserRole.Student">Student</option>
+            <option value="@UserRole.Instructor">Instructor</option>
+            <option value="@UserRole.Admin">Admin</option>
+        </AppSelect>
+    </AppForm>
+    <div class="modal-actions">
+        <AppButton OnClick="Cancel">Huỷ</AppButton>
+        <AppButton Variant="AppButtonVariant.Primary" OnClick="Submit" Loading="isBusy">Tạo tài khoản</AppButton>
+    </div>
+}
+else
+{
+    <div class="alert-success">
+        Đã tạo tài khoản cho <strong>@createdResponse.User.Email</strong>.
+    </div>
+    <div class="field">
+        <label>Mật khẩu tạm thời</label>
+        <div class="password-copy-row">
+            <input type="text" readonly value="@createdResponse.GeneratedPassword" />
+            <AppButton OnClick="CopyPasswordAsync">@(copied ? "Đã sao chép" : "Sao chép")</AppButton>
+        </div>
+        <div class="hint">Mật khẩu chỉ hiển thị một lần, hãy sao chép và gửi cho người dùng qua kênh riêng (Zalo, gặp trực tiếp...) — hệ thống không lưu lại.</div>
+    </div>
+    <div class="modal-actions">
+        <AppButton Variant="AppButtonVariant.Primary" OnClick="Done">Đóng</AppButton>
+    </div>
+}

@@ -6,6 +6,7 @@ public static class ApiRoutes
     {
         public const string Base = "/api/users";
         public const string Me = "/api/users/me";
+        public const string Create = "/api/users";
         public static string Role(string externalId) => $"{Base}/{externalId}/role";
         public static string Active(string externalId) => $"{Base}/{externalId}/active";
         public static string Paged(int page, int pageSize, string? search = null, UserRole? role = null, bool? isActive = null)

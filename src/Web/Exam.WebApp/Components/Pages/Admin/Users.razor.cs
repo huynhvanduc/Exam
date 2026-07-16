@@ -43,6 +43,13 @@ public partial class Users : AdminPageBase
 
     private Task ApplyFiltersAsync() => table?.ResetAndReloadAsync() ?? Task.CompletedTask;
 
+    private async Task OpenCreateDialog()
+    {
+        var result = await ShowFormDialogAsync<UserFormDialog, CreateUserResponse>("Thêm người dùng", []);
+        if (result != null && table != null)
+            await table.ResetAndReloadAsync();
+    }
+
     private bool IsSelf(UserDto user) => user.Email == currentUserEmail;
 
     private Task ChangeRoleAsync(UserDto user, UserRole role)

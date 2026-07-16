@@ -140,6 +140,9 @@ public class ExamApiClient
         bool? isActive = null, CancellationToken cancellationToken = default) =>
         SendAsync<PagedResult<UserDto>>(HttpMethod.Get, ApiRoutes.Users.Paged(page, pageSize, search, role, isActive), cancellationToken: cancellationToken);
 
+    public Task<CreateUserResponse> CreateUserAsync(CreateUserRequest body, CancellationToken cancellationToken = default) =>
+        SendAsync<CreateUserResponse>(HttpMethod.Post, ApiRoutes.Users.Create, body, cancellationToken);
+
     public Task<UserDto> PromoteUserRoleAsync(string externalId, PromoteUserRoleRequest body, CancellationToken cancellationToken = default) =>
         SendAsync<UserDto>(HttpMethod.Put, ApiRoutes.Users.Role(externalId), body, cancellationToken);
 

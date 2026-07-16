@@ -34,5 +34,9 @@ window.appShell = (function () {
   });
   function setDirtyGuard(isDirty) { dirty = isDirty; }
 
-  return { toast, initSidebarToggle, setDirtyGuard };
+  function copyToClipboard(text) {
+    return navigator.clipboard.writeText(text);
+  }
+
+  return { toast, initSidebarToggle, setDirtyGuard, copyToClipboard };
 })();
