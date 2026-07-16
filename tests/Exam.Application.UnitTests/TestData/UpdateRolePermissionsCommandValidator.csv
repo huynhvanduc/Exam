@@ -1,0 +1,4 @@
+PermissionsCsv,IsValid
+Category.Create;Question.View,true
+Category.Create;Unknown.Permission,false
+,true
